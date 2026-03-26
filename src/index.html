@@ -3,111 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#eb6a8a">
-  <meta name="description" content="Mam-IA: centro de organizacion familiar con agenda compartida, comidas, compras, limpieza, trabajo, escuela y bienestar.">
+  <meta name="theme-color" content="#f0678f">
+  <meta name="description" content="Mam-IA: organización integral familiar para madres con agenda compartida y planificación inteligente.">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="./assets/mam-ia-logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <title>Mam-IA | Centro de mando familiar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Mam-IA | Organización Familiar</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <div class="app-bg"></div>
   <div id="app-shell">
-    <header class="hero-shell glass-card">
-      <div class="hero-brand">
-        <img src="./assets/mam-ia-logo.svg" alt="Logo Mam-IA" class="hero-logo">
-        <div class="hero-copy">
-          <span class="eyebrow">Planifica familia, hogar y tiempo personal</span>
+    <header class="top-bar card">
+      <div class="brand">
+        <img src="./assets/mam-ia-logo.svg" alt="Logo Mam-IA" class="logo">
+        <div>
           <h1>Mam-IA</h1>
-          <p>Una agenda visual y compartida para que una madre tenga el control de comidas, compras, tareas, citas, escuela, escapadas y bienestar sin perder simplicidad.</p>
+          <p>Tu centro de mando familiar</p>
         </div>
       </div>
-      <div class="hero-actions">
-        <div class="theme-picker-wrap">
-          <label for="theme-picker">Tema visual</label>
-          <select id="theme-picker" aria-label="Selecciona tema de color"></select>
-        </div>
-        <div class="hero-stats" id="hero-stats"></div>
+      <div class="theme-tools">
+        <label for="theme-picker">Tema</label>
+        <select id="theme-picker" aria-label="Selecciona tema de color"></select>
       </div>
     </header>
 
-    <main class="dashboard-layout">
-      <section class="main-column">
-        <section class="glass-card highlight-panel">
-          <div class="section-heading">
-            <div>
-              <span class="eyebrow">Panel principal</span>
-              <h2>Hoy en Mam-IA</h2>
-            </div>
-            <button id="family-mode-toggle" class="ghost-button" type="button">Vista familiar</button>
-          </div>
-          <div id="focus-cards" class="focus-cards"></div>
-        </section>
+    <main class="layout">
+      <nav id="module-grid" class="module-grid" aria-label="Módulos principales"></nav>
 
-        <section class="glass-card">
-          <div class="section-heading">
-            <div>
-              <span class="eyebrow">Accesos rapidos</span>
-              <h2>Areas de organizacion</h2>
-            </div>
-          </div>
-          <nav id="module-grid" class="module-grid" aria-label="Modulos principales"></nav>
-        </section>
-
-        <section id="module-view" class="glass-card module-panel" aria-live="polite">
-          <div class="section-heading">
-            <div>
-              <span id="module-kicker" class="eyebrow"></span>
-              <h2 id="module-title"></h2>
-            </div>
-            <div id="module-meta" class="module-meta"></div>
-          </div>
-          <p id="module-description" class="section-description"></p>
-          <div id="module-content" class="module-content"></div>
-        </section>
+      <section id="module-view" class="module-view card" aria-live="polite">
+        <h2 id="module-title"></h2>
+        <p id="module-description"></p>
+        <div id="module-content" class="module-content"></div>
       </section>
-
-      <aside class="side-column">
-        <section class="glass-card">
-          <div class="section-heading compact">
-            <div>
-              <span class="eyebrow">Resumen</span>
-              <h2>Agenda del dia</h2>
-            </div>
-          </div>
-          <ul id="daily-summary" class="stack-list"></ul>
-        </section>
-
-        <section class="glass-card">
-          <div class="section-heading compact">
-            <div>
-              <span class="eyebrow">Familia</span>
-              <h2>Miembros e invitaciones</h2>
-            </div>
-          </div>
-          <div id="family-members" class="family-members"></div>
-          <form id="invite-form" class="invite-form">
-            <input type="text" id="invite-name" placeholder="Nombre del miembro" required>
-            <input type="email" id="invite-email" placeholder="Correo electronico" required>
-            <button type="submit" class="primary-button">Invitar a la familia</button>
-          </form>
-          <ul id="invite-list" class="stack-list"></ul>
-        </section>
-
-        <section class="glass-card">
-          <div class="section-heading compact">
-            <div>
-              <span class="eyebrow">Configuracion</span>
-              <h2>Centro familiar</h2>
-            </div>
-          </div>
-          <div id="settings-cards" class="settings-cards"></div>
-        </section>
-      </aside>
     </main>
+
+    <aside class="quick-panels">
+      <section class="card panel">
+        <h3>Resumen del día</h3>
+        <ul id="daily-summary" class="summary-list"></ul>
+      </section>
+      <section class="card panel">
+        <h3>Invitaciones familiares</h3>
+        <form id="invite-form" class="invite-form">
+          <input type="text" id="invite-name" placeholder="Nombre del miembro" required>
+          <input type="email" id="invite-email" placeholder="Email" required>
+          <button type="submit" class="btn-primary">Enviar invitación</button>
+        </form>
+        <ul id="invite-list" class="invite-list"></ul>
+      </section>
+    </aside>
   </div>
 
   <script src="./app.js"></script>

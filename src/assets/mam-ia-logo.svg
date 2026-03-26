@@ -1,22 +1,17 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="78" y1="54" x2="434" y2="458" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FF8E7D"/>
-      <stop offset="0.52" stop-color="#EE6F92"/>
-      <stop offset="1" stop-color="#5C83FF"/>
+    <linearGradient id="bg" x1="65" y1="52" x2="437" y2="456" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8EAA"/>
+      <stop offset="1" stop-color="#6D8FFF"/>
     </linearGradient>
-    <linearGradient id="mark" x1="179" y1="140" x2="332" y2="331" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFF4BE"/>
+    <linearGradient id="heart" x1="181" y1="151" x2="336" y2="333" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF3A8"/>
       <stop offset="1" stop-color="#FFFFFF"/>
     </linearGradient>
   </defs>
-  <rect x="28" y="28" width="456" height="456" rx="128" fill="url(#bg)"/>
-  <circle cx="152" cy="150" r="26" fill="#FFFFFF" fill-opacity="0.2"/>
-  <circle cx="361" cy="122" r="18" fill="#FFFFFF" fill-opacity="0.18"/>
-  <path d="M198 171C198 143.386 220.386 121 248 121H264C302.66 121 334 152.34 334 191C334 230.764 301.764 263 262 263H248C220.386 263 198 240.614 198 213V171Z" fill="url(#mark)"/>
-  <path d="M174 188C174 167.013 191.013 150 212 150H220V262H212C191.013 262 174 244.987 174 224V188Z" fill="#FFD36B"/>
-  <path d="M300 209C323.196 209 342 190.196 342 167C342 143.804 323.196 125 300 125H282V209H300Z" fill="#FFFFFF"/>
-  <path d="M161 318C161 297.013 178.013 280 199 280H313C333.987 280 351 297.013 351 318V321C351 341.987 333.987 359 313 359H199C178.013 359 161 341.987 161 321V318Z" fill="#FFFFFF" fill-opacity="0.18"/>
-  <path d="M195 321C220.333 321 220.333 300 245.667 300C271 300 271 321 296.333 321C321.667 321 321.667 300 347 300" stroke="white" stroke-width="16" stroke-linecap="round"/>
-  <text x="256" y="414" text-anchor="middle" font-family="Outfit, Arial, sans-serif" font-size="54" font-weight="800" fill="#FFFFFF">Mam-IA</text>
+  <rect x="32" y="32" width="448" height="448" rx="130" fill="url(#bg)"/>
+  <path d="M254 361C251 361 248 360 246 358C176 304 133 264 133 209C133 166 167 134 209 134C232 134 255 145 268 166C281 145 304 134 327 134C369 134 403 166 403 209C403 264 360 304 290 358C288 360 285 361 282 361H254Z" fill="url(#heart)"/>
+  <circle cx="255.5" cy="211.5" r="22.5" fill="#FF7E9F"/>
+  <path d="M161 408H351" stroke="white" stroke-width="20" stroke-linecap="round"/>
+  <text x="256" y="436" text-anchor="middle" font-family="Manrope, Arial, sans-serif" font-size="48" font-weight="800" fill="#FFFFFF">Mam-IA</text>
 </svg>

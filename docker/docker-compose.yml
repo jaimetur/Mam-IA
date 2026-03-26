@@ -5,26 +5,16 @@ services:
     restart: ${RESTART_POLICY}
     ports:
       - "${APP_PORT}:${CONTAINER_PORT}"
+    network_mode: bridge
     environment:
       TZ: ${TZ}
       APP_ENV: ${APP_ENV}
     volumes:
-      - ${APP_CONFIG_DIR}:${CONTAINER_CONFIG_DIR}
-      - ${APP_DATA_DIR}:${CONTAINER_DATA_DIR}
+      - ${APP_CONFIG_DIR}:/app/config
+      - ${APP_DATA_DIR}:/app/data
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:${CONTAINER_PORT}/ || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
-    networks:
-      - mam_ia_net
-
-networks:
-  mam_ia_net:
-    name: ${DOCKER_NETWORK_NAME}
-    driver: bridge
-    ipam:
-      config:
-        - subnet: ${DOCKER_SUBNET}
-          gateway: ${DOCKER_GATEWAY}
