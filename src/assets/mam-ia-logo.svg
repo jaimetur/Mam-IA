@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="78" y1="54" x2="434" y2="458" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8E7D"/>
+      <stop offset="0.52" stop-color="#EE6F92"/>
+      <stop offset="1" stop-color="#5C83FF"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="179" y1="140" x2="332" y2="331" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF4BE"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="28" y="28" width="456" height="456" rx="128" fill="url(#bg)"/>
+  <circle cx="152" cy="150" r="26" fill="#FFFFFF" fill-opacity="0.2"/>
+  <circle cx="361" cy="122" r="18" fill="#FFFFFF" fill-opacity="0.18"/>
+  <path d="M198 171C198 143.386 220.386 121 248 121H264C302.66 121 334 152.34 334 191C334 230.764 301.764 263 262 263H248C220.386 263 198 240.614 198 213V171Z" fill="url(#mark)"/>
+  <path d="M174 188C174 167.013 191.013 150 212 150H220V262H212C191.013 262 174 244.987 174 224V188Z" fill="#FFD36B"/>
+  <path d="M300 209C323.196 209 342 190.196 342 167C342 143.804 323.196 125 300 125H282V209H300Z" fill="#FFFFFF"/>
+  <path d="M161 318C161 297.013 178.013 280 199 280H313C333.987 280 351 297.013 351 318V321C351 341.987 333.987 359 313 359H199C178.013 359 161 341.987 161 321V318Z" fill="#FFFFFF" fill-opacity="0.18"/>
+  <path d="M195 321C220.333 321 220.333 300 245.667 300C271 300 271 321 296.333 321C321.667 321 321.667 300 347 300" stroke="white" stroke-width="16" stroke-linecap="round"/>
+  <text x="256" y="414" text-anchor="middle" font-family="Outfit, Arial, sans-serif" font-size="54" font-weight="800" fill="#FFFFFF">Mam-IA</text>
+</svg>

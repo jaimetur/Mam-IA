@@ -1,0 +1,18 @@
+{
+  "name": "Mam-IA | Centro de mando familiar",
+  "short_name": "Mam-IA",
+  "description": "Agenda y organizacion familiar para comidas, compras, limpieza, escuela, trabajo, bienestar y planes compartidos.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fffaf5",
+  "theme_color": "#eb6a8a",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./assets/mam-ia-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
