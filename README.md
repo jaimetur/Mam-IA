@@ -32,6 +32,7 @@ Version funcional de interfaz moderna y responsive (desktop + movil) con:
 
 ```text
 Mam-IA/
+  runMamIA.py
   src/
     index.html
     styles.css
@@ -51,6 +52,21 @@ Mam-IA/
 ```
 
 ## Ejecucion local rapida (sin Docker)
+
+Desde PyCharm, ejecuta `runMamIA.py`. PyCharm usara el interprete que tengas
+configurado para el proyecto, levantara el servidor y abrira la interfaz en el
+navegador.
+
+Abrir: `http://127.0.0.1:5173`
+
+Puedes añadir argumentos a la configuracion de ejecucion de PyCharm para no
+abrir el navegador automaticamente o elegir otro puerto:
+
+```bash
+--no-browser --port 5180
+```
+
+Como alternativa, puedes usar el servidor estatico de Python directamente:
 
 ```bash
 cd src
