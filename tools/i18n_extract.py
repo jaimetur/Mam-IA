@@ -220,7 +220,7 @@ def page_strings(src: str) -> list[str]:
 
 
 # files whose strings are internal (prompts for the translator), not texts the users see
-SKIP_PY = {"i18n.py"}
+SKIP_PY = {"i18n.py", "play_review.py"}   # play_review.py: sample data, not texts of the app
 SQL = re.compile(r"^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|PRAGMA|WITH)\b", re.I)
 LOGGERS = {"debug", "info", "warning", "error", "exception", "critical"}
 

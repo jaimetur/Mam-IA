@@ -7,8 +7,8 @@ Mam-IA para Android (`app.mamia.android`) se puede instalar de dos formas:
 - **Google Play**: la tienda. Dentro de la app, la suscripción de la familia se compra con Google Play, porque Play
   no permite cobrar suscripciones digitales de otra forma. En la web se sigue pagando con Stripe.
 
-Los dos caminos usan la misma clave de firma, así que el APK del servidor y el de Play se pueden actualizar el uno
-sobre el otro. La guía sigue lo que ya funciona en BodyLens.
+Con la clave generada por Google, la versión de Play y el APK del servidor tienen firmas distintas: cada una se
+actualiza sobre sí misma, no la una sobre la otra. La guía sigue lo que ya funciona en BodyLens.
 
 ## 1. La clave de firma (una vez, la creas tú)
 
@@ -49,14 +49,17 @@ APK modernos.)
 
 ## 3. Play Console: crear la app
 
-- Nombre: **Mam-IA**. Idioma predeterminado: **español (España)**. Añade traducciones de la ficha si quieres (la app
+- Nombre: **Mam-IA**. Idioma predeterminado: **inglés (en-US)**, como en BodyLens; el español va como traducción. Añade traducciones de la ficha si quieres (la app
   está en 10 idiomas).
 - App, **gratis**: las suscripciones son productos dentro de la app.
 - Categoría: **Productividad** o **Crianza** (Parenting).
 - Contacto: `mamia@jtgcloud.com`, web `https://mamia.jtgcloud.com`.
 - Icono de la ficha: `assets/branding/icon-maskable-512.png` (512×512, cuadrado completo: Play redondea las esquinas).
-- Firma de la app: «Usar mi propia clave». Exporta `mamia-upload.jks` con la herramienta PEPK de Google, para que el
-  APK del servidor y el de Play compartan firma.
+- Firma de la app: **clave generada por Google** (Play App Signing), como en BodyLens. `mamia-upload.jks` es solo la
+  clave de subida. Por eso la app de Play y el APK del servidor tienen firmas distintas: quien tenga instalada una
+  tiene que desinstalarla para pasar a la otra.
+- **Protección automática**: desactivada, porque también se reparte el APK directo.
+- Requisitos de Play para el AAB: Play Billing 8.0.0 o más moderno y target SDK 36 (ya están en `android/`).
 - Verificación de desarrollador de Android: registra el paquete `app.mamia.android`.
 
 ## 4. La suscripción
@@ -117,7 +120,46 @@ la familia (comparten agenda, tareas y lista de la compra). Compras digitales: *
 - Se pueden borrar: **Sí**.
 - No se recogen ubicación, contactos, fotos ni identificadores de publicidad.
 
-## 7. Antes de la primera subida
+## 7. La cuenta de los revisores (Acceso a la app)
+
+Mam-IA solo se usa con la sesión iniciada, así que Google pide unas credenciales de prueba. Se usa una cuenta propia
+para los revisores, con una familia de ejemplo: una pareja, dos peques con su ficha, una agenda de esta semana y la
+siguiente, tareas y rutinas, la lista de la compra y el menú. Todo es inventado.
+
+Créala y rellénala en el NAS. El script te pide la contraseña la primera vez y no la muestra ni la guarda:
+
+```bash
+ssh nas
+```
+
+```bash
+sudo docker exec -it mamia python -m app.demo.play_review playreview@jtgcloud.com
+```
+
+O sin escribir tú la contraseña: se genera una aleatoria y se guarda solo en un fichero del NAS (no se muestra):
+
+```bash
+sudo docker exec mamia python -m app.demo.play_review playreview@jtgcloud.com --password-file /data/secrets/playreview.txt
+```
+
+```bash
+sudo cat /volume1/docker/data/mamia/secrets/playreview.txt
+```
+
+- Se puede volver a ejecutar cuando quieras: reescribe los mismos datos con fechas alrededor de hoy (la agenda queda
+  al día) y no duplica nada.
+- La familia es gratis para siempre, nunca pasa a solo lectura.
+- La pareja (`sam@demo.mamia.invalid`) es una cuenta de demostración, sin contraseña: nadie puede entrar con ella.
+
+En Play Console → Contenido de la app → **Acceso a la app**: «Todas o algunas funciones están restringidas» → añade
+el correo `playreview@jtgcloud.com`, la contraseña que elegiste y estas instrucciones:
+
+```
+Sign in with the email and password above (server: https://mamia.jtgcloud.com).
+The account belongs to a sample family with made-up data: agenda, tasks, shopping list, weekly menu and kids' info.
+```
+
+## 8. Antes de la primera subida
 
 - Crea la clave (paso 1) y espera a que GitHub compile con ella: el registro de Actions debe decir `release key`.
 - Sube `mamia-android.aab` (de la release `android-latest`) a una prueba interna, configura la suscripción y la

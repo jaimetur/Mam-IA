@@ -100,8 +100,9 @@ def _text_of(html_body: str) -> str:
 
 
 def _recipients(to: str | list[str]) -> list[str]:
+    """The addresses to send to, without repeats and without the demo accounts' (a .invalid domain never exists)."""
     to = [to] if isinstance(to, str) else to
-    return list(dict.fromkeys(x.strip() for x in to if x and x.strip()))
+    return list(dict.fromkeys(x.strip() for x in to if x and x.strip() and not x.strip().lower().endswith(".invalid")))
 
 
 def _helo_name(s: dict) -> str:
