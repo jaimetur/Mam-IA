@@ -1,5 +1,6 @@
 """Notifications in the browser (Web Push): the server's key, subscribing each device, and the loop that sends the
-reminders of events and tasks when they are due. (The Android app sets its own alarms through its native bridge.)"""
+reminders of events and tasks when they are due, as notifications and by email. (The Android app sets its own alarms
+through its native bridge.)"""
 from __future__ import annotations
 
 import asyncio
@@ -105,10 +106,18 @@ def test(u: User = Depends(signed_in_user)):
 
 
 def due_now(t0: datetime, t1: datetime) -> int:
-    """Send the reminders due between t0 and t1 to the devices of the people concerned. Returns how many were sent."""
+    """Send the reminders due between t0 and t1 to the devices of the people concerned and, by email, to the accounts
+    that want them. Returns how many notifications and emails were sent."""
+    from app.accounts import users
+    from app.core import mailer
+    from app.notices import scheduler as notices
+
+    mail_on = mailer.configured()
     with db.ro() as con:
-        fams = [r["family_id"] for r in con.execute(
-            "SELECT DISTINCT u.family_id FROM push_subs p JOIN users u ON u.id=p.user_id")]
+        q = "SELECT DISTINCT u.family_id FROM push_subs p JOIN users u ON u.id=p.user_id"
+        if mail_on:
+            q += " UNION SELECT family_id FROM users WHERE mail_reminders=1"
+        fams = [r[0] for r in con.execute(q)]
     sent = 0
     for fid in fams:
         with db.ro() as con:
@@ -116,6 +125,7 @@ def due_now(t0: datetime, t1: datetime) -> int:
             docs = {c: store.all_of(con, fid, c) for c in ("members", "events", "tasks")}
             subs = [dict(r) for r in con.execute(
                 "SELECT p.*, u.member_id FROM push_subs p JOIN users u ON u.id=p.user_id WHERE u.family_id=?", (fid,))]
+            accounts = users.family_users(con, fid) if mail_on else []
         if not f:
             continue
         for a in recur.alarms(docs, f["tz"], t0, t1):
@@ -128,17 +138,23 @@ def due_now(t0: datetime, t1: datetime) -> int:
             for s in targets:
                 _send(s, {"title": a["title"], "body": a["body"], "path": a["path"], "tag": a["id"], "id": a["id"]})
                 sent += 1
+            readers = notices.reminder_targets(accounts, a["who"])
+            if readers:
+                sent += notices.reminder(a, f["tz"], readers)
     return sent
 
 
 async def loop() -> None:
-    """Every minute, the reminders that became due since the last check (at most 10 minutes back)."""
+    """Every minute, the reminders that became due since the last check (at most 10 minutes back), and the other
+    automatic emails (the summary of the day, the notices of the subscription)."""
     last = datetime.now(timezone.utc) - timedelta(minutes=2)
     while True:
         await asyncio.sleep(60)
         now = datetime.now(timezone.utc)
         try:
+            from app.notices import scheduler as notices
             await asyncio.to_thread(due_now, max(last, now - timedelta(minutes=10)), now)
+            await asyncio.to_thread(notices.tick, now)
             with db.tx() as con:
                 con.execute("DELETE FROM push_sent WHERE sent_at < ?", ((now - timedelta(days=30)).isoformat(timespec="seconds"),))
         except Exception:   # noqa: BLE001 — the loop must go on

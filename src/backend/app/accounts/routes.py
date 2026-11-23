@@ -6,7 +6,7 @@ import html
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
-from app.accounts import users
+from app.accounts import users, verify
 from app.accounts.users import User, UserError
 from app.billing.status import cancel_for, status
 from app.core import db, mailer
@@ -14,6 +14,7 @@ from app.core.deps import (base_url, clear_session_cookie, client_ip, session_to
                            signed_in_user)
 from app.core.security import login_throttle, mail_throttle
 from app.families import service as families
+from app.notices import emails
 
 router = APIRouter()
 
@@ -59,16 +60,49 @@ class MeIn(BaseModel):
     email: str | None = None
     theme: str | None = None
     accent: str | None = None
+    mailReminders: bool | None = None
+    mailDigest: bool | None = None
 
 
 @router.put("/api/me")
 def update_me(body: MeIn, u: User = Depends(signed_in_user)):
+    if body.email is not None and body.email.strip().lower() != u.email.lower():
+        raise HTTPException(400, "Para cambiar el correo, confírmalo con el código que te enviamos (Cuenta → Correo).")
     try:
         with db.tx() as con:
-            users.update_profile(con, u, body.name, body.theme, body.accent, body.email)
+            users.update_profile(con, u, body.name, body.theme, body.accent, mail_reminders=body.mailReminders,
+                                 mail_digest=body.mailDigest)
             return {"user": users.get_user(con, u.id).public()}
     except UserError as e:
         raise HTTPException(400, str(e))
+
+
+class EmailIn(BaseModel):
+    email: str
+    password: str
+
+
+@router.post("/api/me/email")
+def change_email(body: EmailIn, request: Request, u: User = Depends(signed_in_user)):
+    """A new address for the account: a code goes to it, and it changes once the code is written (/api/web/verify)."""
+    if mail_throttle.blocked(f"code|{u.id}"):
+        raise HTTPException(429, "Ya te hemos enviado varios códigos. Espera un rato.")
+    try:
+        email = users.clean_email(body.email)
+        with db.tx() as con:
+            if not users.check_password(con, u.id, body.password):
+                raise UserError("La contraseña no es correcta.")
+            if email.lower() == u.email.lower():
+                raise UserError("Ese ya es tu correo.")
+            if users.get_by_email(con, email):
+                raise UserError("Ya hay otra cuenta con ese correo.")
+            pid, code = verify.start(con, "email", email, {"user": u.id, "name": u.name})
+            rec = verify.load(con, pid)
+        mail_throttle.fail(f"code|{u.id}")
+        verify.send(pid, rec, code)
+    except UserError as e:
+        raise HTTPException(400, str(e))
+    return verify.public(pid, rec)
 
 
 class PasswordIn(BaseModel):
@@ -85,6 +119,8 @@ def change_password(body: PasswordIn, request: Request, u: User = Depends(signed
             users.set_password(con, u.id, body.new, keep_session=session_token(request))
     except UserError as e:
         raise HTTPException(400, str(e))
+    if not u.must_change:   # the first password of a new account is not news
+        emails.password_changed(u)
     return {"ok": True}
 
 
@@ -128,6 +164,7 @@ def reset(body: ResetIn, response: Response):
             token = users.create_session(con, u.id)
     except UserError as e:
         raise HTTPException(400, str(e))
+    emails.password_changed(u)
     set_session_cookie(response, token)
     return {"ok": True}
 
@@ -150,5 +187,6 @@ def delete_me(body: DeleteIn, response: Response, u: User = Depends(signed_in_us
             families.leave(con, u)
     except UserError as e:
         raise HTTPException(400, str(e))
+    emails.account_deleted(u.email, u.name, family_too=f["owner_id"] == u.id and alone)
     clear_session_cookie(response)
     return {"ok": True}

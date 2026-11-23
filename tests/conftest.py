@@ -15,14 +15,19 @@ def server(tmp_path, monkeypatch):
     monkeypatch.setenv("COOKIE_SECURE", "0")
     monkeypatch.setenv("SCHEDULER_ENABLED", "0")
     monkeypatch.setenv("OPEN_SIGNUP", "1")
-    for k in ("MAMIA_ADMIN_EMAIL", "SMTP_HOST", "SECRET_KEY", "MAMIA_REVISION"):
+    # emails are not sent: they are kept in mailer.SENT (see the outbox fixture)
+    monkeypatch.setenv("SMTP_HOST", "log")
+    monkeypatch.setenv("SMTP_FROM", "mamia@mamia.test")
+    monkeypatch.setenv("PUBLIC_URL", "https://mamia.test")
+    for k in ("MAMIA_ADMIN_EMAIL", "SECRET_KEY", "MAMIA_REVISION"):
         monkeypatch.delenv(k, raising=False)
-    from app.core import config, crypto
+    from app.core import config, crypto, mailer
     from app.core.security import login_throttle, mail_throttle
     config.reload_settings()
     crypto.reset()
     login_throttle.clear()
     mail_throttle.clear()
+    mailer.SENT.clear()
     yield config.settings
     crypto.reset()
 
@@ -54,10 +59,41 @@ def new_client(server):
         c.__exit__(None, None, None)
 
 
+@pytest.fixture()
+def outbox(server):
+    """The emails sent during the test: [{to, subject, text, unsubscribe}]."""
+    from app.core import mailer
+    return mailer.SENT
+
+
+def mails_to(email):
+    from app.core import mailer
+    return [m for m in mailer.SENT if email.lower() in m["to"].lower()]
+
+
+def code_for(email):
+    """The last confirmation code emailed to an address."""
+    import re
+    for m in reversed(mails_to(email)):
+        found = re.search(r"Tu código es (\d{6})", m["subject"])
+        if found:
+            return found.group(1)
+    raise AssertionError(f"no code was emailed to {email}")
+
+
+def confirm(c, started, email):
+    """Write the emailed code of a pending confirmation ({verify: id} from the API)."""
+    r = c.post("/api/web/verify", json={"id": started["verify"], "code": code_for(email)})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
 def signup(c, email="laura@familia.test", name="Laura", family="Familia García", code="", password="secreto-largo"):
     r = c.post("/api/web/signup", json={"plan": "yearly", "name": name, "email": email, "password": password,
                                          "family": family, "code": code})
     assert r.status_code == 200, r.text
+    assert r.json()["email"] == email
+    assert confirm(c, r.json(), email)["signedIn"]
     return c.get("/api/me").json()
 
 

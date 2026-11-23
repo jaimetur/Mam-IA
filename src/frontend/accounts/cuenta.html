@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
   <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
   <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
@@ -22,9 +22,17 @@
       <h1 id="hello">Tu cuenta</h1>
       <form id="fp" autocomplete="on">
         <label class="field"><span>Nombre</span><input type="text" name="name" maxlength="60" required></label>
-        <label class="field"><span>Correo electrónico (con él entras)</span><input type="email" name="email" required></label>
         <p class="msg" id="mp" hidden role="status"></p>
         <div class="btns"><button class="btn" type="submit">Guardar</button></div>
+      </form>
+      <div class="field"><span>Correo electrónico (con él entras y a él te llegan los avisos)</span>
+        <p style="margin:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b id="myemail"></b>
+          <button class="linkbtn" type="button" id="chemail">Cambiar</button></p></div>
+      <form id="fe" autocomplete="off" hidden>
+        <label class="field"><span>Correo nuevo (te enviaremos un código para confirmarlo)</span><input type="email" name="email" autocomplete="email" required></label>
+        <label class="field"><span>Tu contraseña</span><input type="password" name="password" autocomplete="current-password" required></label>
+        <p class="msg" id="mx" hidden role="alert"></p>
+        <div class="btns"><button class="btn pri" type="submit">Enviar el código</button><button class="btn" type="button" id="noemail">Cancelar</button></div>
       </form>
     </section>
 
@@ -82,7 +90,7 @@
       if (u.mustChange || M.q("cambiar")) { $("must").hidden = false; $("cur").hidden = true; $("back").hidden = true; }
       else { $("who").hidden = false; $("sub").hidden = false; $("danger").hidden = false; }
       $("hello").textContent = "Hola, " + u.name.split(" ")[0];
-      $("fp").name.value = u.name; $("fp").email.value = u.email;
+      $("fp").name.value = u.name; $("myemail").textContent = u.email;
       // subscription
       const kv = [];
       const plan = { monthly: "Mensual (2,50 €/mes)", yearly: "Anual (25 €/año)" };
@@ -125,8 +133,23 @@
 
     $("fp").addEventListener("submit", async (e) => {
       e.preventDefault();
-      try { await M.api("/api/me", { method: "PUT", body: { name: e.target.name.value, email: e.target.email.value } }); M.msg($("mp"), "Guardado", "ok"); }
+      try { await M.api("/api/me", { method: "PUT", body: { name: e.target.name.value } }); M.msg($("mp"), "Guardado", "ok"); }
       catch (err) { M.msg($("mp"), err.message); }
+    });
+    $("chemail").addEventListener("click", () => { $("fe").hidden = false; $("fe").email.focus(); });
+    $("noemail").addEventListener("click", () => { $("fe").reset(); $("fe").hidden = true; M.msg($("mx"), ""); });
+    $("fe").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target, b = f.querySelector("button[type=submit]");
+      M.msg($("mx"), ""); M.busy(b, true, "Enviando…");
+      try {
+        const r = await M.api("/api/me/email", { method: "POST", body: { email: f.email.value.trim(), password: f.password.value } });
+        const done = await M.askCode(f, r);
+        M.busy(b, false);
+        if (!done) return;
+        $("myemail").textContent = done.user.email; f.reset(); f.hidden = true;
+        M.msg($("mp"), "Correo cambiado: desde ahora entras con " + done.user.email + ".", "ok");
+      } catch (err) { M.msg($("mx"), err.message); M.busy(b, false); }
     });
     $("fw").addEventListener("submit", async (e) => {
       e.preventDefault();

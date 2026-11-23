@@ -1,4 +1,4 @@
-// Más (every section) and Ajustes (look, reminders, copies, account, about).
+// Más (every section) and Ajustes (look, reminders on the device and by email, copies, account, about).
 import * as S from "../store.js";
 import { api } from "../api.js";
 import { html, icon, on, toast, confirmSheet } from "../ui.js";
@@ -50,6 +50,13 @@ export function render(root) {
           <div class="btns"><button class="btn pri" type="button" data-notify>${icon("bell-ring", "sm")}Activar los avisos</button></div>`
         : html`<p class="muted" style="margin:0">Este navegador no puede mostrar avisos. En iPhone, añade Mam-IA a la pantalla de inicio (Compartir → Añadir a pantalla de inicio) y ábrela desde ahí. En Android, instala la app.</p>`}
     </section>
+    <section class="card"><h2>Avisos por correo</h2>
+      <p class="muted" style="margin:0">Te llegan a ${me.email} (lo cambias en Tu cuenta).</p>
+      <label class="switch"><span>Recordatorios de planes y tareas<span class="sub" style="display:block;font-weight:400;font-size:13px;color:var(--ink2)">Cuando toca el aviso de algo tuyo o de toda la familia</span></span>
+        <input type="checkbox" data-mail="mailReminders" ${me.mailReminders !== false ? "checked" : ""}></label>
+      <label class="switch"><span>Resumen del día<span class="sub" style="display:block;font-weight:400;font-size:13px;color:var(--ink2)">Cada mañana a partir de las 7: planes, tareas, pendientes y menú</span></span>
+        <input type="checkbox" data-mail="mailDigest" ${me.mailDigest ? "checked" : ""}></label>
+    </section>
     <section class="card"><h2>Copia de seguridad</h2>
       <p class="muted" style="margin:0">Descarga todos los datos de la familia en un archivo. El servidor además hace una copia cada noche.</p>
       <div class="btns"><button class="btn" type="button" data-export>${icon("download", "sm")}Descargar una copia</button>
@@ -93,6 +100,14 @@ export function bind(root, rerender) {
   on(root, "click", "[data-accent]", (el) => { saveLook({ accent: el.dataset.accent }); rerender(); });
   on(root, "click", "[data-notify]", () => askNotifications().then(rerender));
   on(root, "click", "[data-test]", () => testNotification());
+  on(root, "change", "[data-mail]", async (el) => {
+    const key = el.dataset.mail, value = el.checked;
+    try {
+      const r = await api("/api/me", { method: "PUT", body: { [key]: value } });
+      Object.assign(ctx.me, r.user);
+      toast(value ? "Te los enviaremos por correo" : "Ya no te los enviaremos por correo");
+    } catch (e) { el.checked = !value; toast(e.message, { error: true }); }
+  });
   on(root, "click", "[data-export]", () => exportCopy());
   on(root, "click", "[data-legacy]", async () => { const n = importOld(); toast(n ? `Traídos ${n} datos de la versión anterior` : "No había nada que traer"); rerender(); });
   on(root, "change", "[data-import]", async (el) => {

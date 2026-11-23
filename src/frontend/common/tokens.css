@@ -62,3 +62,8 @@
 
 /* icons from /static/common/icons.svg: <svg class="ic"><use href="/static/common/icons.svg#i-house"/></svg> */
 .ic { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* on the phone, pages that never move beyond their edges: no rubber band past the top or the bottom, no sideways
+   scroll (the viewport also has maximum-scale=1, so iOS does not zoom in when a field is touched) */
+html, body { overscroll-behavior: none; }
+body { overflow-x: clip; }

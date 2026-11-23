@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS users (
   must_change INTEGER NOT NULL DEFAULT 0,
   theme TEXT NOT NULL DEFAULT 'auto',
   accent TEXT NOT NULL DEFAULT 'rosa',
+  mail_reminders INTEGER NOT NULL DEFAULT 1,
+  mail_digest INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   last_seen TEXT
 );
@@ -104,7 +106,13 @@ CREATE TABLE IF NOT EXISTS pending_signups (
 );
 CREATE TABLE IF NOT EXISTS lapses (
   family_id INTEGER PRIMARY KEY REFERENCES families(id) ON DELETE CASCADE,
-  lapsed_at TEXT NOT NULL
+  lapsed_at TEXT NOT NULL,
+  notified INTEGER NOT NULL DEFAULT 0
+);
+-- automatic emails already sent once (subscription notices, daily summaries…): key → when
+CREATE TABLE IF NOT EXISTS mail_sent (
+  key TEXT PRIMARY KEY,
+  sent_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
@@ -115,6 +123,13 @@ CREATE TABLE IF NOT EXISTS counters (
   value INTEGER NOT NULL
 );
 """
+
+# columns added after a database was made: (table, column, definition), added when missing
+MIGRATIONS = (
+    ("users", "mail_reminders", "INTEGER NOT NULL DEFAULT 1"),
+    ("users", "mail_digest", "INTEGER NOT NULL DEFAULT 0"),
+    ("lapses", "notified", "INTEGER NOT NULL DEFAULT 0"),
+)
 
 
 def now_iso() -> str:
@@ -160,6 +175,9 @@ def init_db() -> None:
     try:
         con.execute("PRAGMA journal_mode=WAL")
         con.executescript(SCHEMA)
+        for table, column, ddl in MIGRATIONS:
+            if column not in {r["name"] for r in con.execute(f"PRAGMA table_info({table})")}:
+                con.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
     finally:
         con.close()
 

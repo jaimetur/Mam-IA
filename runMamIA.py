@@ -2,7 +2,8 @@
 
 The data goes to ./data-dev (not in Git). With an empty database it creates the administrator account
 admin@mamia.local with the password «mamia-admin» (asked to be changed on entering). New families can sign up without
-paying (OPEN_SIGNUP), since Stripe is not configured locally.
+paying (OPEN_SIGNUP), since Stripe is not configured locally. Emails are not sent: they are written to the console
+(SMTP_HOST=log), sign-up codes included.
 """
 
 from __future__ import annotations
@@ -22,6 +23,8 @@ DEV_DEFAULTS = {
     "MAMIA_ADMIN_EMAIL": "admin@mamia.local",
     "MAMIA_ADMIN_PASSWORD": "mamia-admin",
     "MAMIA_ADMIN_NAME": "Administración",
+    "SMTP_HOST": "log",
+    "SMTP_FROM": "mamia@mamia.local",
 }
 
 
@@ -44,6 +47,7 @@ def main() -> None:
     except ImportError:
         raise SystemExit("Faltan las dependencias del servidor: pip install -e \".[test]\" en el entorno del proyecto.")
     url = f"http://{'127.0.0.1' if args.host == '0.0.0.0' else args.host}:{args.port}"
+    os.environ.setdefault("PUBLIC_URL", url)   # the links in the emails
     print(f"Mam-IA está disponible en {url}  (datos en {os.environ['DATA_DIR']})")
     print(f"Administración: {os.environ['MAMIA_ADMIN_EMAIL']} · contraseña inicial «{os.environ['MAMIA_ADMIN_PASSWORD']}»")
     print("Pulsa Ctrl+C para detener el servidor.")

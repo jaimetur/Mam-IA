@@ -30,12 +30,16 @@ Todas las fechas usan formato `YYYY-MM-DD`.
 - **Administración** del servidor (`/admin`): familias y su acceso, dar acceso gratis, códigos de promoción, Stripe y copias de seguridad.
 - Aspecto: modo claro, oscuro o automático y 4 colores (rosa, lavanda, menta y coral). Logo nuevo.
 - Copia de seguridad: descargar e importar los datos de la familia, y copia automática del servidor cada noche (se guardan 30).
+- **Correo obligatorio y confirmado al darse de alta**: cada cuenta nueva confirma su dirección con un código de 6 cifras (vale 30 minutos, 5 intentos, se puede pedir otro). También al unirse a una familia con un enlace que no se envió a ese correo, y al cambiar el correo de la cuenta (con aviso a la dirección anterior).
+- **Correos automáticos**, como en BodyLens: recordatorios de planes y tareas a quien le tocan (con «Marcar como hecha» en las tareas), resumen del día cada mañana (opcional), bienvenida, alguien se une a la familia, te quitan de ella o te la pasan, cambio de contraseña, cuenta o familia borrada, aviso a la administración de cada familia nueva, y avisos de la suscripción (el acceso gratis termina en 7 días y mañana, la familia pasa a solo lectura, ha fallado un cobro). Cada correo automático lleva un enlace para dejar de recibirlo, y en Ajustes → Avisos por correo se eligen.
 
 #### 🚀 Mejoras:
 - `tools/CreateUpdateRelease.py` pone la versión también en `pyproject.toml` y en el `versionName` de Android, y la caché del service worker está ahora en `src/frontend/app/sw.js`.
 - GitHub Actions pasa los tests y publica la imagen `jaimetur/mam-ia` con cada push (`:main`, y `:X.Y.Z` + `:latest` en las ramas de versión).
 - Las fuentes y los iconos se sirven desde el propio servidor (sin Google Fonts ni CDN): más privacidad y funcionan sin conexión.
-- `runMamIA.py` levanta el servidor completo en local con datos de desarrollo.
+- `runMamIA.py` levanta el servidor completo en local con datos de desarrollo; los correos se escriben en la consola (`SMTP_HOST=log`).
+- Administración → Correo: el servidor SMTP se configura desde la web (manda sobre el `.env`; la contraseña se guarda cifrada) y se comprueba con un correo de prueba.
+- La pantalla de entrar tiene un botón «Página de inicio» (en el móvil, «Web») para volver a la web, como en BodyLens; no aparece dentro de la app de Android, que no tiene landing.
 
 #### 🐛 Correcciones:
 - La semana de la agenda ponía cada evento un día más tarde en España, y «hoy» cambiaba a medianoche en hora UTC: ahora todas las fechas son locales.
@@ -45,6 +49,7 @@ Todas las fechas usan formato `YYYY-MM-DD`.
 - Las invitaciones se marcaban como «Enviado» sin enviar nada: ahora llega un correo o un enlace para compartir.
 - Los choques de la agenda solo se buscaban entre planes seguidos.
 - La PWA antigua guardaba la página para siempre: un service worker de retirada la limpia y carga la app nueva.
+- En el iPhone, al tocar un campo la página se ampliaba y se podía arrastrar más allá de los bordes de la pantalla: ya no hace zoom ni rebota.
 
 #### 📚 Documentación:
 - README nuevo, guía de despliegue en el NAS (`docs/DEPLOYMENT.md`) y de la app de Android (`docs/ANDROID.md`).

@@ -15,7 +15,10 @@ En el NAS, crea la carpeta del stack (por ejemplo `/volume1/docker/stacks/mamia`
     `MAMIA_ADMIN_PASSWORD` provisional (se pide cambiarla al entrar la primera vez).
   - `HOST_DATA_DIR`, `PUID` y `PGID` (un usuario o grupo con permiso de escritura en la carpeta de datos; en Synology
     `1034:65544` = docker_limited:docker_users).
-  - El correo saliente (`SMTP_*`): hace falta para las invitaciones por correo y para recuperar la contraseña.
+  - El correo saliente (`SMTP_*`, o después en Administración → Correo, que manda sobre el `.env`): **sin él no se
+    pueden crear cuentas**, porque cada alta confirma su dirección con un código de 6 cifras. También envía las
+    invitaciones, las contraseñas olvidadas, los recordatorios y el resumen del día, y los avisos de la cuenta y de
+    la suscripción. «Enviarme un correo de prueba» en Administración → Correo lo comprueba.
   - `OPEN_SIGNUP` vacío en el servidor público (las familias entran pagando, con un código o por invitación).
 
 ## 2. Arrancar

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <title>Crear cuenta · Mam-IA</title>
   <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
   <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
@@ -24,7 +24,7 @@
         </div>
         <label class="field"><span>Tu nombre</span><input type="text" name="name" autocomplete="given-name" maxlength="60" required placeholder="Laura"></label>
         <label class="field"><span>Nombre de la familia</span><input type="text" name="family" maxlength="60" placeholder="Familia García"></label>
-        <label class="field"><span>Correo electrónico</span><input type="email" name="email" autocomplete="email" required></label>
+        <label class="field"><span>Correo electrónico (te enviaremos un código para confirmarlo)</span><input type="email" name="email" autocomplete="email" required></label>
         <label class="field"><span>Contraseña (8 caracteres o más)</span><input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
         <label class="field"><span>Código de promoción (opcional)</span><input type="text" name="code" maxlength="60" autocapitalize="characters" placeholder="LANZAMIENTO"></label>
         <label class="small" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" name="terms" required style="margin-top:3px">
@@ -74,7 +74,10 @@
         const r = await M.api("/api/web/signup", { method: "POST", body: {
           plan: f.plan.value, name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value,
           family: f.family.value.trim(), code: f.code.value.trim() } });
-        if (r.url) location.href = r.url; else location.href = "/app";
+        // the email has to be a real one: a code goes to it, and the family is made (or the payment opens) with it
+        const done = await M.askCode(f, r);
+        if (!done) { M.busy(go, false); f.email.focus(); return; }
+        location.href = done.url || "/app";
       } catch (err) { M.msg(m, err.message); M.busy(go, false); }
     });
   </script>

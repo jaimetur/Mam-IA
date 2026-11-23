@@ -53,10 +53,13 @@ def test_push_key_subscribe_and_send(client, family, monkeypatch):
     now = datetime.now(TZ).replace(second=0, microsecond=0)
     start = (now + timedelta(minutes=30)).strftime("%Y-%m-%dT%H:%M")
     client.post("/api/sync", json={"changes": [{"c": "events", "id": "e1", "data": {"title": "Pediatra", "start": start, "remind": 30}}]})
+    from app.core import mailer
     from app.push.routes import due_now
-    assert due_now(now - timedelta(minutes=1), now + timedelta(minutes=1)) == 1
+    mailer.SENT.clear()
+    assert due_now(now - timedelta(minutes=1), now + timedelta(minutes=1)) == 2       # the phone and the email
     assert due_now(now - timedelta(minutes=1), now + timedelta(minutes=1)) == 0       # never twice
     assert sent[0][0] == sub["endpoint"] and "Pediatra" in sent[0][1]
+    assert [m["to"] for m in mailer.SENT] == ["laura@familia.test"] and "Pediatra" in mailer.SENT[0]["subject"]
 
 
 def test_pages(client, server):

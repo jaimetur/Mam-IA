@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
   <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
   <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
@@ -46,7 +46,11 @@
       const b = f.querySelector("button"), m = document.getElementById("m");
       M.msg(m, ""); M.busy(b, true);
       try {
-        await M.api("/api/invites/accept", { method: "POST", body: { code, name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value } });
+        const r = await M.api("/api/invites/accept", { method: "POST", body: { code, name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value } });
+        if (r.verify) {   // the invitation was not sent to this address: it is confirmed with a code
+          const done = await M.askCode(f, r);
+          if (!done) { M.busy(b, false); f.email.focus(); return; }
+        }
         location.href = "/app";
       } catch (err) { M.msg(m, err.message); M.busy(b, false); }
     });

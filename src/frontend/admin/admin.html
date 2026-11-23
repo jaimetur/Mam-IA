@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
   <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
   <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
@@ -35,6 +35,27 @@
     </section>
 
     <section class="panel">
+      <h2>Correo</h2>
+      <p class="small" style="margin:0">Con él se envían los códigos para crear cuentas, las invitaciones, las contraseñas olvidadas, los
+        recordatorios, el resumen del día y los avisos de la suscripción. Lo que guardes aquí manda sobre las variables SMTP_* del .env.</p>
+      <dl class="kv" id="mk"></dl>
+      <form id="fm" autocomplete="off">
+        <label class="field"><span>Servidor SMTP</span><input type="text" name="host" placeholder="mail.jtgcloud.com"></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <label class="field"><span>Seguridad</span><select name="security"><option value="ssl">SSL (465)</option><option value="starttls">STARTTLS (587)</option><option value="none">Ninguna (25)</option></select></label>
+          <label class="field"><span>Puerto</span><input type="number" name="port" min="1" max="65535" value="465"></label>
+        </div>
+        <label class="field"><span>Usuario</span><input type="text" name="username" placeholder="mamia@jtgcloud.com" autocomplete="off"></label>
+        <label class="field"><span>Contraseña (vacío: se mantiene la guardada)</span><input type="password" name="password" autocomplete="new-password"></label>
+        <label class="field"><span>Remitente</span><input type="email" name="from_address" placeholder="mamia@jtgcloud.com"></label>
+        <label class="field"><span>Nombre del remitente</span><input type="text" name="from_name" placeholder="Mam-IA"></label>
+        <div class="btns"><button class="btn pri" type="submit">Guardar</button><button class="btn" type="button" id="testmail">Enviarme un correo de prueba</button>
+          <button class="btn danger" type="button" id="rmmail">Usar el .env</button></div>
+        <p class="msg" id="mm" hidden></p>
+      </form>
+    </section>
+
+    <section class="panel">
       <h2>Pagos con Stripe</h2>
       <dl class="kv" id="st"></dl>
       <form id="fs" autocomplete="off">
@@ -54,7 +75,7 @@
     async function overview() {
       const o = await M.api("/api/admin/overview");
       kv($("ov"), [["Versión", `${o.version.version || "—"} (${(o.version.build || "").slice(0, 7)})`], ["Familias", o.families], ["Cuentas", o.accounts],
-        ["Dispositivos con avisos", o.pushDevices], ["Correo saliente", o.mail ? "Configurado" : "Sin configurar (SMTP_* en el .env)"],
+        ["Dispositivos con avisos", o.pushDevices], ["Correo saliente", o.mail ? "Configurado" : "Sin configurar (sección Correo)"],
         ["Stripe", o.stripe ? "Configurado" : "Sin configurar"], ["Última copia", o.backups[0] ? o.backups[0].name : "Ninguna todavía"]]);
     }
 
@@ -147,11 +168,38 @@
     $("rmstripe").addEventListener("click", async () => {
       try { await M.api("/api/admin/stripe", { method: "PUT", body: { remove: true } }); stripe(); } catch (e) { M.msg($("ms"), e.message); }
     });
+    async function mail() {
+      const s = await M.api("/api/admin/mail");
+      kv($("mk"), [["Estado", s.logOnly ? "Solo al registro del servidor (SMTP_HOST=log): no se envía nada" : s.configured ? "Configurado" : "Sin configurar: no se pueden crear cuentas"],
+        ["Contraseña", s.hasPassword ? "Guardada" : "Sin contraseña"]]);
+      const f = $("fm");
+      for (const k of ["host", "port", "security", "username", "from_address", "from_name"]) f[k].value = s[k] ?? "";
+      f.password.value = "";
+    }
+    $("fm").security.addEventListener("change", (e) => { $("fm").port.value = { ssl: 465, starttls: 587, none: 25 }[e.target.value]; });
+    $("fm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      try {
+        await M.api("/api/admin/mail", { method: "PUT", body: { host: f.host.value.trim(), port: Number(f.port.value) || 465, security: f.security.value,
+          username: f.username.value.trim(), password: f.password.value, from_address: f.from_address.value.trim(), from_name: f.from_name.value.trim() } });
+        M.msg($("mm"), "Guardado. Pulsa «Enviarme un correo de prueba» para comprobarlo.", "ok"); mail(); overview();
+      } catch (err) { M.msg($("mm"), err.message); }
+    });
+    $("testmail").addEventListener("click", async () => {
+      M.msg($("mm"), "Enviando…", "info");
+      try { const r = await M.api("/api/admin/test-email", { method: "POST", body: {} }); M.msg($("mm"), "Enviado a " + r.to + ". Revisa tu bandeja de entrada (y el spam).", "ok"); }
+      catch (err) { M.msg($("mm"), err.message); }
+    });
+    $("rmmail").addEventListener("click", async () => {
+      try { await M.api("/api/admin/mail", { method: "PUT", body: { remove: true } }); M.msg($("mm"), "Ahora se usan las variables SMTP_* del .env.", "ok"); mail(); overview(); }
+      catch (err) { M.msg($("mm"), err.message); }
+    });
     $("bk").addEventListener("click", async () => {
       try { const r = await M.api("/api/admin/backup", { method: "POST" }); M.msg($("mo"), "Copia hecha: " + r.name, "ok"); overview(); }
       catch (e) { M.msg($("mo"), e.message); }
     });
-    Promise.all([overview(), families(), codes(), stripe()]).catch((e) => M.msg($("mo"), e.message));
+    Promise.all([overview(), families(), codes(), mail(), stripe()]).catch((e) => M.msg($("mo"), e.message));
   </script>
 </body>
 </html>

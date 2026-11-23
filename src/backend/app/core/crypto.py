@@ -60,3 +60,15 @@ def decrypt(token: str | None):
 
 def new_token(nbytes: int = 24) -> str:
     return secrets.token_urlsafe(nbytes)
+
+
+def sign(text: str) -> str:
+    """A short signature of `text` made with the server's key (links in emails that must not be forged)."""
+    import hmac
+    mac = hmac.new(hashlib.sha256(b"mamia-sign|" + _key()).digest(), text.encode(), hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(mac[:18]).decode().rstrip("=")
+
+
+def signed(text: str, sig: str) -> bool:
+    import hmac
+    return hmac.compare_digest(sign(text), sig or "")

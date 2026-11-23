@@ -18,6 +18,7 @@ from app.core.deps import CSRF_HEADER
 from app.data import routes as data_routes
 from app.families import routes as families_routes
 from app.families import service as families
+from app.notices import routes as notices_routes
 from app.push import routes as push_routes
 from app.web import routes as web_routes
 
@@ -99,5 +100,5 @@ def healthz():
 
 # the order matters: the pages and static files go last
 for r in (accounts_routes.router, families_routes.router, data_routes.router, push_routes.router, billing_web.router,
-          admin_routes.router, web_routes.router):
+          admin_routes.router, notices_routes.router, web_routes.router):
     app.include_router(r)

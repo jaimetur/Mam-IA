@@ -46,11 +46,13 @@ class User:
     must_change: bool
     theme: str
     accent: str
+    mail_reminders: bool = True     # reminders of events and tasks by email
+    mail_digest: bool = False       # the summary of the day by email, every morning
 
     @classmethod
     def from_row(cls, r: sqlite3.Row) -> "User":
         return cls(r["id"], r["email"], r["name"], r["family_id"], r["member_id"], r["role"], bool(r["is_admin"]),
-                   bool(r["must_change"]), r["theme"], r["accent"])
+                   bool(r["must_change"]), r["theme"], r["accent"], bool(r["mail_reminders"]), bool(r["mail_digest"]))
 
     @property
     def family_admin(self) -> bool:
@@ -59,7 +61,8 @@ class User:
     def public(self) -> dict:
         return {"id": self.id, "email": self.email, "name": self.name, "familyId": self.family_id,
                 "memberId": self.member_id, "role": self.role, "isAdmin": self.is_admin,
-                "mustChange": self.must_change, "theme": self.theme, "accent": self.accent}
+                "mustChange": self.must_change, "theme": self.theme, "accent": self.accent,
+                "mailReminders": self.mail_reminders, "mailDigest": self.mail_digest}
 
 
 def _utcnow() -> datetime:
@@ -114,7 +117,8 @@ def set_password(con: sqlite3.Connection, user_id: int, password: str, keep_sess
 
 
 def update_profile(con: sqlite3.Connection, user: User, name: str | None = None, theme: str | None = None,
-                   accent: str | None = None, email: str | None = None) -> None:
+                   accent: str | None = None, email: str | None = None, mail_reminders: bool | None = None,
+                   mail_digest: bool | None = None) -> None:
     if name is not None:
         name = clean_name(name)
         con.execute("UPDATE users SET name=? WHERE id=?", (name, user.id))
@@ -132,6 +136,10 @@ def update_profile(con: sqlite3.Connection, user: User, name: str | None = None,
         if other and other.id != user.id:
             raise UserError("Ya hay otra cuenta con ese correo.")
         con.execute("UPDATE users SET email=? WHERE id=?", (email, user.id))
+    if mail_reminders is not None:
+        con.execute("UPDATE users SET mail_reminders=? WHERE id=?", (int(mail_reminders), user.id))
+    if mail_digest is not None:
+        con.execute("UPDATE users SET mail_digest=? WHERE id=?", (int(mail_digest), user.id))
 
 
 # ---------- sessions ----------

@@ -1,5 +1,5 @@
 """Signing up, in and out, the account, passwords, the server administrator and the app's header against CSRF."""
-from conftest import signup
+from conftest import mails_to, signup
 
 
 def test_signup_makes_family_member_and_lists(client):
@@ -50,6 +50,7 @@ def test_profile_and_password_change(client, family):
     assert client.put("/api/me", json={"theme": "neón"}).status_code == 400
     assert client.post("/api/me/password", json={"current": "mal", "new": "nueva-clave-1"}).status_code == 400
     assert client.post("/api/me/password", json={"current": "secreto-largo", "new": "nueva-clave-1"}).status_code == 200
+    assert "Tu contraseña ha cambiado" in mails_to("laura@familia.test")[-1]["subject"]
     client.post("/api/logout")
     assert client.post("/api/login", json={"email": "laura@familia.test", "password": "nueva-clave-1"}).status_code == 200
 
@@ -66,7 +67,13 @@ def test_password_reset_with_token(client, family):
     assert client.post("/api/password/reset", json={"token": token, "password": "otra-clave-3"}).status_code == 400
 
 
-def test_forgot_password_needs_mail(client, family):
+def test_forgot_password_emails_a_link(client, family, monkeypatch):
+    assert client.post("/api/password/forgot", json={"email": "laura@familia.test"}).status_code == 200
+    assert client.post("/api/password/forgot", json={"email": "nadie@familia.test"}).status_code == 200   # same answer
+    m = mails_to("laura@familia.test")[-1]
+    assert "Cambia tu contraseña" in m["subject"] and "https://mamia.test/recuperar?t=" in m["text"]
+    assert not mails_to("nadie@familia.test")
+    monkeypatch.setenv("SMTP_HOST", "")
     assert client.post("/api/password/forgot", json={"email": "laura@familia.test"}).status_code == 503
 
 

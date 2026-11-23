@@ -14,9 +14,11 @@ from app.accounts.users import User, UserError
 from app.billing import codes, stripe
 from app.billing.status import save_sub, status
 from app.core import config, crypto, db
-from app.core.deps import admin_user, base_url, family_admin, set_session_cookie, signed_in_user
-from app.core.security import password_problem
+from app.accounts import verify
+from app.core.deps import admin_user, base_url, client_ip, family_admin, set_session_cookie, signed_in_user
+from app.core.security import mail_throttle, password_problem
 from app.families import service as families
+from app.notices import emails
 
 router = APIRouter()
 
@@ -52,41 +54,121 @@ def _check(body: SignupIn) -> None:
     with db.ro() as con:
         if users.get_by_email(con, body.email):
             raise UserError("Ya hay una cuenta con ese correo: entra con ella.")
+    if body.code.strip() and not codes.valid(body.code):
+        raise UserError("Ese código no es válido o ya no quedan plazas.")
+
+
+def _free(code: str) -> bool:
+    """Made at once, without paying: with a promotion code, or on an open server without Stripe."""
+    return bool(code.strip()) or (config.settings.open_signup and not stripe.configured())
 
 
 @router.post("/api/web/signup")
-def signup(body: SignupIn, request: Request, response: Response):
-    """Check the details and return the address of Stripe's checkout page (the family is made when the payment is
-    confirmed). With a valid code, or on an open server, the family is made at once and the person is signed in."""
+def signup(body: SignupIn, request: Request):
+    """Check the details and email a code to confirm the address: the family is made (or the payment starts) once
+    the code is written in /api/web/verify. An email is required, and it has to be a real one."""
+    if mail_throttle.blocked(f"code|{client_ip(request)}") or mail_throttle.blocked(f"code|{body.email.strip().lower()}"):
+        raise HTTPException(429, "Ya te hemos enviado varios códigos. Espera un rato y revisa tu bandeja de entrada.")
     try:
         _check(body)
-        if body.code.strip() or (config.settings.open_signup and not stripe.configured()):
-            with db.tx() as con:
-                u = families.create_family(con, body.family, body.name, body.email, body.password)
-                if body.code.strip():
-                    c = codes.use(con, body.code)
-                    if c is None:
-                        raise UserError("Ese código no es válido o ya no quedan plazas.")
-                    codes.grant(con, u.family_id, codes.norm(c["code"]), codes.until_ms(c["duration"]))
-                token = users.create_session(con, u.id)
-            set_session_cookie(response, token)
-            return {"ok": True, "signedIn": True}
+        if not _free(body.code):
+            if not stripe.configured():
+                raise HTTPException(503, "Las altas con pago todavía no están disponibles. Si tienes un código, escríbelo.")
+            if body.plan not in stripe.PLANS:
+                raise UserError("Ese plan no existe.")
+        data = {"name": " ".join(body.name.split()), "pw": crypto.encrypt(body.password), "family": body.family,
+                "plan": body.plan, "code": body.code.strip()}
+        with db.tx() as con:
+            pid, code = verify.start(con, "signup", body.email.strip(), data)
+            rec = verify.load(con, pid)
+        mail_throttle.fail(f"code|{client_ip(request)}")
+        mail_throttle.fail(f"code|{body.email.strip().lower()}")
+        verify.send(pid, rec, code)
     except UserError as e:
         raise HTTPException(400, str(e))
-    if not stripe.configured():
-        raise HTTPException(503, "Las altas con pago todavía no están disponibles. Si tienes un código, escríbelo.")
-    if body.plan not in stripe.PLANS:
-        raise HTTPException(400, "Ese plan no existe.")
-    pid = crypto.new_token(18)
-    data = {"name": " ".join(body.name.split()), "email": body.email.strip(), "pw": crypto.encrypt(body.password),
-            "family": body.family, "plan": body.plan}
-    with db.tx() as con:
-        con.execute("DELETE FROM pending_signups WHERE created_at < datetime('now','-2 days')")
-        con.execute("INSERT INTO pending_signups(id, data, created_at) VALUES(?,?,datetime('now'))", (pid, json.dumps(data)))
+    return verify.public(pid, rec)
+
+
+def _make_family(con, d: dict) -> User:
+    """The family of a confirmed sign-up (with the free access of its code, if it has one)."""
+    u = families.create_family(con, d.get("family"), d["name"], d["email"], crypto.decrypt(d["pw"]))
+    if d.get("code"):
+        c = codes.use(con, d["code"])
+        if c is None:
+            raise UserError("Ese código ya no es válido o ya no quedan plazas. Vuelve a empezar sin código o con otro.")
+        codes.grant(con, u.family_id, codes.norm(c["code"]), codes.until_ms(c["duration"]))
+    return u
+
+
+def _welcome(u: User, how: str) -> None:
+    """The emails of a new family: welcome to its owner, and a notice to the server's administrators."""
+    with db.ro() as con:
+        fam = families.get_family(con, u.family_id)
+        admins = [users.User.from_row(r) for r in con.execute("SELECT * FROM users WHERE is_admin=1")]
+    emails.welcome_owner(u, fam["name"])
+    emails.new_family_to_admins(admins, u, fam["name"], how)
+
+
+class VerifyIn(BaseModel):
+    id: str
+    code: str = ""
+
+
+@router.post("/api/web/verify")
+def verify_code(body: VerifyIn, request: Request, response: Response):
+    """The code of the email: makes the family (or opens the payment), the account of someone joining a family, or the
+    new address of an account."""
     try:
-        return {"url": stripe.checkout(body.plan, pid, data["email"], base_url(request))}
-    except stripe.StripeError as e:
-        raise HTTPException(502, str(e))
+        d = verify.check(body.id, body.code)
+        kind = d["kind"]
+        if kind == "signup" and not _free(d.get("code", "")):
+            if not stripe.configured():
+                raise HTTPException(503, "Las altas con pago todavía no están disponibles. Si tienes un código, escríbelo.")
+            try:   # the pending sign-up waits for the payment (see _family_for)
+                return {"url": stripe.checkout(d.get("plan") or "yearly", body.id, d["email"], base_url(request))}
+            except stripe.StripeError as e:
+                raise HTTPException(502, str(e))
+        with db.tx() as con:
+            if kind == "signup":
+                u = _make_family(con, d)
+            elif kind == "join":
+                u = families.accept_invite(con, d["invite"], d["name"], d["email"], crypto.decrypt(d["pw"]))
+            elif kind == "email":
+                old = users.get_user(con, d["user"])
+                if old is None:
+                    raise UserError("Esa cuenta ya no existe.")
+                users.update_profile(con, old, email=d["email"])
+                u = users.get_user(con, old.id)
+            else:
+                raise UserError("Esa confirmación no es válida: vuelve a empezar.")
+            verify.forget(con, body.id)
+            token = users.create_session(con, u.id) if kind != "email" else None
+    except UserError as e:
+        raise HTTPException(400, str(e))
+    if kind == "signup":
+        _welcome(u, f"código {d['code'].upper()}" if d.get("code") else "alta libre (servidor sin pagos)")
+    elif kind == "join":
+        emails.member_joined(u)
+    else:
+        emails.email_changed(old.email, u)
+        return {"ok": True, "user": u.public()}
+    set_session_cookie(response, token)
+    return {"ok": True, "signedIn": True}
+
+
+class ResendIn(BaseModel):
+    id: str
+
+
+@router.post("/api/web/verify/resend")
+def resend_code(body: ResendIn):
+    try:
+        with db.tx() as con:
+            rec, code = verify.resend(con, body.id)
+        verify.send(body.id, rec, code)
+    except UserError as e:
+        raise HTTPException(400, str(e))
+    return verify.public(body.id, rec)
 
 
 def _family_for(session: dict) -> User | None:
@@ -113,10 +195,14 @@ def _family_for(session: dict) -> User | None:
         if not row:
             return None
         d = json.loads(row["data"])
+        if "check" in d and not d.get("verified"):   # the email was never confirmed
+            return None
         u = families.create_family(con, d.get("family"), d["name"], d["email"], crypto.decrypt(d["pw"]))
         save_sub(con, u.family_id, sub)
         con.execute("DELETE FROM pending_signups WHERE id=?", (meta.get("pending", ""),))
-        return u
+        made = u
+    _welcome(made, f"de pago, plan {'anual' if d.get('plan') == 'yearly' else 'mensual'}")
+    return made
 
 
 class CompleteIn(BaseModel):

@@ -14,6 +14,7 @@ from app.billing.status import cancel_for, summary
 from app.core import backup, db, mailer, version
 from app.core.deps import admin_user
 from app.families import service as families
+from app.notices import emails
 
 router = APIRouter()
 
@@ -73,12 +74,15 @@ def delete_family(family_id: int, u: User = Depends(admin_user)):
     if family_id == u.family_id:
         raise HTTPException(400, "Tu propia familia se borra desde Cuenta.")
     with db.tx() as con:
-        if not families.get_family(con, family_id):
+        f = families.get_family(con, family_id)
+        if not f:
             raise HTTPException(404, "Esa familia no existe.")
         if con.execute("SELECT 1 FROM users WHERE family_id=? AND is_admin=1", (family_id,)).fetchone():
             raise HTTPException(400, "Esa familia tiene una cuenta de administración del servidor.")
+        to = [r["email"] for r in con.execute("SELECT email FROM users WHERE family_id=?", (family_id,))]
         cancel_for(con, family_id)
         families.delete_family(con, family_id)
+    emails.family_deleted_by_admin(to, f["name"])
     return {"ok": True}
 
 

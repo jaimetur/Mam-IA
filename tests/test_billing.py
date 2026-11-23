@@ -4,7 +4,7 @@ import hmac
 import json
 import time
 
-from conftest import signup
+from conftest import confirm, mails_to, signup
 
 
 def test_launch_promo_gives_a_year_and_counts_places(client, monkeypatch):
@@ -72,7 +72,8 @@ def test_stripe_checkout_creates_the_family(client, server, monkeypatch):
         raise AssertionError(path)
     monkeypatch.setattr(stripe, "call", fake_call)
     r = client.post("/api/web/signup", json={"plan": "monthly", "name": "Ana", "email": "ana@x.test", "password": "secreto-largo", "family": "Los Ruiz"})
-    assert r.json()["url"] == "https://checkout.stripe.test/s"
+    assert not calls and "verify" in r.json()                       # first, the email is confirmed
+    assert confirm(client, r.json(), "ana@x.test")["url"] == "https://checkout.stripe.test/s"
     params = calls[0][2]
     assert params["line_items"][0]["price"] == "price_m" and params["subscription_data"]["trial_period_days"] == 7
     pending = params["metadata"]["pending"]
@@ -85,6 +86,7 @@ def test_stripe_checkout_creates_the_family(client, server, monkeypatch):
     assert client.post("/api/login", json={"email": "ana@x.test", "password": "secreto-largo"}).status_code == 200
     me = client.get("/api/me").json()
     assert me["family"]["name"] == "Los Ruiz"
+    assert any(m["subject"].endswith("Ya tenéis Mam-IA") for m in mails_to("ana@x.test"))
     assert me["billing"]["plan"] == "web" and me["billing"]["active"] and me["billing"]["method"] == "Visa ·4242"
     # a later cancellation from Stripe makes the family read-only
     sub2 = {**sub, "status": "canceled"}
