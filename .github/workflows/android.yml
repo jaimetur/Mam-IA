@@ -53,7 +53,9 @@ jobs:
         run: |
           # the SHA-256 of the signing certificate: always the same once the keystore is in the secrets
           # (tools/android-keystore.sh); without it each build has a new debug key and can't install over the last one
-          SHA=$(keytool -printcert -jarfile android/app/build/outputs/apk/release/app-release.apk | sed -n 's/.*SHA256: *//p' | head -1)
+          # apksigner reads the v2/v3 signatures of modern APKs (keytool -printcert only sees the old v1 one)
+          SIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          SHA=$("$SIGNER" verify --print-certs android/app/build/outputs/apk/release/app-release.apk | sed -n 's/.*certificate SHA-256 digest: *//p' | head -1)
           [ -n "$ANDROID_KEYSTORE_FILE" ] && KIND="release key" || KIND="DEBUG key (no keystore in the secrets)"
           echo "SIGNATURE=$KIND · SHA-256 $SHA" >> "$GITHUB_ENV"
           echo "::notice title=Android signature::$KIND · SHA-256 $SHA"

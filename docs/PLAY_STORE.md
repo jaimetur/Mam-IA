@@ -27,8 +27,11 @@ y un APK no se instala encima del anterior. El registro de GitHub Actions avisa 
 «Android signature» dice `release key` o `DEBUG key`, junto con la huella SHA-256. La huella también se puede ver así:
 
 ```bash
-keytool -printcert -jarfile mamia-android.apk
+apksigner verify --print-certs mamia-android.apk
 ```
+
+(`apksigner` viene con las build-tools del SDK de Android; `keytool -printcert -jarfile` no ve la firma v2 de los
+APK modernos.)
 
 ## 2. Compilar y publicar el APK
 
