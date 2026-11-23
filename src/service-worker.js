@@ -1,4 +1,4 @@
-const CACHE_NAME = "mam-ia-v1";
+const CACHE_NAME = "mam-ia-v0.1.0";
 const ASSETS = [
   "./",
   "./index.html",

@@ -33,6 +33,10 @@ Version funcional de interfaz moderna y responsive (desktop + movil) con:
 ```text
 Mam-IA/
   runMamIA.py
+  tools/
+    CreateUpdateRelease.py
+  tests/
+    test_create_update_release.py
   src/
     index.html
     styles.css
@@ -49,6 +53,34 @@ Mam-IA/
   .github/
     workflows/
       build_docker.yml
+```
+
+## Entorno virtual local
+
+La app no necesita paquetes externos: el lanzador y la herramienta de releases
+solo usan la biblioteca estandar de Python. El entorno virtual del proyecto es
+`.venv` (excluido de Git), creado con Python 3.12 (con Tk, para la ventana de la
+herramienta de releases):
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+```
+
+En PyCharm, selecciona `.venv/bin/python` como interprete del proyecto.
+
+Para que el bytecode (`.pyc`) se genere fuera del proyecto, como indica
+`sitecustomize.py`: con el Python de Homebrew, cuyo propio `sitecustomize`
+tiene prioridad, anade un archivo `.pth` al `site-packages` del entorno:
+
+```bash
+echo "import sys; sys.pycache_prefix = \"$HOME/development/python_cache/Mam-IA/pycache\"" > .venv/lib/python3.12/site-packages/mamia_pycache_prefix.pth
+```
+
+Tests:
+
+```bash
+.venv/bin/python -m unittest discover -s tests
 ```
 
 ## Ejecucion local rapida (sin Docker)
@@ -128,6 +160,22 @@ Secrets requeridos en GitHub:
 Imagen publicada:
 - `jaimetur/mam-ia:latest`
 - tags por rama y sha
+
+## Publicar una nueva release
+
+Ejecuta `tools/CreateUpdateRelease.py` con el interprete del proyecto
+(configuracion de ejecucion de PyCharm **CreateUpdateRelease**). La version y la
+fecha de la release actual salen de la primera cabecera `## Release:` de
+`CHANGELOG.md`.
+
+- **Update Current Release** reescribe esa cabecera y pone la misma version en
+  el nombre de la cache del service worker (`src/service-worker.js`).
+- **Create New Release** crea una rama con el nombre de la nueva version
+  (`X.Y.Z`), anade un bloque de release vacio al principio de `CHANGELOG.md`,
+  actualiza la version del service worker, y confirma y sube la rama a `origin`.
+
+Sin Tk pregunta en el terminal. Tambien acepta
+`--update VERSION FECHA` y `--create VERSION FECHA [--dirty commit|carry|discard]`.
 
 ## Configuracion familiar (UI)
 
