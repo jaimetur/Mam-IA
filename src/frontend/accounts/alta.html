@@ -39,6 +39,38 @@
   <script>
     const f = document.getElementById("f"), go = document.getElementById("go"), m = document.getElementById("m");
     let plans = { enabled: true, openSignup: false };
+    // in the Android app, with Google Play configured: the subscription is bought in Google Play (Play's rules)
+    const N = window.MamIANative && window.MamIANative.billingProducts ? window.MamIANative : null;
+    let playMode = false;
+    async function setupPlay() {
+      if (!N) return;
+      let cfg = null, P = [];
+      try { cfg = await M.api("/api/play/config"); } catch (e) { return; }
+      for (let i = 0; i < 10 && cfg.enabled && !P.length; i++) {   // Google Play answers a moment after the app opens
+        try { P = JSON.parse(N.billingProducts() || "[]"); } catch (e) { P = []; }
+        if (!P.length) await new Promise((r) => setTimeout(r, 300));
+      }
+      if (!cfg.enabled || !P.length) return;
+      playMode = true;
+      for (const x of P) {
+        const el = document.querySelector(`[data-p="${x.plan}"]`);
+        if (el) { el.firstChild.textContent = x.price + " "; el.setAttribute("data-noi18n", ""); }
+      }
+      const trial = (P.find((x) => x.trialDays) || {}).trialDays;
+      document.getElementById("how").textContent = "Pagas con tu cuenta de Google Play. La suscripción se gestiona y se cancela desde Google Play.";
+      if (trial) document.getElementById("lead").textContent = `Una sola suscripción para toda la familia. Los primeros ${trial} días son gratis y puedes cancelar cuando quieras.`;
+      mode();
+    }
+    /** Google Play's purchase screen; resolves with its purchase token (or throws). */
+    function buyInPlay(plan) {
+      return new Promise((resolve, reject) => {
+        window.miPurchase = (r) => {
+          if (r && r.token) resolve(r.token);
+          else reject(new Error(r && r.error === "cancel" ? "Has cancelado la compra." : (r && r.message) || "No se ha completado la compra."));
+        };
+        N.subscribe(plan);
+      });
+    }
     const plan = M.q("plan"); if (plan === "monthly" || plan === "yearly") f.plan.value = plan;
     if (M.q("code")) f.code.value = M.q("code");
     function mode() {
@@ -46,7 +78,7 @@
       const free = !!code || (!plans.enabled && plans.openSignup);
       document.getElementById("plans").hidden = free;
       document.getElementById("how").hidden = free;
-      go.textContent = free ? "Crear mi cuenta" : "Continuar al pago seguro";
+      go.textContent = free ? "Crear mi cuenta" : playMode ? "Continuar con Google Play" : "Continuar al pago seguro";
     }
     f.code.addEventListener("input", mode);
     M.api("/api/web/plans").then((p) => {
@@ -65,7 +97,26 @@
       box.textContent = `Oferta de lanzamiento: con el código ${p.code} tu familia tiene ${p.duration === "1y" ? "1 año" : "un tiempo"} gratis, sin tarjeta.` + (p.left != null ? ` Quedan ${p.left} plazas.` : "");
       box.hidden = false;
     }).catch(() => {});
+    /** After the email code: Google Play's purchase, then the family is made with it (it can be tried again). */
+    async function payInPlay(done) {
+      const box = document.createElement("div"), pm = document.createElement("p"), again = document.createElement("button");
+      box.className = "codestep"; pm.className = "msg info";
+      again.className = "btn pri"; again.type = "button"; again.textContent = "Volver a Google Play"; again.hidden = true;
+      box.append(pm, again); f.after(box);
+      const attempt = async () => {
+        again.hidden = true; M.msg(pm, "Abriendo Google Play…", "info");
+        try {
+          const token = await buyInPlay(done.plan || f.plan.value);
+          M.msg(pm, "Creando tu familia…", "info");
+          await M.api("/api/play/complete", { method: "POST", body: { pending: done.pending, token } });
+          location.href = "/app";
+        } catch (err) { M.msg(pm, err.message); again.hidden = false; }
+      };
+      again.addEventListener("click", attempt);
+      attempt();
+    }
     mode();
+    setupPlay();
     f.addEventListener("submit", async (e) => {
       e.preventDefault();
       M.msg(m, "");
@@ -73,10 +124,11 @@
       try {
         const r = await M.api("/api/web/signup", { method: "POST", body: {
           plan: f.plan.value, name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value,
-          family: f.family.value.trim(), code: f.code.value.trim() } });
+          family: f.family.value.trim(), code: f.code.value.trim(), store: playMode ? "play" : "" } });
         // the email has to be a real one: a code goes to it, and the family is made (or the payment opens) with it
         const done = await M.askCode(f, r);
         if (!done) { M.busy(go, false); f.email.focus(); return; }
+        if (done.play) { await payInPlay(done); return; }   // the email is confirmed: now the purchase
         location.href = done.url || "/app";
       } catch (err) { M.msg(m, err.message); M.busy(go, false); }
     });

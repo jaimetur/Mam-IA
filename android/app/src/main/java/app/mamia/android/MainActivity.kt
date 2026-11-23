@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
     /** A page to open once the web app is there (a shared text, a notification, a link): a path or a full address. */
     private var pending: String? = null
     private lateinit var bridge: NativeBridge
+    lateinit var billing: Billing
 
     private enum class Page { SETUP, LOADING, READY, ERROR }
 
@@ -92,6 +93,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         prefs = Prefs(this)
         bridge = NativeBridge(this)
+        billing = Billing(this).also { it.start() }
         Notifier.ensureChannel(this)
         if (prefs.server.isEmpty()) page.value = Page.SETUP
         // the start screen stays until the page has loaded (or failed, or the server has to be set)

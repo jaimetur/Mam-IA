@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from app.accounts import routes as accounts_routes
 from app.admin import routes as admin_routes
 from app.billing import codes
+from app.billing import play_routes as billing_play
 from app.billing import web as billing_web
 from app.core import backup, config, db, version
 from app.core.deps import CSRF_HEADER
@@ -100,5 +101,5 @@ def healthz():
 
 # the order matters: the pages and static files go last
 for r in (accounts_routes.router, families_routes.router, data_routes.router, push_routes.router, billing_web.router,
-          admin_routes.router, notices_routes.router, web_routes.router):
+          billing_play.router, admin_routes.router, notices_routes.router, web_routes.router):
     app.include_router(r)

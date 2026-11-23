@@ -65,6 +65,25 @@
         <p class="msg" id="ms" hidden></p>
       </form>
     </section>
+    <section class="panel">
+      <h2>Google Play</h2>
+      <p class="small" style="margin:0">Para las familias que se suscriben desde la app de Android: el servidor comprueba cada compra con Google
+        usando una cuenta de servicio con acceso a la Play Console. Mientras no esté configurado, la app no ofrece suscribirse
+        (se puede entrar con un código o con una suscripción de la web). Los pasos están en docs/PLAY_STORE.md.</p>
+      <dl class="kv" id="gpkv"></dl>
+      <form id="fg" autocomplete="off">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <label class="field"><span>Paquete de la app</span><input type="text" name="package" placeholder="app.mamia.android"></label>
+          <label class="field"><span>Suscripción (ID del producto)</span><input type="text" name="product" placeholder="mamia"></label>
+        </div>
+        <label class="field"><span>Clave de la cuenta de servicio (el contenido del fichero JSON). Vacío: se mantiene la guardada</span>
+          <textarea name="sa" rows="4" spellcheck="false" placeholder="(sin cambios)" style="font:13px/1.4 ui-monospace,monospace;width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px"></textarea></label>
+        <label class="field"><span>Enlace de la app en Google Play (cuando esté publicada: la página de inicio lo muestra)</span>
+          <input type="url" name="url" placeholder="https://play.google.com/store/apps/details?id=app.mamia.android"></label>
+        <div class="btns"><button class="btn pri" type="submit">Guardar</button><button class="btn danger" type="button" id="rmplay">Quitar la clave</button></div>
+        <p class="msg" id="mg" hidden></p>
+      </form>
+    </section>
   </main>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -81,6 +100,7 @@
 
     function access(a) {
       if (a.kind === "web") return `De pago · ${a.plan === "yearly" ? "anual" : "mensual"} · ${a.state}${a.gift ? " + gratis" : ""}`;
+      if (a.kind === "play") return `Google Play · ${a.plan === "yearly" ? "anual" : "mensual"} · ${a.state.replace("SUBSCRIPTION_STATE_", "").toLowerCase()}${a.gift ? " + gratis" : ""}`;
       if (a.kind === "gift") return `Gratis${a.code && a.code !== "admin" ? " (" + a.code + ")" : ""} · ${a.giftUntil ? "hasta " + fmt(a.giftUntil) : "para siempre"}`;
       return "Sin suscripción";
     }
@@ -195,11 +215,31 @@
       try { await M.api("/api/admin/mail", { method: "PUT", body: { remove: true } }); M.msg($("mm"), "Ahora se usan las variables SMTP_* del .env.", "ok"); mail(); overview(); }
       catch (err) { M.msg($("mm"), err.message); }
     });
+    async function gplay() {
+      const g = await M.api("/api/admin/play");
+      kv($("gpkv"), [["Estado", g.configured ? "Configurado con " + g.serviceAccount : "Sin configurar: la app no ofrece suscribirse"],
+        ["Familias con suscripción de Google Play", g.subscriptions], ["Ficha en Google Play", g.storeUrl || "Todavía no publicada"]]);
+      const f = $("fg"); f.package.value = g.package; f.product.value = g.product; f.sa.value = ""; f.url.value = g.storeUrl || "";
+    }
+    $("fg").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      try {
+        await M.api("/api/admin/play", { method: "PUT", body: { package: f.package.value.trim(), product: f.product.value.trim(),
+          serviceAccount: f.sa.value, storeUrl: f.url.value.trim() } });
+        M.msg($("mg"), "Guardado.", "ok"); gplay();
+      } catch (err) { M.msg($("mg"), err.message); }
+    });
+    $("rmplay").addEventListener("click", async () => {
+      if (!confirm("¿Quitar la clave de Google Play? Las suscripciones de la app no podrán comprobarse hasta que la vuelvas a poner.")) return;
+      try { await M.api("/api/admin/play", { method: "PUT", body: { remove: true } }); M.msg($("mg"), "Quitada.", "ok"); gplay(); }
+      catch (err) { M.msg($("mg"), err.message); }
+    });
     $("bk").addEventListener("click", async () => {
       try { const r = await M.api("/api/admin/backup", { method: "POST" }); M.msg($("mo"), "Copia hecha: " + r.name, "ok"); overview(); }
       catch (e) { M.msg($("mo"), e.message); }
     });
-    Promise.all([overview(), families(), codes(), mail(), stripe()]).catch((e) => M.msg($("mo"), e.message));
+    Promise.all([overview(), families(), codes(), mail(), stripe(), gplay()]).catch((e) => M.msg($("mo"), e.message));
   </script>
 </body>
 </html>

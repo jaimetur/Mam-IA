@@ -16,4 +16,7 @@
     <string name="action_done">Hecho</string>
     <string name="action_snooze">Posponer 10 min</string>
     <string name="save_failed">No se pudo guardar el archivo.</string>
+    <string name="no_purchase">Esta cuenta de Google no tiene una suscripción de Mam-IA.</string>
+    <string name="purchase_pending">La compra está pendiente: cuando Google Play la confirme, vuelve a abrir Mam-IA.</string>
+    <string name="purchase_failed">No se ha podido completar la compra.</string>
 </resources>

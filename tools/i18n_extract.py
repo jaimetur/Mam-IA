@@ -29,7 +29,8 @@ PAGES = [*sorted(FRONT.rglob("*.html")), *sorted((FRONT / "app" / "js").rglob("*
 # the quick-capture parser reads Spanish (its words are not shown): it is not translated
 SKIP_JS = {"parse.js"}
 # texts of the code that are not shown (HTTP headers, CSS classes)
-IGNORE = {"Vary", "Cookie, Accept-Language", "small center langrow"}
+IGNORE = {"Vary", "Cookie, Accept-Language", "small center langrow", "Authorization", "Bearer {0}", "PRIVATE KEY",
+          "btn pri", "msg info", "mamia", "Google Play"}
 
 LETTER = re.compile(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]")
 SPANISH = re.compile(r"[áéíóúüñÁÉÍÓÚÜÑ¿¡]")

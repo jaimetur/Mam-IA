@@ -82,6 +82,18 @@
     const $ = (id) => document.getElementById(id);
     const fmt = (ms) => new Date(ms).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
     let me = null;
+    // in the Android app: the family's subscription can be bought, renewed or restored with Google Play
+    const NATIVE = window.MamIANative && window.MamIANative.subscribe ? window.MamIANative : null;
+    let PLAY = false;
+    if (NATIVE) M.api("/api/play/config").then((c) => { PLAY = !!c.enabled; }).catch(() => {});
+    /** Runs a Google Play action of the app and resolves with the purchase token it answers (window.miPurchase). */
+    function playResult(start) {
+      return new Promise((resolve, reject) => {
+        window.miPurchase = (r) => (r && r.token ? resolve(r.token)
+          : reject(new Error(r && r.error === "cancel" ? "Has cancelado la compra." : (r && r.message) || "No se ha completado la compra.")));
+        start();
+      });
+    }
 
     async function load() {
       me = await M.api("/api/me");
@@ -99,6 +111,11 @@
         kv.push(["Estado", b.state === "trialing" ? "Prueba gratis" : b.active ? (b.cancelAtEnd ? "Cancelada: termina al final del periodo" : "Activa") : "Terminada"]);
         if (b.expiry) kv.push([b.cancelAtEnd || !b.active ? "Hasta el" : "Próximo cobro", fmt(b.expiry)]);
         if (b.method) kv.push(["Pago", b.method]);
+      } else if (b.plan === "play") {
+        kv.push(["Plan", (plan[b.basePlan] || "De pago")]);
+        kv.push(["Pago", "Google Play"]);
+        kv.push(["Estado", b.active ? (b.cancelAtEnd ? "Cancelada: termina al final del periodo" : "Activa") : "Terminada"]);
+        if (b.expiry) kv.push([b.cancelAtEnd || !b.active ? "Hasta el" : "Próximo cobro", fmt(b.expiry)]);
       } else if (b.plan === "gift") {
         kv.push(["Plan", "Gratis" + (b.code && b.code !== "admin" ? ` (código ${b.code})` : "")]);
         kv.push(["Hasta", b.expiry ? fmt(b.expiry) : "Para siempre"]);
@@ -113,14 +130,20 @@
         if (b.active && !b.cancelAtEnd) acts.push([b.basePlan === "monthly" ? "Pasar al plan anual" : "Pasar al plan mensual", "change"], ["Cancelar la suscripción", "cancel"]);
         if (b.active && b.cancelAtEnd) acts.push(["Seguir con la suscripción", "resume"]);
       }
+      if (owner && b.plan === "play") {
+        if (NATIVE) acts.push(["Gestionar en Google Play", "playmanage"]);
+        if (NATIVE) acts.push(["Recuperar la suscripción de esta cuenta de Google", "playrestore"]);
+      }
       $("subacts").innerHTML = "";
       for (const [label, act] of acts) {
         const btn = document.createElement("button");
         btn.className = "btn sm" + (act === "cancel" ? " danger" : ""); btn.type = "button"; btn.textContent = label; btn.dataset.act = act;
         $("subacts").appendChild(btn);
       }
-      const needsPay = owner && (b.readOnly || (b.plan === "gift" && b.expiry) || (b.plan === "web" && !b.active));
+      const needsPay = owner && (b.readOnly || (b.plan === "gift" && b.expiry) || (b.plan === "web" && !b.active) || (b.plan === "play" && !b.active));
       $("renew").hidden = !needsPay;
+      if (b.plan === "play" && !NATIVE) M.msg($("ms"), "La suscripción de tu familia se paga con Google Play: se gestiona desde la app de Android (Tu cuenta) o desde Google Play.", "info");
+      $("dorenew").textContent = PLAY ? "Pagar con Google Play" : "Pagar con Stripe";
       $("fc").hidden = u.role !== "admin";
       // deleting
       const others = f.accounts.length > 1;
@@ -164,6 +187,11 @@
       const act = b.dataset.act;
       try {
         if (act === "portal") { location.href = (await M.api("/api/web/portal", { method: "POST" })).url; return; }
+        if (act === "playmanage") { NATIVE.manageSubscription("mamia"); return; }
+        if (act === "playrestore") {
+          const token = await playResult(() => NATIVE.restorePurchase());
+          await M.api("/api/play/link", { method: "POST", body: { token } }); M.msg($("ms"), "Suscripción recuperada.", "ok"); load(); return;
+        }
         if (act === "change") await M.api("/api/web/change", { method: "POST", body: { plan: me.billing.basePlan === "monthly" ? "yearly" : "monthly" } });
         if (act === "cancel") await M.api("/api/web/cancel", { method: "POST" });
         if (act === "resume") await M.api("/api/web/resume", { method: "POST" });
@@ -173,8 +201,13 @@
     });
     $("dorenew").addEventListener("click", async () => {
       const plan = document.querySelector("input[name=rplan]:checked").value;
-      try { location.href = (await M.api("/api/web/renew", { method: "POST", body: { plan } })).url; }
-      catch (err) { M.msg($("ms"), err.message); }
+      try {
+        if (PLAY) {   // in the Android app: Google Play
+          const token = await playResult(() => NATIVE.subscribe(plan));
+          await M.api("/api/play/link", { method: "POST", body: { token } }); M.msg($("ms"), "¡Renovada! Gracias.", "ok"); load(); return;
+        }
+        location.href = (await M.api("/api/web/renew", { method: "POST", body: { plan } })).url;
+      } catch (err) { M.msg($("ms"), err.message); }
     });
     $("fc").addEventListener("submit", async (e) => {
       e.preventDefault();

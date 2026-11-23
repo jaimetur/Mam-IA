@@ -399,6 +399,7 @@ p{margin:0}
 .final .wrap{display:grid;gap:22px;justify-items:center}
 .final h2{font-size:clamp(38px,6vw,72px);font-weight:800;max-width:16ch}
 .final p{color:var(--ink2);font-size:19px}
+.appicon{width:64px;height:64px;border-radius:16px;box-shadow:0 10px 24px -12px rgba(201,62,102,.6)}.getbtns{display:flex;gap:10px;flex-wrap:wrap}.apknote{margin:0;color:var(--ink2);font-size:13px}.btn[aria-disabled=true]{opacity:.55;pointer-events:none}
 footer{border-top:1px solid var(--line);padding:34px 0 calc(46px + env(safe-area-inset-bottom,0px));color:var(--ink2);font-size:14px}
 footer .wrap{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center}
 footer a{color:var(--ink2);text-decoration:none}
@@ -856,10 +857,14 @@ footer .sp{margin-left:auto}
     <div class="sh rv"><h2 id="getH">Llévala <span class="mark">en el bolsillo</span></h2><p>La misma app y los mismos datos en el móvil y en el ordenador. Entra con tu cuenta y listo.</p></div>
     <div class="get">
       <div class="getc rv">
-        <span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-smartphone"/></svg></span>
+        <img class="appicon" src="/icon-192.png" width="64" height="64" alt="Icono de la app Mam-IA">
         <h3>App para Android</h3>
         <p>Con alarmas a la hora exacta, notificaciones con botones y «Compartir con Mam-IA» desde WhatsApp o cualquier app.</p>
-        <a class="btn pri" href="/android.apk"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-download"/></svg>Descargar para Android</a>
+        <div class="getbtns">
+          <a class="btn pri" id="apkBtn" href="/android.apk" download><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-download"/></svg>Descargar para Android</a>
+          <a class="btn sec" id="playBtn" href="#" hidden rel="noopener"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-smartphone"/></svg>Google Play</a>
+        </div>
+        <p class="small apknote" id="apkNote"></p>
       </div>
       <div class="getc rv">
         <span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-monitor"/></svg></span>
@@ -1043,6 +1048,24 @@ footer .sp{margin-left:auto}
       }
     }
     if (Number.isInteger(d.trialDays) && d.trialDays > 0) document.querySelectorAll('.trialN').forEach(el => { el.textContent = d.trialDays; });
+  });
+
+  // the Android app: the download button only when this server has the APK (tools/deploy-android.sh puts it there),
+  // and Google Play's once the app is published there (Administración → Google Play)
+  fetch('/api/android').then(r => r.ok ? r.json() : null).catch(() => null).then(a => {
+    const b = document.getElementById('apkBtn'), n = document.getElementById('apkNote');
+    if (a && a.available) {
+      const mb = (a.size / 1048576).toLocaleString('es-ES', { maximumFractionDigits: 1 });
+      n.textContent = `APK de ${mb} MB · instálala directamente, sin tienda.`;
+    } else {
+      b.setAttribute('aria-disabled', 'true'); b.removeAttribute('href');
+      n.textContent = 'Muy pronto: la app de Android está casi lista.';
+    }
+  });
+  fetch('/api/play/config').then(r => r.ok ? r.json() : null).catch(() => null).then(c => {
+    if (!c || !c.storeUrl) return;
+    const g = document.getElementById('playBtn');
+    g.href = c.storeUrl; g.hidden = false;
   });
 
   // oferta de lanzamiento: el primer código público con plazas libres

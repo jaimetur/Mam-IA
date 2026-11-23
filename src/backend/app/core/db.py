@@ -99,6 +99,18 @@ CREATE TABLE IF NOT EXISTS stripe_subs (
   method TEXT,
   cancel_end INTEGER NOT NULL DEFAULT 0
 );
+-- a family's subscription bought in the Android app (Google Play): the purchase token, encrypted, and its state
+CREATE TABLE IF NOT EXISTS play_subs (
+  family_id INTEGER PRIMARY KEY REFERENCES families(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  token_enc TEXT NOT NULL,
+  product_id TEXT,
+  base_plan TEXT,
+  state TEXT NOT NULL,
+  expiry_ms INTEGER NOT NULL DEFAULT 0,
+  checked_at INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS pending_signups (
   id TEXT PRIMARY KEY,
   data TEXT NOT NULL,

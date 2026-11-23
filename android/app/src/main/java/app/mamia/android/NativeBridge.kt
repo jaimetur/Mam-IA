@@ -65,5 +65,24 @@ class NativeBridge(private val activity: MainActivity) {
         }
     }
 
+    /** The plans of the Google Play subscription with their price ([{plan, price, trialDays}], "[]" while unknown). */
+    @JavascriptInterface
+    fun billingProducts(): String = activity.billing.productsJson()
+
+    /** Opens Google Play's purchase screen; the page hears the result in window.miPurchase({token} or {error}). */
+    @JavascriptInterface
+    fun subscribe(plan: String) = activity.billing.subscribe(plan)
+
+    /** The subscription already bought on this Google account, through window.miPurchase. */
+    @JavascriptInterface
+    fun restorePurchase() = activity.billing.restore()
+
+    /** Google Play's page to manage (change or cancel) the subscription. */
+    @JavascriptInterface
+    fun manageSubscription(product: String) = activity.runOnUiThread {
+        val uri = android.net.Uri.parse("https://play.google.com/store/account/subscriptions?sku=$product&package=${activity.packageName}")
+        activity.startActivity(Intent(Intent.ACTION_VIEW, uri))
+    }
+
     private fun toast(text: String) = activity.runOnUiThread { Toast.makeText(activity, text, Toast.LENGTH_LONG).show() }
 }

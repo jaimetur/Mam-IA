@@ -183,7 +183,7 @@ def billing(now_ms: int | None = None) -> dict:
     now_ms = now_ms or int(time.time() * 1000)
     out = {"ending": 0, "readOnly": 0, "failed": 0}
     with db.ro() as con:
-        ids = [r[0] for r in con.execute("SELECT family_id FROM grants UNION SELECT family_id FROM stripe_subs")]
+        ids = [r[0] for r in con.execute("SELECT family_id FROM grants UNION SELECT family_id FROM stripe_subs UNION SELECT family_id FROM play_subs")]
     for fid in ids:
         try:
             lapsed = status.expired(fid)
@@ -194,6 +194,7 @@ def billing(now_ms: int | None = None) -> dict:
             fam_name, owner = _owner(con, fid)
             g = con.execute("SELECT * FROM grants WHERE family_id=?", (fid,)).fetchone()
             w = con.execute("SELECT * FROM stripe_subs WHERE family_id=?", (fid,)).fetchone()
+            pl = con.execute("SELECT expiry_ms FROM play_subs WHERE family_id=?", (fid,)).fetchone()
         if owner is None:
             continue
         if lapsed:
@@ -206,7 +207,7 @@ def billing(now_ms: int | None = None) -> dict:
             continue
         with db.tx() as con:   # it can write again (renewed, a new code…): a later lapse is a new one
             con.execute("DELETE FROM lapses WHERE family_id=?", (fid,))
-        paying = w is not None and w["status"] in stripe_api.ACTIVE
+        paying = (w is not None and w["status"] in stripe_api.ACTIVE) or (pl is not None and pl["expiry_ms"] > now_ms)
         if g is not None and g["until_ms"] and codes.active(g) and not paying:
             days = math.ceil((g["until_ms"] - now_ms) / 86400000)
             due = [s for s in ENDING_DAYS if days <= s]

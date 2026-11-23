@@ -155,6 +155,20 @@ def favicon():
     return FileResponse(config.settings.branding_dir / "favicon-32.png", media_type="image/png")
 
 
+@router.get("/api/android")
+def android_info():
+    """Whether this server has the Android app to download (the landing page shows its button only then)."""
+    d = config.settings.data_dir / "android"
+    apk = d / "mamia-android.apk"
+    if not apk.is_file():
+        return {"available": False}
+    try:
+        build = (d / "android-build.txt").read_text(encoding="utf-8").splitlines()[0].strip()
+    except (OSError, IndexError):
+        build = ""
+    return {"available": True, "url": "/android.apk", "size": apk.stat().st_size, "build": build}
+
+
 @router.get("/android.apk")
 def android_apk():
     apk = config.settings.data_dir / "android" / "mamia-android.apk"

@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from app.accounts import users
 from app.accounts.users import User, UserError
-from app.billing import codes, stripe
+from app.billing import codes, play, stripe
 from app.billing.status import save_sub, status
 from app.core import config, crypto, db, i18n
 from app.accounts import verify
@@ -43,6 +43,7 @@ class SignupIn(BaseModel):
     password: str
     family: str = ""
     code: str = ""   # a promotion or invitation code: the family is free for its time and made at once
+    store: str = ""  # "play": paid in the Android app with Google Play (app.billing.play_routes), else Stripe
 
 
 def _check(body: SignupIn) -> None:
@@ -72,12 +73,16 @@ def signup(body: SignupIn, request: Request):
     try:
         _check(body)
         if not _free(body.code):
-            if not stripe.configured():
+            if body.store == "play":
+                if not play.configured():
+                    raise HTTPException(503, "Las suscripciones de Google Play todavía no están disponibles.")
+            elif not stripe.configured():
                 raise HTTPException(503, "Las altas con pago todavía no están disponibles. Si tienes un código, escríbelo.")
             if body.plan not in stripe.PLANS:
                 raise UserError("Ese plan no existe.")
         data = {"name": " ".join(body.name.split()), "pw": crypto.encrypt(body.password), "family": body.family,
-                "plan": body.plan, "code": body.code.strip(), "lang": i18n.request_lang(request)}
+                "plan": body.plan, "code": body.code.strip(), "lang": i18n.request_lang(request),
+                "store": "play" if body.store == "play" else ""}
         with db.tx() as con:
             pid, code = verify.start(con, "signup", body.email.strip(), data)
             rec = verify.load(con, pid)
@@ -121,6 +126,8 @@ def verify_code(body: VerifyIn, request: Request, response: Response):
     try:
         d = verify.check(body.id, body.code)
         kind = d["kind"]
+        if kind == "signup" and not _free(d.get("code", "")) and d.get("store") == "play":
+            return {"play": True, "pending": body.id, "plan": d.get("plan") or "yearly"}   # now the purchase in the app
         if kind == "signup" and not _free(d.get("code", "")):
             if not stripe.configured():
                 raise HTTPException(503, "Las altas con pago todavía no están disponibles. Si tienes un código, escríbelo.")

@@ -1,8 +1,9 @@
 name: 🤖 Android app
 
 # Builds the Mam-IA Android app (the web app in a native shell, with exact reminders and "Share with Mam-IA").
-# - On every change in android/ it refreshes the rolling "android-latest" pre-release, from where the APK reaches the
-#   server (<DATA_DIR>/android/mamia-android.apk, served at /android.apk).
+# - On every change in android/ it refreshes the rolling "android-latest" pre-release (the APK for direct download and
+#   the AAB for Google Play), from where tools/deploy-android.sh puts the APK on the server
+#   (<DATA_DIR>/android/mamia-android.apk, served at /android.apk; /api/android says whether it is there).
 # - Called by a release workflow with a release tag, it attaches the APK to that version's release instead.
 on:
   push:
@@ -47,13 +48,22 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: gradle --no-daemon assembleRelease
+        run: gradle --no-daemon assembleRelease bundleRelease   # the APK (direct download) and the AAB (Google Play)
+      - name: Signature
+        run: |
+          # the SHA-256 of the signing certificate: always the same once the keystore is in the secrets
+          # (tools/android-keystore.sh); without it each build has a new debug key and can't install over the last one
+          SHA=$(keytool -printcert -jarfile android/app/build/outputs/apk/release/app-release.apk | sed -n 's/.*SHA256: *//p' | head -1)
+          [ -n "$ANDROID_KEYSTORE_FILE" ] && KIND="release key" || KIND="DEBUG key (no keystore in the secrets)"
+          echo "SIGNATURE=$KIND · SHA-256 $SHA" >> "$GITHUB_ENV"
+          echo "::notice title=Android signature::$KIND · SHA-256 $SHA"
       - name: Publish to the rolling android-latest pre-release
         if: ${{ !inputs.release_tag }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp android/app/build/outputs/apk/release/app-release.apk mamia-android.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab mamia-android.aab
           TITLE="Android app (rolling build)"
           NOTES="Latest APK of the Mam-IA Android app, rebuilt on every change in android/. It is a rolling build (hence a pre-release); each version's APK is attached to its own vX.Y.Z release."
           if gh release view android-latest >/dev/null 2>&1; then
@@ -61,8 +71,8 @@ jobs:
           else
             gh release create android-latest --prerelease --title "$TITLE" --notes "$NOTES"
           fi
-          gh release upload android-latest mamia-android.apk --clobber
-          echo "build ${{ github.run_number }} · ${GITHUB_SHA::7}" > android-build.txt
+          gh release upload android-latest mamia-android.apk mamia-android.aab --clobber
+          printf 'build %s · %s\n%s\n' "${{ github.run_number }}" "${GITHUB_SHA::7}" "$SIGNATURE" > android-build.txt
           gh release upload android-latest android-build.txt --clobber
       - name: Attach to the version release
         if: ${{ inputs.release_tag }}
@@ -71,4 +81,5 @@ jobs:
         run: |
           T="${{ inputs.release_tag }}"
           cp android/app/build/outputs/apk/release/app-release.apk "mamia-android-$T.apk"
-          gh release upload "$T" "mamia-android-$T.apk" --clobber
+          cp android/app/build/outputs/bundle/release/app-release.aab "mamia-android-$T.aab"
+          gh release upload "$T" "mamia-android-$T.apk" "mamia-android-$T.aab" --clobber

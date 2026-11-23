@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the background of the launcher icon: the gradient of the brand (tools/make_icons.py) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="270" android:startColor="#E05A82" android:endColor="#B22F58" />
+</shape>

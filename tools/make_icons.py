@@ -85,6 +85,37 @@ def png(size: int, *, rounded: bool, pad: float = 0.0) -> Image.Image:
     return img.resize((size, size), Image.LANCZOS)
 
 
+def foreground(size: int) -> Image.Image:
+    """The heart and the spark alone, on transparent (the foreground of Android's adaptive icon: its background is
+    the gradient of res/drawable/ic_launcher_background.xml)."""
+    big = size * 4
+    img = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    heart, spark = shapes(big)
+    d.polygon(heart, fill=HEART + (255,))
+    d.polygon(spark, fill=SPARK + (255,))
+    return img.resize((size, size), Image.LANCZOS)
+
+
+ANDROID_RES = ROOT / "android" / "app" / "src" / "main" / "res"
+DENSITIES = {"mdpi": 108, "hdpi": 162, "xhdpi": 216, "xxhdpi": 324, "xxxhdpi": 432}   # 108 dp
+
+
+def android() -> None:
+    """The launcher icon of the Android app, drawn exactly like the brand's (same heart, spark and gradient)."""
+    for dens, px in DENSITIES.items():
+        out = ANDROID_RES / f"mipmap-{dens}"
+        out.mkdir(parents=True, exist_ok=True)
+        foreground(px).save(out / "ic_launcher_foreground.png", optimize=True)
+    hexc = lambda c: "#" + "".join(f"{x:02X}" for x in c)   # noqa: E731
+    (ANDROID_RES / "drawable" / "ic_launcher_background.xml").write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<!-- the background of the launcher icon: the gradient of the brand (tools/make_icons.py) -->\n'
+        '<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">\n'
+        f'    <gradient android:angle="270" android:startColor="{hexc(TOP)}" android:endColor="{hexc(BOTTOM)}" />\n'
+        '</shape>\n', encoding="utf-8")
+
+
 def main() -> None:
     icons = OUT
     icons.mkdir(parents=True, exist_ok=True)
@@ -94,7 +125,8 @@ def main() -> None:
     png(512, rounded=False).save(icons / "icon-maskable-512.png")       # full bleed: Android crops it to its shape
     png(180, rounded=False).convert("RGB").save(icons / "apple-touch-icon.png")   # iOS rounds the corners itself
     png(32, rounded=True).save(icons / "favicon-32.png")
-    print("Logo and icons written to", OUT.relative_to(ROOT))
+    android()
+    print("Logo and icons written to", OUT.relative_to(ROOT), "and the Android launcher icon to", ANDROID_RES.relative_to(ROOT))
 
 
 if __name__ == "__main__":
