@@ -79,7 +79,7 @@ Tests:
 ```
 
 ```bash
-TZ=Europe/Madrid node --test tests/frontend/
+TZ=Europe/Madrid node --test tests/frontend/*.test.mjs
 ```
 
 Con Docker (código en caliente): `docker compose -f docker/compose.dev.yml up --build` → `http://localhost:8000`.

@@ -35,7 +35,7 @@ jobs:
           pip install -e ".[test]"
           python -m pytest -q
       - name: Web app tests
-        run: TZ=Europe/Madrid node --test tests/frontend/
+        run: TZ=Europe/Madrid node --test tests/frontend/*.test.mjs
 
   docker:
     needs: tests
