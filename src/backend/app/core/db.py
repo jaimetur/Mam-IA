@@ -129,6 +129,7 @@ MIGRATIONS = (
     ("users", "mail_reminders", "INTEGER NOT NULL DEFAULT 1"),
     ("users", "mail_digest", "INTEGER NOT NULL DEFAULT 0"),
     ("lapses", "notified", "INTEGER NOT NULL DEFAULT 0"),
+    ("users", "lang", "TEXT"),
 )
 
 

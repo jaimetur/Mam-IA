@@ -943,6 +943,7 @@ footer .sp{margin-left:auto}
   <a href="/terminos">Términos</a>
   <a href="/borrar-cuenta">Borrar la cuenta</a>
   <a href="/entrar">Entrar</a>
+  <label class="langpick" aria-label="Idioma">🌐 <select data-lang-picker></select></label>
   <span class="sp">Contacto: <a class="mail" href="mailto:mamia@jtgcloud.com">mamia@jtgcloud.com</a></span>
 </div></footer>
 
@@ -1049,19 +1050,26 @@ footer .sp{margin-left:auto}
     const p = d && (d.promos || []).find(x => x.left === null || x.left > 0); if (!p) return;
     const box = document.getElementById('promo');
     const day = s => new Date(s + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-    const head = { '1m': '1 mes gratis', '3m': '3 meses gratis', '6m': '6 meses gratis', '1y': '1 año gratis', life: 'Gratis para siempre' }[p.duration] || ('Gratis hasta el ' + day(p.duration));
+    // whole sentences (only numbers, codes and dates change), so lang/ can translate them
+    const head = { '1m': '1 mes gratis', '3m': '3 meses gratis', '6m': '6 meses gratis', '1y': '1 año gratis', life: 'Gratis para siempre' }[p.duration] || `Gratis hasta el ${day(p.duration)}`;
     document.getElementById('pHead').textContent = head;
     const sub = document.getElementById('pSub');
-    if (p.max) sub.textContent = 'para las ' + p.max + ' primeras familias'; else sub.remove();
-    const what = { '1y': 'un año entero', '6m': 'seis meses', '3m': 'tres meses', '1m': 'un mes', life: 'para siempre' }[p.duration];
-    document.getElementById('pTxt').innerHTML = esc('Crea tu cuenta con este código y usa Mam-IA ' + (what ? what + ' ' : '') + 'sin pagar nada, con toda tu familia.') + ' <b>' + esc('Sin tarjeta.') + '</b>'
-      + (p.expires ? ' ' + esc('Hasta el ' + day(p.expires) + '.') : '');
+    if (p.max) sub.textContent = `para las ${p.max} primeras familias`; else sub.remove();
+    const what = {
+      '1y': 'Crea tu cuenta con este código y usa Mam-IA un año entero sin pagar nada, con toda tu familia.',
+      '6m': 'Crea tu cuenta con este código y usa Mam-IA seis meses sin pagar nada, con toda tu familia.',
+      '3m': 'Crea tu cuenta con este código y usa Mam-IA tres meses sin pagar nada, con toda tu familia.',
+      '1m': 'Crea tu cuenta con este código y usa Mam-IA un mes sin pagar nada, con toda tu familia.',
+      life: 'Crea tu cuenta con este código y usa Mam-IA para siempre sin pagar nada, con toda tu familia.',
+    }[p.duration] || 'Crea tu cuenta con este código y usa Mam-IA sin pagar nada, con toda tu familia.';
+    document.getElementById('pTxt').innerHTML = esc(what) + ' <b>' + esc('Sin tarjeta.') + '</b>'
+      + (p.expires ? ' ' + esc(`Hasta el ${day(p.expires)}.`) : '');
     document.getElementById('pCodeT').textContent = p.code;
     document.getElementById('pGo').href = '/alta?code=' + encodeURIComponent(p.code);
     const pr = box.querySelector('.pr');
     if (p.left === null || !p.max) { pr.querySelector('.pleft').remove(); pr.querySelector('.pbar').remove(); }
     else {
-      document.getElementById('pOf').textContent = p.left + ' de ' + p.max + ' plazas';
+      document.getElementById('pOf').textContent = `${p.left} de ${p.max} plazas`;
       document.getElementById('pUnit').textContent = p.left === 1 ? 'plaza libre' : 'plazas libres';
       let shown = false;
       new IntersectionObserver((es, o) => es.forEach(e => {
@@ -1077,14 +1085,17 @@ footer .sp{margin-left:auto}
       const done = ok => { c.textContent = ok ? '¡Copiado!' : p.code; setTimeout(() => { c.textContent = 'Copiar'; }, 1600); };
       try { navigator.clipboard.writeText(p.code).then(() => done(true), () => done(false)); } catch (e) { done(false); }
     });
-    const left = p.left !== null && p.max ? ' · quedan ' + p.left + (p.left === 1 ? ' plaza' : ' plazas') : '';
+    const left = p.left !== null && p.max ? (p.left === 1 ? ' · queda 1 plaza' : ` · quedan ${p.left} plazas`) : '';
     const eb = document.getElementById('heroEyebrow'), a = document.createElement('a');
     a.className = 'eyebrow hot'; a.href = '#promo'; a.id = 'heroEyebrow';
-    a.innerHTML = '<i></i>' + esc('Oferta de lanzamiento: ' + head.toLowerCase() + left);
+    a.innerHTML = '<i></i>' + esc(`Oferta de lanzamiento: ${head.toLowerCase()}` + left);
     eb.replaceWith(a);
-    document.getElementById('pricePromoT').textContent = '¿Llegas a tiempo? ' + head + (p.max ? ' para las ' + p.max + ' primeras familias' : '') + left;
+    // separate pieces, so each one is translated on its own (lang/i18n.js)
+    document.getElementById('pricePromoT').innerHTML = '<span>' + esc('¿Llegas a tiempo?') + '</span> <span>' + esc(head) + '</span>'
+      + (p.max ? ' <span>' + esc(`para las ${p.max} primeras familias`) + '</span>' : '') + (left ? '<span>' + esc(left) + '</span>' : '');
     document.getElementById('pricePromo').hidden = false;
-    document.getElementById('faqPromoT').textContent = (p.max ? 'Las ' + p.max + ' primeras familias' : 'Las familias') + ' que se den de alta con el código ' + p.code + ' usan Mam-IA ' + (p.duration === 'life' ? 'gratis para siempre' : what ? what + ' gratis' : 'gratis') + ', sin tarjeta. Cuando termine, si quieres seguir, eliges un plan.';
+    document.getElementById('faqPromoT').textContent = (p.max ? `Las ${p.max} primeras familias que se den de alta con el código ${p.code} tienen: ${head.toLowerCase()}, sin tarjeta.`
+      : `Las familias que se den de alta con el código ${p.code} tienen: ${head.toLowerCase()}, sin tarjeta.`) + ' Cuando termine, si quieres seguir, eliges un plan.';
     document.getElementById('faqPromo').hidden = false;
     box.hidden = false;
     box.querySelectorAll('.rv').forEach(el => { if (el.getBoundingClientRect().top < innerHeight) show(el); else try { new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { show(el); o.disconnect(); } })).observe(el); } catch (e) { show(el); } });

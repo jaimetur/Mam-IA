@@ -8,13 +8,14 @@ import { openCapture } from "../capture.js";
 import { notifyState, askNotifications } from "../notify.js";
 import { confetti, evTitle } from "../fun.js";
 
-function greeting(now = new Date()) {
+// whole sentences, so lang/ can translate them
+function greeting(name, now = new Date()) {
   const h = now.getHours();
-  return h < 6 ? "Buenas noches" : h < 14 ? "Buenos días" : h < 21 ? "Buenas tardes" : "Buenas noches";
+  return h < 6 || h >= 21 ? `Buenas noches, ${name}` : h < 14 ? `Buenos días, ${name}` : `Buenas tardes, ${name}`;
 }
 
 const sky = (now = new Date()) => { const h = now.getHours(); return h < 7 || h >= 21 ? "🌙" : h < 14 ? "☀️" : "🌤️"; };
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
 
 const nameOf = (id) => (S.get("members", id) || {}).name || "";
 
@@ -70,10 +71,10 @@ export function render(root) {
 
   root.innerHTML = html`
     <header class="hero">
-      <div class="hero-txt"><p class="kicker">${cap(longDay(d))}</p><h1>${greeting(now)}, ${first} <span class="sky" aria-hidden="true">${sky(now)}</span></h1>
-        <div class="pills"><a class="pill" href="#agenda"><span aria-hidden="true">📅</span> ${todays.length ? plural(todays.length, "plan hoy", "planes hoy") : "Hoy sin planes"}</a>
-          <a class="pill" href="#tareas"><span aria-hidden="true">✅</span> ${tasks.length ? plural(tasks.length, "tarea pendiente", "tareas pendientes") : "Nada pendiente"}</a>
-          <a class="pill" href="#compras"><span aria-hidden="true">🛒</span> ${toBuy ? plural(toBuy, "cosa en la compra", "cosas en la compra") : "Compra hecha"}</a></div></div>
+      <div class="hero-txt"><p class="kicker">${cap(longDay(d))}</p><h1><span>${greeting(first, now)}</span> <span class="sky" aria-hidden="true">${sky(now)}</span></h1>
+        <div class="pills"><a class="pill" href="#agenda"><span aria-hidden="true">📅</span> <span>${!todays.length ? "Hoy sin planes" : todays.length === 1 ? "1 plan hoy" : `${todays.length} planes hoy`}</span></a>
+          <a class="pill" href="#tareas"><span aria-hidden="true">✅</span> <span>${!tasks.length ? "Nada pendiente" : tasks.length === 1 ? "1 tarea pendiente" : `${tasks.length} tareas pendientes`}</span></a>
+          <a class="pill" href="#compras"><span aria-hidden="true">🛒</span> <span>${!toBuy ? "Compra hecha" : toBuy === 1 ? "1 cosa en la compra" : `${toBuy} cosas en la compra`}</span></a></div></div>
       <a class="avs" href="#familia" aria-label="Tu familia">${ms.slice(0, 5).map((m) => avatar(m))}</a>
     </header>
     ${b.readOnly ? html`<div class="banner bad">${icon("lock")}<div><b>Tu familia está en modo solo lectura.</b>
@@ -110,9 +111,9 @@ export function render(root) {
       <div class="daylist">${tomorrows.map((o) => html`<button class="evrow ${evColor(o.ev)}" type="button" data-ev="${o.id}" data-day="${o.day}"><i></i>
         <div><b>${evTitle(o.ev)}</b>${evSub(o) ? html`<span>${evSub(o)}</span>` : ""}</div><time>${o.time || "Todo el día"}</time></button>`)}</div></section>` : ""}
     <div class="duo">
-      <a class="mini" href="#menu"><span class="lbl">🍽️ Cena</span><b>${(meal && meal.dish) || "Sin decidir"}</b>
+      <a class="mini" href="#menu"><span class="lbl"><span aria-hidden="true">🍽️</span> <span>Cena</span></span><b>${(meal && meal.dish) || "Sin decidir"}</b>
         <span>${lunch && lunch.school ? `Comedor: ${lunch.school}` : "Ver el menú de la semana"}</span></a>
-      <a class="mini" href="#compras"><span class="lbl">🛒 Compra</span><b>${toBuy ? `${toBuy} ${toBuy === 1 ? "cosa" : "cosas"}` : "Todo comprado"}</b>
+      <a class="mini" href="#compras"><span class="lbl"><span aria-hidden="true">🛒</span> <span>Compra</span></span><b>${toBuy ? `${toBuy} ${toBuy === 1 ? "cosa" : "cosas"}` : "Todo comprado"}</b>
         <span>${toBuy ? "En la lista de la compra" : "Añade lo que falte"}</span></a>
     </div>
     ${!ns.on && !fresh && ns.can ? html`<button class="banner info" type="button" data-act="notify" style="border:0;text-align:left;width:100%">${icon("bell-ring")}

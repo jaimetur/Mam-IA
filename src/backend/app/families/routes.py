@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from app.accounts import users, verify
 from app.accounts.users import User, UserError
 from app.billing.status import cancel_for
-from app.core import crypto, db, mailer
+from app.core import crypto, db, i18n, mailer
 from app.core.deps import (base_url, clear_session_cookie, client_ip, family_admin, json_body, set_session_cookie,
                            signed_in_user, writer)
 from app.core.security import mail_throttle, password_problem
@@ -109,6 +109,8 @@ def accept(body: AcceptIn, request: Request, response: Response):
         if inv["email"] and inv["email"].lower() == body.email.strip().lower():
             with db.tx() as con:
                 u = families.accept_invite(con, body.code, body.name, body.email, body.password)
+                con.execute("UPDATE users SET lang=? WHERE id=?", (i18n.request_lang(request), u.id))
+                u = users.get_user(con, u.id)
                 token = users.create_session(con, u.id)
             set_session_cookie(response, token)
             emails.member_joined(u)
@@ -124,7 +126,8 @@ def accept(body: AcceptIn, request: Request, response: Response):
                 raise UserError("Ya hay una cuenta con ese correo: entra con ella.")
         with db.tx() as con:
             pid, code = verify.start(con, "join", email, {"invite": body.code, "name": " ".join(body.name.split()),
-                                                          "pw": crypto.encrypt(body.password)})
+                                                          "pw": crypto.encrypt(body.password),
+                                                          "lang": i18n.request_lang(request)})
             rec = verify.load(con, pid)
         mail_throttle.fail(f"accept|{client_ip(request)}")
         verify.send(pid, rec, code)

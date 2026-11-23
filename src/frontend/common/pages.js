@@ -6,6 +6,16 @@
     if (look.accent && look.accent !== "rosa") document.documentElement.dataset.accent = look.accent;
   } catch (e) { /* private window */ }
   if (/MamIAApp\//.test(navigator.userAgent)) document.documentElement.classList.add("inapp");   // the Android app
+  // the language, at the foot of every account page (lang/i18n.js fills it in)
+  document.addEventListener("DOMContentLoaded", () => {
+    const main = document.querySelector("main.wrap");
+    if (!main || main.querySelector("select[data-lang-picker]")) return;
+    const p = document.createElement("p");
+    p.className = "small center langrow";
+    p.innerHTML = '<label class="langpick" aria-label="Idioma">🌐 <select data-lang-picker></select></label>';
+    main.appendChild(p);
+    if (window.miLangPicker) window.miLangPicker(p.querySelector("select"));
+  });
 })();
 
 window.M = {

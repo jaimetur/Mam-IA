@@ -31,7 +31,7 @@ def _hash(pid: str, code: str) -> str:
     return token_hash(f"{pid}:{code.strip()}")
 
 
-def _email(to: str, code: str, kind: str, name: str = "") -> None:
+def _email(to: str, code: str, kind: str, name: str = "", lang: str | None = None) -> None:
     """Send the code (at once: if the email cannot go, the person is told now)."""
     hello = f"Hola, {html.escape(name.split()[0])}." if name.strip() else "Hola."
     mailer.send(to, f"Tu código es {code}", mailer.page(f"Tu código: {code}", [
@@ -40,7 +40,7 @@ def _email(to: str, code: str, kind: str, name: str = "") -> None:
         f'<span style="font-size:28px;font-weight:800;letter-spacing:6px">{code}</span>',
         f"Vale durante {CODE_MINUTES} minutos. Si no lo has pedido tú, no hagas nada: sin el código no se hace nada "
         "con tu correo.",
-    ]))
+    ]), lang=lang)
 
 
 def start(con: sqlite3.Connection, kind: str, email: str, data: dict) -> tuple[str, str]:
@@ -59,7 +59,7 @@ def start(con: sqlite3.Connection, kind: str, email: str, data: dict) -> tuple[s
 def send(pid: str, rec: dict, code: str) -> None:
     """Email the code; if it cannot be sent, the pending confirmation is forgotten and a UserError raised."""
     try:
-        _email(rec["email"], code, rec["kind"], rec.get("name", ""))
+        _email(rec["email"], code, rec["kind"], rec.get("name", ""), rec.get("lang"))
     except RuntimeError as e:
         with db.tx() as con:
             forget(con, pid)
@@ -98,8 +98,9 @@ def check(pid: str, code: str) -> dict:
             error = "Has escrito mal el código demasiadas veces: vuelve a empezar."
         else:
             _save(con, pid, rec)
-            left = MAX_TRIES - rec["tries"]
-            error = f"El código no es correcto. Te {'queda 1 intento' if left == 1 else f'quedan {left} intentos'}."
+            left = MAX_TRIES - rec["tries"]   # whole sentences, so each one can be translated
+            error = ("El código no es correcto. Te queda 1 intento." if left == 1
+                     else f"El código no es correcto. Te quedan {left} intentos.")
     raise UserError(error)
 
 

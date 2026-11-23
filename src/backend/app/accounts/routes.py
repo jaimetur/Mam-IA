@@ -62,6 +62,7 @@ class MeIn(BaseModel):
     accent: str | None = None
     mailReminders: bool | None = None
     mailDigest: bool | None = None
+    lang: str | None = None
 
 
 @router.put("/api/me")
@@ -71,7 +72,7 @@ def update_me(body: MeIn, u: User = Depends(signed_in_user)):
     try:
         with db.tx() as con:
             users.update_profile(con, u, body.name, body.theme, body.accent, mail_reminders=body.mailReminders,
-                                 mail_digest=body.mailDigest)
+                                 mail_digest=body.mailDigest, lang=body.lang)
             return {"user": users.get_user(con, u.id).public()}
     except UserError as e:
         raise HTTPException(400, str(e))
@@ -96,7 +97,7 @@ def change_email(body: EmailIn, request: Request, u: User = Depends(signed_in_us
                 raise UserError("Ese ya es tu correo.")
             if users.get_by_email(con, email):
                 raise UserError("Ya hay otra cuenta con ese correo.")
-            pid, code = verify.start(con, "email", email, {"user": u.id, "name": u.name})
+            pid, code = verify.start(con, "email", email, {"user": u.id, "name": u.name, "lang": u.lang})
             rec = verify.load(con, pid)
         mail_throttle.fail(f"code|{u.id}")
         verify.send(pid, rec, code)

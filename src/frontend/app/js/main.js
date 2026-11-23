@@ -124,7 +124,7 @@ async function start() {
     const n = S.pendingCount();
     const off = !S.status.online;
     net.hidden = !off && !n;
-    if (!net.hidden) net.innerHTML = html`${icon(off ? "wifi-off" : "refresh-cw")}${off ? "Sin conexión" : "Guardando"}${n ? ` · ${n} ${n === 1 ? "cambio" : "cambios"} por enviar` : " · lo apuntado se guarda aquí"}`;
+    if (!net.hidden) net.innerHTML = html`${icon(off ? "wifi-off" : "refresh-cw")}${off ? "Sin conexión" : "Guardando"}${n ? (n === 1 ? " · 1 cambio por enviar" : ` · ${n} cambios por enviar`) : " · lo apuntado se guarda aquí"}`;
   };
   setInterval(showNet, 2000);
   window.addEventListener("online", showNet);

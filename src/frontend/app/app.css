@@ -329,6 +329,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .emo { margin-right: 0.35em; font-style: normal; }
 /* the emoji sits in the title's line, whatever the row does with its other spans */
 .evrow b .emo, .tl .ev b .emo, .bev b .emo, .row .title .emo, .now .t .emo, .mchip .emo { display: inline; font-size: 1em; color: inherit; margin-right: 0.4em; }
+/* the title the family wrote (never translated): part of the same line */
+.evrow b > span[data-noi18n], .tl .ev b > span[data-noi18n], .bev b > span[data-noi18n], .row .title > span[data-noi18n], .now .t > span[data-noi18n], .mchip > span[data-noi18n] { display: inline; font-size: 1em; color: inherit; }
 .hero {
   position: relative; overflow: hidden; border-radius: 26px; padding: 18px 18px 16px; color: #fff;
   background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--c5) 85%, #fff) 0%, transparent 55%),

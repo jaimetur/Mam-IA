@@ -48,11 +48,13 @@ class User:
     accent: str
     mail_reminders: bool = True     # reminders of events and tasks by email
     mail_digest: bool = False       # the summary of the day by email, every morning
+    lang: str | None = None         # the language of the app and the emails (app.core.i18n), None = not chosen
 
     @classmethod
     def from_row(cls, r: sqlite3.Row) -> "User":
         return cls(r["id"], r["email"], r["name"], r["family_id"], r["member_id"], r["role"], bool(r["is_admin"]),
-                   bool(r["must_change"]), r["theme"], r["accent"], bool(r["mail_reminders"]), bool(r["mail_digest"]))
+                   bool(r["must_change"]), r["theme"], r["accent"], bool(r["mail_reminders"]), bool(r["mail_digest"]),
+                   r["lang"] if "lang" in r.keys() else None)
 
     @property
     def family_admin(self) -> bool:
@@ -62,7 +64,7 @@ class User:
         return {"id": self.id, "email": self.email, "name": self.name, "familyId": self.family_id,
                 "memberId": self.member_id, "role": self.role, "isAdmin": self.is_admin,
                 "mustChange": self.must_change, "theme": self.theme, "accent": self.accent,
-                "mailReminders": self.mail_reminders, "mailDigest": self.mail_digest}
+                "mailReminders": self.mail_reminders, "mailDigest": self.mail_digest, "lang": self.lang}
 
 
 def _utcnow() -> datetime:
@@ -118,7 +120,7 @@ def set_password(con: sqlite3.Connection, user_id: int, password: str, keep_sess
 
 def update_profile(con: sqlite3.Connection, user: User, name: str | None = None, theme: str | None = None,
                    accent: str | None = None, email: str | None = None, mail_reminders: bool | None = None,
-                   mail_digest: bool | None = None) -> None:
+                   mail_digest: bool | None = None, lang: str | None = None) -> None:
     if name is not None:
         name = clean_name(name)
         con.execute("UPDATE users SET name=? WHERE id=?", (name, user.id))
@@ -140,6 +142,11 @@ def update_profile(con: sqlite3.Connection, user: User, name: str | None = None,
         con.execute("UPDATE users SET mail_reminders=? WHERE id=?", (int(mail_reminders), user.id))
     if mail_digest is not None:
         con.execute("UPDATE users SET mail_digest=? WHERE id=?", (int(mail_digest), user.id))
+    if lang is not None:
+        from app.core import i18n
+        if not i18n.clean(lang):
+            raise UserError("Ese idioma no está disponible.")
+        con.execute("UPDATE users SET lang=? WHERE id=?", (i18n.clean(lang), user.id))
 
 
 # ---------- sessions ----------

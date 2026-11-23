@@ -3,7 +3,8 @@
 // (src/backend/app/push/recur.py); both are tested with the same cases.
 
 export const WEEKDAYS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
-export const WD_SHORT = ["L", "M", "X", "J", "V", "S", "D"];
+// the initials of the week, Monday first: in the language of the page when it is not Spanish (lang/i18n.js)
+export const WD_SHORT = (typeof window !== "undefined" && window.MI_DS) || ["L", "M", "X", "J", "V", "S", "D"];
 export const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 export const ALL_DAY_HOUR = 9;
 

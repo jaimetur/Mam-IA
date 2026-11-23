@@ -75,7 +75,7 @@ def code_for(email):
     """The last confirmation code emailed to an address."""
     import re
     for m in reversed(mails_to(email)):
-        found = re.search(r"Tu código es (\d{6})", m["subject"])
+        found = re.search(r"(?:Tu código es|Your code is) (\d{6})", m["subject"])
         if found:
             return found.group(1)
     raise AssertionError(f"no code was emailed to {email}")

@@ -41,6 +41,7 @@ Mam-IA/
     legal/                privacidad, términos y borrar la cuenta
     common/               tokens de diseño, fuentes, iconos de la interfaz y estilos de las páginas
   assets/branding/        logo e iconos de la marca (favicon, PWA, Apple), servidos en la raíz del sitio
+  lang/                   idiomas: catálogo en inglés y una traducción por idioma (lang/README.md)
   android/                app de Android (la web en una ventana nativa, con alarmas exactas): docs/ANDROID.md
   docker/                 imagen y compose de producción y de desarrollo
   tests/                  pytest (servidor) y node --test (app web)

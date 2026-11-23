@@ -43,7 +43,11 @@ export function render(root) {
         <button type="button" data-theme="${k}" aria-pressed="${me.theme === k}">${l}</button>`)}</div>
       <div class="field"><span>Color</span><div class="swatches">${ACCENTS.map(([k, c]) => html`<button type="button" data-accent="${k}" aria-pressed="${me.accent === k}" aria-label="${k}" style="background:${c}"></button>`)}</div></div>
     </section>
-    <section class="card"><h2>Avisos en este ${ns.native ? "móvil" : "dispositivo"}</h2>
+    <section class="card"><h2>Idioma</h2>
+      <label class="switch"><span>Idioma de la app y de los correos</span><select data-lang-picker aria-label="Idioma" style="width:auto"></select></label>
+      <p class="muted" style="margin:0;font-size:13px">Apuntar con el botón + entiende por ahora frases en español.</p>
+    </section>
+    <section class="card"><h2>${ns.native ? "Avisos en este móvil" : "Avisos en este dispositivo"}</h2>
       ${ns.on ? html`<p class="muted" style="margin:0">${icon("circle-check", "xs")} Activados. Te avisaremos de los planes y tareas con aviso.</p>
         <div class="btns"><button class="btn sm" type="button" data-test>${icon("bell", "sm")}Probar un aviso</button></div>`
         : ns.can ? html`<p class="muted" style="margin:0">${ns.denied ? "Has bloqueado los avisos: permítelos en los ajustes del navegador." : "Actívalos para que Mam-IA te recuerde lo que toca aunque no la tengas abierta."}</p>
@@ -70,6 +74,7 @@ export function render(root) {
       <button class="row" type="button" data-logout style="border:0;background:none;padding:6px 2px;color:var(--bad);font-weight:700">${icon("log-out")}Cerrar sesión</button></div></section>
     <section class="card"><h2>Acerca de Mam-IA</h2><p class="muted" style="margin:0">Versión ${v.version || "—"}${v.build && v.build !== "dev" ? ` (${v.build.slice(0, 7)})` : ""} ·
       <a href="/privacidad">Privacidad</a> · <a href="/terminos">Términos</a> · Ayuda: <span style="user-select:all">mamia@jtgcloud.com</span></p></section>`;
+  if (window.miLangPicker) root.querySelectorAll("select[data-lang-picker]").forEach((s) => window.miLangPicker(s));
 }
 
 async function saveLook(changes) {

@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import mimetypes
+import re
 from pathlib import Path
 from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 
-from app.core import config, version
+from app.core import config, i18n, version
 from app.core.deps import optional_user
 
 router = APIRouter()
@@ -23,12 +24,15 @@ def _front(*parts: str) -> Path:
     return config.settings.frontend_dir.joinpath(*parts)
 
 
-def _html(*parts: str, **extra: str) -> HTMLResponse:
-    """A page with its own static files marked with the version (browsers never use an old copy)."""
+def _html(request: Request, *parts: str, **extra: str) -> HTMLResponse:
+    """A page with its own static files marked with the version (browsers never use an old copy), in the language of
+    the person (its dictionary and lang/i18n.js go first in the head, so every text is translated as it appears)."""
     html = _front(*parts).read_text(encoding="utf-8").replace("{{v}}", version.stamp())
     for k, v in extra.items():
         html = html.replace("{{" + k + "}}", v)
-    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
+    lang = i18n.request_lang(request, optional_user(request))
+    html = re.sub(r"(<head[^>]*>)", lambda m: m.group(1) + i18n.head(lang), html, count=1)
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache", "Content-Language": lang, "Vary": "Cookie, Accept-Language"})
 
 
 def _next(request: Request) -> str:
@@ -44,7 +48,7 @@ def index(request: Request):
         return RedirectResponse("/app", status_code=303)
     if APP_UA in request.headers.get("user-agent", ""):   # the Android app goes straight to signing in
         return RedirectResponse("/entrar", status_code=303)
-    return _html("landing", "index.html")
+    return _html(request, "landing", "index.html")
 
 
 @router.get("/app")
@@ -54,14 +58,14 @@ def app_page(request: Request):
         return RedirectResponse(f"/entrar?next={_next(request)}", status_code=303)
     if u.must_change:
         return RedirectResponse("/cuenta?cambiar=1", status_code=303)
-    return _html("app", "index.html")
+    return _html(request, "app", "index.html")
 
 
 def _account_page(name: str, signed_in: bool = False):
     def page(request: Request):
         if signed_in and not optional_user(request):
             return RedirectResponse(f"/entrar?next={_next(request)}", status_code=303)
-        return _html("accounts", f"{name}.html")
+        return _html(request, "accounts", f"{name}.html")
     return page
 
 
@@ -77,12 +81,30 @@ def admin_page(request: Request):
         return RedirectResponse(f"/entrar?next={_next(request)}", status_code=303)
     if not u.is_admin:
         return RedirectResponse("/app", status_code=303)
-    return _html("admin", "admin.html")
+    return _html(request, "admin", "admin.html")
+
+
+def _legal_page(name: str):
+    def page(request: Request):
+        return _html(request, "legal", f"{name}.html")
+    return page
 
 
 for _path, _name in (("/privacidad", "privacidad"), ("/terminos", "terminos"), ("/borrar-cuenta", "borrar-cuenta")):
-    router.add_api_route(_path, (lambda n: lambda: _html("legal", f"{n}.html"))(_name), methods=["GET"],
+    router.add_api_route(_path, _legal_page(_name), methods=["GET"],
                          include_in_schema=False)
+
+
+@router.get("/lang/i18n.js")
+def lang_translator():
+    return FileResponse(config.settings.lang_dir / "i18n.js", media_type="text/javascript", headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/lang/{code}.js")
+def lang_dictionary(code: str):
+    if code not in i18n.LANGS:
+        raise HTTPException(404)
+    return Response(i18n.script(code), media_type="text/javascript", headers={"Cache-Control": "no-cache"})
 
 
 @router.get("/manifest.webmanifest")

@@ -119,14 +119,16 @@ def digest_html(docs: dict, d: date, me_member: str | None) -> tuple[str, list[s
     if late:
         rows = [x for _, x in sorted(late)]
         paras.append("<b>Pendientes de días anteriores</b><br>" + ul(rows[:8]) + (f"<br>…y {len(rows) - 8} más" if len(rows) > 8 else ""))
-    food = [f"{'Comida' if s == 'comida' else 'Cena'}: {esc(m.get('dish') or m.get('school') or '')}"
+    food = [(f"Comida: {esc(m.get('dish') or m.get('school') or '')}" if s == "comida" else f"Cena: {esc(m.get('dish') or m.get('school') or '')}")
             for s, m in sorted(meals.items(), key=lambda x: x[0] != "comida") if m.get("dish") or m.get("school")]
     if food:
         paras.append("<b>Menú</b><br>" + "<br>".join(food))
     if to_buy:
-        paras.append(f"En la lista de la compra hay {to_buy} {'cosa' if to_buy == 1 else 'cosas'} por comprar.")
+        paras.append("En la lista de la compra hay 1 cosa por comprar." if to_buy == 1   # whole sentences: translatable
+                     else f"En la lista de la compra hay {to_buy} cosas por comprar.")
     n_ev, n_tk = len(events), len(tasks)
-    parts = [f"{n_ev} {'plan' if n_ev == 1 else 'planes'}" if n_ev else "", f"{n_tk} {'tarea' if n_tk == 1 else 'tareas'}" if n_tk else ""]
+    parts = [("1 plan" if n_ev == 1 else f"{n_ev} planes") if n_ev else "",   # whole phrases: translatable
+             ("1 tarea" if n_tk == 1 else f"{n_tk} tareas") if n_tk else ""]
     subject = "Tu día: " + (" y ".join(p for p in parts if p) or f"{len(late)} pendientes")
     return subject, paras
 

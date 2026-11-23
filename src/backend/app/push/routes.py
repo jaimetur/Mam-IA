@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.accounts.users import User
-from app.core import config, crypto, db
+from app.core import config, crypto, db, i18n
 from app.core.deps import signed_in_user
 from app.data import store
 from app.push import recur
@@ -101,7 +101,8 @@ def test(u: User = Depends(signed_in_user)):
     if not subs:
         raise HTTPException(400, "Este dispositivo todavía no tiene los avisos activados.")
     for s in subs:
-        _send(s, {"title": "Mam-IA", "body": "Así te avisaremos de lo que toca.", "path": "/app", "tag": "prueba"})
+        _send(s, {"title": "Mam-IA", "body": i18n.tr(u.lang or i18n.DEFAULT, "Así te avisaremos de lo que toca."),
+                  "path": "/app", "tag": "prueba"})
     return {"ok": True, "devices": len(subs)}
 
 
@@ -124,7 +125,7 @@ def due_now(t0: datetime, t1: datetime) -> int:
             f = con.execute("SELECT tz FROM families WHERE id=?", (fid,)).fetchone()
             docs = {c: store.all_of(con, fid, c) for c in ("members", "events", "tasks")}
             subs = [dict(r) for r in con.execute(
-                "SELECT p.*, u.member_id FROM push_subs p JOIN users u ON u.id=p.user_id WHERE u.family_id=?", (fid,))]
+                "SELECT p.*, u.member_id, u.lang FROM push_subs p JOIN users u ON u.id=p.user_id WHERE u.family_id=?", (fid,))]
             accounts = users.family_users(con, fid) if mail_on else []
         if not f:
             continue
@@ -136,7 +137,9 @@ def due_now(t0: datetime, t1: datetime) -> int:
                 continue
             targets = [s for s in subs if s["member_id"] in a["who"]] or subs   # nobody with an account: everyone
             for s in targets:
-                _send(s, {"title": a["title"], "body": a["body"], "path": a["path"], "tag": a["id"], "id": a["id"]})
+                code = i18n.clean(s.get("lang")) or i18n.DEFAULT   # in the language of each person
+                _send(s, {"title": i18n.tr(code, a["title"]), "body": i18n.tr(code, a["body"]), "path": a["path"],
+                          "tag": a["id"], "id": a["id"]})
                 sent += 1
             readers = notices.reminder_targets(accounts, a["who"])
             if readers:

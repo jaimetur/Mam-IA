@@ -13,7 +13,7 @@ from app.accounts import users
 from app.accounts.users import User, UserError
 from app.billing import codes, stripe
 from app.billing.status import save_sub, status
-from app.core import config, crypto, db
+from app.core import config, crypto, db, i18n
 from app.accounts import verify
 from app.core.deps import admin_user, base_url, client_ip, family_admin, set_session_cookie, signed_in_user
 from app.core.security import mail_throttle, password_problem
@@ -77,7 +77,7 @@ def signup(body: SignupIn, request: Request):
             if body.plan not in stripe.PLANS:
                 raise UserError("Ese plan no existe.")
         data = {"name": " ".join(body.name.split()), "pw": crypto.encrypt(body.password), "family": body.family,
-                "plan": body.plan, "code": body.code.strip()}
+                "plan": body.plan, "code": body.code.strip(), "lang": i18n.request_lang(request)}
         with db.tx() as con:
             pid, code = verify.start(con, "signup", body.email.strip(), data)
             rec = verify.load(con, pid)
@@ -141,6 +141,9 @@ def verify_code(body: VerifyIn, request: Request, response: Response):
                 u = users.get_user(con, old.id)
             else:
                 raise UserError("Esa confirmación no es válida: vuelve a empezar.")
+            if kind != "email" and d.get("lang"):   # the language the person was using
+                con.execute("UPDATE users SET lang=? WHERE id=?", (i18n.clean(d["lang"]), u.id))
+                u = users.get_user(con, u.id)
             verify.forget(con, body.id)
             token = users.create_session(con, u.id) if kind != "email" else None
     except UserError as e:
@@ -198,10 +201,13 @@ def _family_for(session: dict) -> User | None:
         if "check" in d and not d.get("verified"):   # the email was never confirmed
             return None
         u = families.create_family(con, d.get("family"), d["name"], d["email"], crypto.decrypt(d["pw"]))
+        if i18n.clean(d.get("lang")):
+            con.execute("UPDATE users SET lang=? WHERE id=?", (i18n.clean(d["lang"]), u.id))
+            u = users.get_user(con, u.id)
         save_sub(con, u.family_id, sub)
         con.execute("DELETE FROM pending_signups WHERE id=?", (meta.get("pending", ""),))
         made = u
-    _welcome(made, f"de pago, plan {'anual' if d.get('plan') == 'yearly' else 'mensual'}")
+    _welcome(made, "de pago, plan anual" if d.get("plan") == "yearly" else "de pago, plan mensual")
     return made
 
 

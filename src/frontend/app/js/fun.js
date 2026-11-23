@@ -20,10 +20,10 @@ export function emojiOf(item) {
   return guess ? guess[1] : (item && CAT_EMOJI[item.cat]) || "";
 }
 
-/** The title of a plan or task with its emoji in front. */
+/** The title of a plan or task with its emoji in front. What the family writes is never translated (data-noi18n). */
 export const evTitle = (item) => {
   const e = emojiOf(item);
-  return html`${e ? html`<span class="emo" aria-hidden="true">${e}</span>` : ""}${item.title}`;
+  return html`${e ? html`<span class="emo" aria-hidden="true">${e}</span>` : ""}<span data-noi18n>${item.title}</span>`;
 };
 
 const COLORS = ["#E8577D", "#7B61D6", "#16A085", "#F08A4B", "#F5C542", "#4F9DE8"];

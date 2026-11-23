@@ -153,18 +153,41 @@ def _deliver(s: dict, msg: EmailMessage) -> None:
         raise RuntimeError(f"No se pudo enviar el correo: {type(e).__name__}.") from e
 
 
-def send(to: str | list[str], subject: str, html_body: str, unsubscribe: str | None = None) -> None:
-    """Send one email (to one or more addresses, each sees them all). Raises RuntimeError with a message in Spanish."""
+def _by_lang(to: list[str], lang: str | None) -> dict[str, list[str]]:
+    """The recipients grouped by language: the one given, else each account's (looked up by address), else Spanish."""
+    from app.core import db, i18n
+    if i18n.clean(lang):
+        return {i18n.clean(lang): to}
+    try:
+        with db.ro() as con:
+            found = {r["e"]: r["lang"] for r in con.execute(
+                f"SELECT lower(email) AS e, lang FROM users WHERE lower(email) IN ({','.join('?' * len(to))})",
+                [t.lower() for t in to])}
+    except Exception:   # noqa: BLE001 — an email always goes, in Spanish if need be
+        found = {}
+    out: dict[str, list[str]] = {}
+    for t in to:
+        out.setdefault(i18n.clean(found.get(t.lower())) or i18n.DEFAULT, []).append(t)
+    return out
+
+
+def send(to: str | list[str], subject: str, html_body: str, unsubscribe: str | None = None,
+         lang: str | None = None) -> None:
+    """Send one email (to one or more addresses, each sees them all), in the language of each recipient (or `lang`).
+    Raises RuntimeError with a message in Spanish."""
+    from app.core import i18n
     s = settings()
     rcpt = _recipients(to)
     if not s["configured"]:
         raise RuntimeError("El correo saliente no está configurado en este servidor.")
     if not rcpt:
         raise RuntimeError("El correo no tiene destinatarios.")
-    _deliver(s, build(s, rcpt, subject, html_body, unsubscribe))
+    for code, group in _by_lang(rcpt, lang).items():
+        _deliver(s, build(s, group, i18n.tr(code, subject), i18n.tr_html(code, html_body), unsubscribe))
 
 
-def send_later(to: str | list[str], subject: str, html_body: str, unsubscribe: str | None = None) -> bool:
+def send_later(to: str | list[str], subject: str, html_body: str, unsubscribe: str | None = None,
+               lang: str | None = None) -> bool:
     """Send in the background (the request does not wait for the SMTP server); failures go to the log.
     False when mail is not configured or there is nobody to send it to."""
     s = settings()
@@ -174,7 +197,7 @@ def send_later(to: str | list[str], subject: str, html_body: str, unsubscribe: s
 
     def run():
         try:
-            send(to, subject, html_body, unsubscribe)
+            send(to, subject, html_body, unsubscribe, lang)
             log.info("email sent: %s", subject)
         except Exception as e:   # noqa: BLE001 — logged, never shown with its details
             log.warning("email not sent: %s — %s", subject, e)

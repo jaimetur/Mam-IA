@@ -11,17 +11,18 @@ from pydantic import BaseModel
 
 from app.accounts import users
 from app.accounts.users import User, UserError
-from app.core import crypto, db, mailer
-from app.core.deps import admin_user, base_url
+from app.core import crypto, db, i18n, mailer
+from app.core.deps import admin_user, base_url, optional_user
 
 router = APIRouter()
 KINDS = {"recordatorios": ("mail_reminders", "los recordatorios por correo"),
          "resumen": ("mail_digest", "el resumen del día por correo")}
 
 
-def _page(title: str, text: str) -> HTMLResponse:
+def _page(request: Request, title: str, text: str) -> HTMLResponse:
+    lang = i18n.request_lang(request, optional_user(request))
     return HTMLResponse(
-        '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, '
+        '<!doctype html><html lang="es"><head>' + i18n.head(lang) + '<meta charset="utf-8"><meta name="viewport" content="width=device-width, '
         'initial-scale=1, maximum-scale=1"><title>Mam-IA</title><link rel="stylesheet" href="/static/common/tokens.css">'
         '<link rel="stylesheet" href="/static/common/pages.css"></head><body><header class="top"><a class="brand" href="/">'
         '<img src="/logo.svg" width="32" height="32" alt="">Mam-IA</a></header><main class="wrap">'
@@ -40,11 +41,11 @@ def _unsubscribe(u: str, t: str, s: str) -> tuple[bool, str]:
 
 
 @router.get("/correo/baja", include_in_schema=False)
-def unsubscribe_page(u: str = "", t: str = "", s: str = ""):
+def unsubscribe_page(request: Request, u: str = "", t: str = "", s: str = ""):
     ok, what = _unsubscribe(u, t, s)
     if not ok:
-        return _page("Enlace no válido", "Este enlace no es válido. Puedes elegir qué correos recibir en Mam-IA, en Ajustes.")
-    return _page("Hecho", f"Ya no te enviaremos {esc(what)}. Si cambias de idea, vuelve a activarlo en Ajustes.")
+        return _page(request, "Enlace no válido", "Este enlace no es válido. Puedes elegir qué correos recibir en Mam-IA, en Ajustes.")
+    return _page(request, "Hecho", f"Ya no te enviaremos {esc(what)}. Si cambias de idea, vuelve a activarlo en Ajustes.")
 
 
 @router.post("/correo/baja", include_in_schema=False)
