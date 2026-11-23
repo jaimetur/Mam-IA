@@ -36,8 +36,8 @@ class Billing(private val activity: MainActivity) : PurchasesUpdatedListener {
         val q = QueryProductDetailsParams.newBuilder().setProductList(listOf(
             QueryProductDetailsParams.Product.newBuilder().setProductId(PRODUCT).setProductType(BillingClient.ProductType.SUBS).build()
         )).build()
-        client.queryProductDetailsAsync(q) { r, list ->
-            if (r.responseCode == BillingClient.BillingResponseCode.OK) details = list.firstOrNull()
+        client.queryProductDetailsAsync(q) { r, res ->   // Billing 8: a QueryProductDetailsResult
+            if (r.responseCode == BillingClient.BillingResponseCode.OK) details = res.productDetailsList.firstOrNull()
         }
     }
 

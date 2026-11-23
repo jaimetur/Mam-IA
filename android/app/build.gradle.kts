@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "app.mamia.android"
-    compileSdk = 35
+    compileSdk = 36   // Google Play asks for target SDK 36
 
     defaultConfig {
         applicationId = "app.mamia.android"
         minSdk = 28
-        targetSdk = 35
+        targetSdk = 36
         versionCode = (System.getenv("MAMIA_ANDROID_BUILD") ?: "1").toInt()
         versionName = "0.2." + (System.getenv("MAMIA_ANDROID_BUILD") ?: "0")
     }
@@ -50,5 +50,5 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.fragment:fragment-ktx:1.8.5")   // activity results need Fragment 1.3+ (lint)
-    implementation("com.android.billingclient:billing-ktx:7.1.1")   // the subscription in Google Play (Billing.kt)
+    implementation("com.android.billingclient:billing-ktx:8.0.0")   // Google Play asks for 8.0.0 or newer   // the subscription in Google Play (Billing.kt)
 }
