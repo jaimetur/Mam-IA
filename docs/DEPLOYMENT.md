@@ -26,7 +26,7 @@ docker compose pull
 docker compose up -d
 ```
 
-La app escucha en `APP_PORT` (5078 por defecto). Comprueba `http://<IP del NAS>:5078/healthz` → `{"ok": true}`.
+La app escucha en `APP_PORT` (5071 por defecto, el que ya usa la regla del proxy del NAS). Comprueba `http://<IP del NAS>:5071/healthz` → `{"ok": true}`.
 
 Para actualizar a la última versión publicada (`:latest`, la de la rama de versión más reciente):
 
@@ -40,7 +40,7 @@ En DSM → Panel de control → Portal de inicio de sesión → Avanzado → Pro
 
 | Origen | Destino |
 | --- | --- |
-| HTTPS · `mamia.jtgcloud.com` · 443 | HTTP · `localhost` · 5078 |
+| HTTPS · `mamia.jtgcloud.com` · 443 | HTTP · `localhost` · 5071 |
 
 En «Encabezado personalizado» añade WebSocket (no es obligatorio) y comprueba que el certificado de
 `mamia.jtgcloud.com` (Let's Encrypt) está asignado a esa regla en Seguridad → Certificado. El DNS de
