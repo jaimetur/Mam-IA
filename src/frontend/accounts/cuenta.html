@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
+  <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
+  <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
+  <script src="/static/common/pages.js?v={{v}}"></script>
+  <title>Tu cuenta · Mam-IA</title>
+</head>
+<body>
+  <header class="top"><a class="brand" href="/app"><img src="/static/common/logo.svg" width="32" height="32" alt="">Mam-IA</a>
+    <a class="btn sm" href="/app" id="back">Volver a la app</a></header>
+  <main class="wrap">
+    <section class="panel" id="must" hidden>
+      <h1>Elige tu contraseña</h1>
+      <p class="lead">Es la primera vez que entras: cambia la contraseña provisional por una tuya.</p>
+    </section>
+
+    <section class="panel" id="who" hidden>
+      <h1 id="hello">Tu cuenta</h1>
+      <form id="fp" autocomplete="on">
+        <label class="field"><span>Nombre</span><input type="text" name="name" maxlength="60" required></label>
+        <label class="field"><span>Correo electrónico (con él entras)</span><input type="email" name="email" required></label>
+        <p class="msg" id="mp" hidden role="status"></p>
+        <div class="btns"><button class="btn" type="submit">Guardar</button></div>
+      </form>
+    </section>
+
+    <section class="panel" id="pw">
+      <h2>Contraseña</h2>
+      <form id="fw" autocomplete="on">
+        <label class="field" id="cur"><span>Contraseña actual</span><input type="password" name="current" autocomplete="current-password"></label>
+        <label class="field"><span>Contraseña nueva (8 caracteres o más)</span><input type="password" name="new" autocomplete="new-password" minlength="8" required></label>
+        <p class="msg" id="mw" hidden role="status"></p>
+        <div class="btns"><button class="btn pri" type="submit">Cambiar la contraseña</button></div>
+      </form>
+    </section>
+
+    <section class="panel" id="sub" hidden>
+      <h2>Suscripción de la familia</h2>
+      <dl class="kv" id="subkv"></dl>
+      <p class="msg" id="ms" hidden role="status"></p>
+      <div class="btns" id="subacts"></div>
+      <div id="renew" hidden style="display:grid;gap:12px">
+        <div class="plans" role="radiogroup" aria-label="Plan">
+          <label class="plan"><input type="radio" name="rplan" value="monthly"><b>Mensual</b><span class="amt">2,50 € <small>/ mes</small></span></label>
+          <label class="plan"><input type="radio" name="rplan" value="yearly" checked><span class="save">2 meses gratis</span><b>Anual</b><span class="amt">25 € <small>/ año</small></span></label>
+        </div>
+        <button class="btn pri" type="button" id="dorenew">Pagar con Stripe</button>
+      </div>
+      <form id="fc" autocomplete="off" style="grid-template-columns:1fr auto;align-items:end">
+        <label class="field"><span>¿Tienes un código?</span><input type="text" name="code" maxlength="60" autocapitalize="characters"></label>
+        <button class="btn" type="submit">Usar</button>
+      </form>
+    </section>
+
+    <section class="panel" id="danger" hidden>
+      <h2>Borrar</h2>
+      <p class="lead" id="dangertxt"></p>
+      <form id="fd" autocomplete="off">
+        <label class="field"><span>Escribe tu contraseña para confirmar</span><input type="password" name="password" autocomplete="current-password" required></label>
+        <p class="msg" id="md" hidden role="alert"></p>
+        <div class="btns"><button class="btn danger" type="submit" id="delme">Borrar mi cuenta</button>
+          <button class="btn danger" type="button" id="delfam" hidden>Borrar la familia entera</button></div>
+      </form>
+      <p class="small">Antes de borrar, puedes descargar una copia en Ajustes → Copia de seguridad. Más información en <a href="/borrar-cuenta">Borrar la cuenta</a>.</p>
+    </section>
+
+    <p class="center"><button class="btn sm" type="button" id="out">Cerrar sesión</button></p>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const fmt = (ms) => new Date(ms).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+    let me = null;
+
+    async function load() {
+      me = await M.api("/api/me");
+      const u = me.user, f = me.family, b = me.billing;
+      const owner = f.ownerId === u.id;
+      if (u.mustChange || M.q("cambiar")) { $("must").hidden = false; $("cur").hidden = true; $("back").hidden = true; }
+      else { $("who").hidden = false; $("sub").hidden = false; $("danger").hidden = false; }
+      $("hello").textContent = "Hola, " + u.name.split(" ")[0];
+      $("fp").name.value = u.name; $("fp").email.value = u.email;
+      // subscription
+      const kv = [];
+      const plan = { monthly: "Mensual (2,50 €/mes)", yearly: "Anual (25 €/año)" };
+      if (b.plan === "web") {
+        kv.push(["Plan", plan[b.basePlan] || "De pago"]);
+        kv.push(["Estado", b.state === "trialing" ? "Prueba gratis" : b.active ? (b.cancelAtEnd ? "Cancelada: termina al final del periodo" : "Activa") : "Terminada"]);
+        if (b.expiry) kv.push([b.cancelAtEnd || !b.active ? "Hasta el" : "Próximo cobro", fmt(b.expiry)]);
+        if (b.method) kv.push(["Pago", b.method]);
+      } else if (b.plan === "gift") {
+        kv.push(["Plan", "Gratis" + (b.code && b.code !== "admin" ? ` (código ${b.code})` : "")]);
+        kv.push(["Hasta", b.expiry ? fmt(b.expiry) : "Para siempre"]);
+      } else kv.push(["Plan", "Sin suscripción (este servidor no la pide)"]);
+      if (b.readOnly) kv.push(["Atención", "La familia está en modo solo lectura"]);
+      if (!owner) kv.push(["Gestiona", (f.accounts.find((a) => a.owner) || {}).name || "Quien paga la familia"]);
+      $("subkv").innerHTML = kv.map(([k, v]) => `<dt>${k}</dt><dd></dd>`).join("");
+      [...$("subkv").querySelectorAll("dd")].forEach((dd, i) => { dd.textContent = kv[i][1]; });
+      const acts = [];
+      if (owner && b.plan === "web") {
+        acts.push(["Cambiar la tarjeta o ver facturas", "portal"]);
+        if (b.active && !b.cancelAtEnd) acts.push([b.basePlan === "monthly" ? "Pasar al plan anual" : "Pasar al plan mensual", "change"], ["Cancelar la suscripción", "cancel"]);
+        if (b.active && b.cancelAtEnd) acts.push(["Seguir con la suscripción", "resume"]);
+      }
+      $("subacts").innerHTML = "";
+      for (const [label, act] of acts) {
+        const btn = document.createElement("button");
+        btn.className = "btn sm" + (act === "cancel" ? " danger" : ""); btn.type = "button"; btn.textContent = label; btn.dataset.act = act;
+        $("subacts").appendChild(btn);
+      }
+      const needsPay = owner && (b.readOnly || (b.plan === "gift" && b.expiry) || (b.plan === "web" && !b.active));
+      $("renew").hidden = !needsPay;
+      $("fc").hidden = u.role !== "admin";
+      // deleting
+      const others = f.accounts.length > 1;
+      $("dangertxt").textContent = owner
+        ? (others ? "Eres quien paga la familia. Para borrar solo tu cuenta, antes pasa la familia a otra persona (en la app: Familia). También puedes borrar la familia entera: todas las cuentas y todos los datos." : "Al borrar tu cuenta se borra también la familia con todos sus datos, y se cancela la suscripción.")
+        : "Al borrar tu cuenta dejarás de entrar. Tus planes y tareas se quedan en la familia, a tu nombre pero sin cuenta.";
+      $("delme").hidden = owner && others;
+      $("delfam").hidden = !owner || !others;
+    }
+
+    $("fp").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try { await M.api("/api/me", { method: "PUT", body: { name: e.target.name.value, email: e.target.email.value } }); M.msg($("mp"), "Guardado", "ok"); }
+      catch (err) { M.msg($("mp"), err.message); }
+    });
+    $("fw").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        await M.api("/api/me/password", { method: "POST", body: { current: e.target.current.value, new: e.target.new.value } });
+        if (me.user.mustChange || M.q("cambiar")) { location.href = "/app"; return; }
+        M.msg($("mw"), "Contraseña cambiada. Las demás sesiones se han cerrado.", "ok"); e.target.reset();
+      } catch (err) { M.msg($("mw"), err.message); }
+    });
+    $("subacts").addEventListener("click", async (e) => {
+      const b = e.target.closest("[data-act]"); if (!b) return;
+      const act = b.dataset.act;
+      try {
+        if (act === "portal") { location.href = (await M.api("/api/web/portal", { method: "POST" })).url; return; }
+        if (act === "change") await M.api("/api/web/change", { method: "POST", body: { plan: me.billing.basePlan === "monthly" ? "yearly" : "monthly" } });
+        if (act === "cancel") await M.api("/api/web/cancel", { method: "POST" });
+        if (act === "resume") await M.api("/api/web/resume", { method: "POST" });
+        M.msg($("ms"), act === "cancel" ? "Cancelada. Seguís teniendo todo hasta el final del periodo pagado." : "Hecho.", "ok");
+        load();
+      } catch (err) { M.msg($("ms"), err.message); }
+    });
+    $("dorenew").addEventListener("click", async () => {
+      const plan = document.querySelector("input[name=rplan]:checked").value;
+      try { location.href = (await M.api("/api/web/renew", { method: "POST", body: { plan } })).url; }
+      catch (err) { M.msg($("ms"), err.message); }
+    });
+    $("fc").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try { await M.api("/api/billing/code", { method: "POST", body: { code: e.target.code.value } }); M.msg($("ms"), "Código aplicado.", "ok"); e.target.reset(); load(); }
+      catch (err) { M.msg($("ms"), err.message); }
+    });
+    async function del(url, what) {
+      const pw = $("fd").password.value;
+      if (!pw) { $("fd").password.focus(); return; }
+      if (!$("md").dataset.sure) { M.msg($("md"), `Pulsa otra vez para borrar ${what}. No se puede deshacer.`); $("md").dataset.sure = url; return; }
+      if ($("md").dataset.sure !== url) { delete $("md").dataset.sure; return del(url, what); }
+      try {
+        await M.api(url, { method: "POST", body: { password: pw } });
+        try { Object.keys(localStorage).filter((k) => k.startsWith("mamia:")).forEach((k) => localStorage.removeItem(k)); } catch (e) {}
+        location.href = "/";
+      } catch (err) { delete $("md").dataset.sure; M.msg($("md"), err.message); }
+    }
+    $("fd").addEventListener("submit", (e) => { e.preventDefault(); del("/api/me/delete", "tu cuenta"); });
+    $("delfam").addEventListener("click", () => del("/api/family/delete", "la familia entera"));
+    $("out").addEventListener("click", async () => {
+      try { await M.api("/api/logout", { method: "POST" }); } catch (e) {}
+      try { Object.keys(localStorage).filter((k) => k.startsWith("mamia:fam:")).forEach((k) => localStorage.removeItem(k)); } catch (e) {}
+      location.href = "/entrar";
+    });
+    load().catch((e) => { document.querySelector("main").insertAdjacentHTML("afterbegin", '<p class="msg err" role="alert"></p>'); document.querySelector("main .msg").textContent = e.message; });
+  </script>
+</body>
+</html>

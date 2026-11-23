@@ -1,0 +1,74 @@
+name: 🤖 Android app
+
+# Builds the Mam-IA Android app (the web app in a native shell, with exact reminders and "Share with Mam-IA").
+# - On every change in android/ it refreshes the rolling "android-latest" pre-release, from where the APK reaches the
+#   server (<DATA_DIR>/android/mamia-android.apk, served at /android.apk).
+# - Called by a release workflow with a release tag, it attaches the APK to that version's release instead.
+on:
+  push:
+    branches: [main, "[0-9]+.[0-9]+.[0-9]+"]
+    paths: ["android/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: "Release (vX.Y.Z) to attach the APK to"
+        type: string
+        required: true
+
+concurrency:
+  group: mamia-android-${{ github.ref }}-${{ inputs.release_tag || 'rolling' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "8.11.1"
+      - name: Signing key (if the keystore is in the secrets)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/mamia.jks"; echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/mamia.jks" >> "$GITHUB_ENV"; fi
+      - name: Build
+        working-directory: android
+        env:
+          MAMIA_ANDROID_BUILD: ${{ github.run_number }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: gradle --no-daemon assembleRelease
+      - name: Publish to the rolling android-latest pre-release
+        if: ${{ !inputs.release_tag }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk mamia-android.apk
+          TITLE="Android app (rolling build)"
+          NOTES="Latest APK of the Mam-IA Android app, rebuilt on every change in android/. It is a rolling build (hence a pre-release); each version's APK is attached to its own vX.Y.Z release."
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release edit android-latest --title "$TITLE" --notes "$NOTES" --prerelease
+          else
+            gh release create android-latest --prerelease --title "$TITLE" --notes "$NOTES"
+          fi
+          gh release upload android-latest mamia-android.apk --clobber
+          echo "build ${{ github.run_number }} · ${GITHUB_SHA::7}" > android-build.txt
+          gh release upload android-latest android-build.txt --clobber
+      - name: Attach to the version release
+        if: ${{ inputs.release_tag }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          T="${{ inputs.release_tag }}"
+          cp android/app/build/outputs/apk/release/app-release.apk "mamia-android-$T.apk"
+          gh release upload "$T" "mamia-android-$T.apk" --clobber

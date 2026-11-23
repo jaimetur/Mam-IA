@@ -34,14 +34,21 @@ class ReleaseToolTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             rt.replace_service_worker_version('const ASSETS = [];\n', '1.4.2')
 
+    def test_pyproject_and_android(self):
+        self.assertIn('version = "0.3.0"', rt.replace_pyproject_version('[project]\nname = "x"\nversion = "0.2.0"\n', '0.3.0'))
+        g = 'versionName = "0.2." + (System.getenv("MAMIA_ANDROID_BUILD") ?: "0")'
+        self.assertTrue(rt.replace_android_version(g, '1.4.2').startswith('versionName = "1.4." +'))
+
     def test_real_files_build_without_writing(self):
-        before = {p: p.read_text(encoding='utf-8') for p in (rt.CHANGELOG_PATH, rt.SERVICE_WORKER_PATH)}
+        before = {p: p.read_text(encoding='utf-8')
+                  for p in (rt.CHANGELOG_PATH, rt.SERVICE_WORKER_PATH, rt.PYPROJECT_PATH, rt.ANDROID_GRADLE_PATH)}
         version, _ = rt.read_release_metadata()
         major, minor, patch = map(int, version.split('.'))
         new_version = f'{major}.{minor}.{patch + 1}'
         files = rt.release_file_contents(new_version, '2030-01-01', create_changelog_release=True)
         self.assertIn(f'## Release: v{new_version}', files[rt.CHANGELOG_PATH])
         self.assertIn(f'"mam-ia-v{new_version}"', files[rt.SERVICE_WORKER_PATH])
+        self.assertIn(f'version = "{new_version}"', files[rt.PYPROJECT_PATH])
         self.assertEqual({p: p.read_text(encoding='utf-8') for p in before}, before)   # nothing written
 
 

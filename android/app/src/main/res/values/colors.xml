@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mam-IA palette (src/frontend/common/tokens.css) -->
+    <color name="ic_launcher_background">#C93E66</color>
+    <color name="accent">#C93E66</color>
+    <color name="paper">#F6F3F6</color>
+    <color name="ink">#231B29</color>
+</resources>

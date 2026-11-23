@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bienvenida · Mam-IA</title>
+  <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
+  <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
+  <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
+  <script src="/static/common/pages.js?v={{v}}"></script>
+</head>
+<body>
+  <header class="top"><a class="brand" href="/"><img src="/static/common/logo.svg" width="32" height="32" alt="">Mam-IA</a></header>
+  <main class="wrap">
+    <section class="panel">
+      <h1 id="t">Preparando tu familia…</h1>
+      <p class="lead" id="d">Estamos confirmando el pago con Stripe. Solo tarda un momento.</p>
+      <p class="msg err" id="m" hidden role="alert"></p>
+      <div class="btns" id="b" hidden><a class="btn pri" href="/app">Abrir Mam-IA</a></div>
+      <div class="btns" id="retry" hidden><button class="btn" type="button" onclick="run()">Volver a intentarlo</button><a class="btn" href="/entrar">Entrar</a></div>
+    </section>
+  </main>
+  <script>
+    let tries = 0;
+    async function run() {
+      document.getElementById("retry").hidden = true;
+      const sid = M.q("session_id");
+      if (!sid) { M.msg(document.getElementById("m"), "Falta la referencia del pago."); return; }
+      try {
+        const r = await M.api("/api/web/complete", { method: "POST", body: { session_id: sid } });
+        document.getElementById("t").textContent = "¡Bienvenida a Mam-IA!";
+        document.getElementById("d").textContent = r.signedIn
+          ? "Tu familia ya está lista. Empieza añadiendo a los tuyos y apuntando lo que tengas en la cabeza."
+          : `Tu suscripción está activa. Entra con ${r.email}.`;
+        document.getElementById("b").hidden = false;
+        if (r.signedIn) setTimeout(() => { location.href = "/app"; }, 2500);
+      } catch (e) {
+        if (++tries < 5) { setTimeout(run, 2500); return; }
+        M.msg(document.getElementById("m"), e.message);
+        document.getElementById("retry").hidden = false;
+      }
+    }
+    run();
+  </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
+  <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
+  <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
+  <script src="/static/common/pages.js?v={{v}}"></script>
+  <title>Únete a tu familia · Mam-IA</title>
+</head>
+<body>
+  <header class="top"><a class="brand" href="/"><img src="/static/common/logo.svg" width="32" height="32" alt="">Mam-IA</a>
+    <a class="btn sm" href="/entrar">Entrar</a></header>
+  <main class="wrap">
+    <section class="panel">
+      <h1 id="t">Únete a tu familia</h1>
+      <p class="lead" id="d">Comprobando la invitación…</p>
+      <form id="f" hidden autocomplete="on">
+        <label class="field"><span>Tu nombre</span><input type="text" name="name" autocomplete="given-name" maxlength="60" required></label>
+        <label class="field"><span>Correo electrónico</span><input type="email" name="email" autocomplete="email" required></label>
+        <label class="field"><span>Contraseña (8 caracteres o más)</span><input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+        <label class="small" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" name="terms" required style="margin-top:3px">
+          <span>Acepto los <a href="/terminos" target="_blank">términos</a> y la <a href="/privacidad" target="_blank">política de privacidad</a>.</span></label>
+        <p class="msg err" id="m" hidden role="alert"></p>
+        <button class="btn pri" type="submit">Crear mi cuenta</button>
+        <p class="small center">No pagas nada: la familia ya tiene Mam-IA.</p>
+      </form>
+    </section>
+  </main>
+  <script>
+    const code = M.q("c"), f = document.getElementById("f");
+    M.api("/api/invites/" + encodeURIComponent(code || "-")).then((i) => {
+      document.getElementById("t").textContent = "Únete a " + i.family;
+      document.getElementById("d").textContent = (i.by ? i.by + " te invita" : "Te invitan") + " a organizar con Mam-IA la agenda, las tareas y la compra de la familia.";
+      if (i.name) f.name.value = i.name;
+      if (i.email) { f.email.value = i.email; f.email.readOnly = true; }
+      f.hidden = false;
+      (i.name ? f.password : f.name).focus();
+    }).catch((e) => {
+      document.getElementById("t").textContent = "Invitación no válida";
+      document.getElementById("d").textContent = e.message;
+    });
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const b = f.querySelector("button"), m = document.getElementById("m");
+      M.msg(m, ""); M.busy(b, true);
+      try {
+        await M.api("/api/invites/accept", { method: "POST", body: { code, name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value } });
+        location.href = "/app";
+      } catch (err) { M.msg(m, err.message); M.busy(b, false); }
+    });
+  </script>
+</body>
+</html>

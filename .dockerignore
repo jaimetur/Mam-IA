@@ -1,22 +1,17 @@
-# Evita incluir archivos innecesarios en la imagen Docker
-
-# Entornos virtuales
-venv/
-.env/
-
-# Archivos temporales y de sistema
-*.pyc
-__pycache__/
-.DS_Store
-
-# Archivos de control de Git
+# What the Docker image does not need (docker/Dockerfile copies only the server, the pages and the docs)
 .git
-.gitignore
-
-# Archivos ZIP de releases
-*.zip
-
-# Workflows de GitHub
 .github/
-
-
+.idea/
+.run/
+.venv/
+venv/
+.env
+docker/.env
+data-dev/
+android/
+tests/
+tools/
+**/__pycache__/
+*.pyc
+.DS_Store
+*.zip

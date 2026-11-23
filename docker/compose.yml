@@ -1,0 +1,14 @@
+# Production (NAS). Copy this file and docker/.env.example (as .env) to the stack folder, then: docker compose up -d
+# The reverse proxy of the NAS publishes it at https://mamia.jtgcloud.com (see docs/DEPLOYMENT.md).
+services:
+  mamia:
+    image: ${IMAGE_REPOSITORY:-jaimetur/mam-ia}:${IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: ${CONTAINER_NAME:-mamia}
+    env_file:
+      - .env
+    ports:
+      - "${APP_PORT:-5078}:8000"
+    volumes:
+      - ${HOST_DATA_DIR:-./data}:/data
+    restart: unless-stopped

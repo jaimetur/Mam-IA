@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
+  <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
+  <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
+  <script src="/static/common/pages.js?v={{v}}"></script>
+  <title>Recuperar la contraseña · Mam-IA</title>
+</head>
+<body>
+  <header class="top"><a class="brand" href="/"><img src="/static/common/logo.svg" width="32" height="32" alt="">Mam-IA</a>
+    <a class="btn sm" href="/entrar">Entrar</a></header>
+  <main class="wrap">
+    <section class="panel" id="ask">
+      <h1>¿Has olvidado la contraseña?</h1>
+      <p class="lead">Escribe tu correo y te enviaremos un enlace para elegir otra.</p>
+      <form id="f1"><label class="field"><span>Correo electrónico</span><input type="email" name="email" autocomplete="email" required autofocus></label>
+        <p class="msg err" id="m1" hidden role="alert"></p><button class="btn pri" type="submit">Enviarme el enlace</button></form>
+    </section>
+    <section class="panel" id="set" hidden>
+      <h1>Elige una contraseña nueva</h1>
+      <form id="f2"><label class="field"><span>Contraseña nueva (8 caracteres o más)</span><input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+        <p class="msg err" id="m2" hidden role="alert"></p><button class="btn pri" type="submit">Guardar y entrar</button></form>
+    </section>
+  </main>
+  <script>
+    const t = M.q("t");
+    if (t) { document.getElementById("ask").hidden = true; document.getElementById("set").hidden = false; }
+    document.getElementById("f1").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const b = e.target.querySelector("button"), m = document.getElementById("m1");
+      M.busy(b, true);
+      try {
+        await M.api("/api/password/forgot", { method: "POST", body: { email: e.target.email.value.trim() } });
+        M.msg(m, "Si hay una cuenta con ese correo, te llegará el enlace en unos minutos. Revisa también el correo no deseado.", "ok");
+      } catch (err) { M.msg(m, err.message); }
+      M.busy(b, false);
+    });
+    document.getElementById("f2").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const b = e.target.querySelector("button"), m = document.getElementById("m2");
+      M.busy(b, true);
+      try { await M.api("/api/password/reset", { method: "POST", body: { token: t, password: e.target.password.value } }); location.href = "/app"; }
+      catch (err) { M.msg(m, err.message); M.busy(b, false); }
+    });
+  </script>
+</body>
+</html>

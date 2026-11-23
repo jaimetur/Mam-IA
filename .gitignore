@@ -221,3 +221,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+
+# Mam-IA: local data of the development server (runMamIA.py) and macOS files
+data-dev/
+.DS_Store

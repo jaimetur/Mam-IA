@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Entrar · Mam-IA</title>
+  <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="/static/common/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
+  <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
+  <script src="/static/common/pages.js?v={{v}}"></script>
+</head>
+<body>
+  <header class="top"><a class="brand" href="/"><img src="/static/common/logo.svg" width="32" height="32" alt="">Mam-IA</a>
+    <a class="btn sm" href="/alta">Crear cuenta</a></header>
+  <main class="wrap">
+    <section class="panel">
+      <h1>Hola de nuevo</h1>
+      <p class="lead">Entra para ver la agenda, las tareas y la compra de tu familia.</p>
+      <form id="f" autocomplete="on">
+        <label class="field"><span>Correo electrónico</span><input type="email" name="email" autocomplete="username" required autofocus></label>
+        <label class="field"><span>Contraseña</span><input type="password" name="password" autocomplete="current-password" required></label>
+        <p class="msg err" id="m" hidden role="alert"></p>
+        <button class="btn pri" type="submit">Entrar</button>
+      </form>
+      <p class="small center"><a href="/recuperar">He olvidado mi contraseña</a></p>
+    </section>
+    <p class="small center">¿Todavía no tienes Mam-IA? <a href="/alta">Pruébala gratis</a> · Si te han invitado, abre el enlace de tu invitación.</p>
+  </main>
+  <script>
+    document.getElementById("f").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target, b = f.querySelector("button"), m = document.getElementById("m");
+      M.msg(m, "");
+      M.busy(b, true, "Entrando…");
+      try {
+        await M.api("/api/login", { method: "POST", body: { email: f.email.value.trim(), password: f.password.value } });
+        location.href = M.next("/app");
+      } catch (err) { M.msg(m, err.message); M.busy(b, false); }
+    });
+  </script>
+</body>
+</html>

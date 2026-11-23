@@ -1,60 +1,42 @@
 # ROADMAP - Mam-IA
 
-Referencia historica: ver [CHANGELOG.md](./CHANGELOG.md)
+Referencia histórica: ver [CHANGELOG.md](./CHANGELOG.md)
 
 ---
 
-## v0.2.x - Producto usable en familia real (corto plazo)
+## v0.2.x - Base compartida (hecho en v0.2.0)
 
-- Persistencia real con backend (API + base de datos).
-- Gestion de cuentas familiares con login y roles:
-  - administradora
-  - colaborador
-  - miembro
-- CRUD completo de tareas y eventos por modulo.
-- Calendario compartido mensual/semanal con filtros por miembro.
-- Recordatorios basicos de tareas/citas.
-- Exportacion/backup de datos familiares.
+- Servidor propio (FastAPI + SQLite en Docker) con cuentas, familias, invitaciones y permisos.
+- Interfaz nueva para el móvil: Hoy, Agenda, Tareas y rutinas, Compras, Menú, Peques, Familia y Ajustes.
+- Apuntar en lenguaje natural sin IA, avisos push y alarmas nativas en Android, modo sin conexión.
+- Suscripción por familia con Stripe, oferta de lanzamiento y administración.
+- Pendiente de esta fase: probar la app de Android en dispositivos reales y publicar su primer APK firmado.
 
-## v0.3.x - Colaboracion y sincronizacion (medio plazo)
+## v0.3.x - La casa y los peques
 
-- Sincronizacion multi-dispositivo en tiempo real.
-- Invitaciones reales por email con token.
-- Notificaciones push web/mobile.
-- Comentarios y estado por tarea (pendiente/en curso/hecha).
-- Plantillas reutilizables:
-  - menu semanal
-  - rutina de limpieza
-  - lista de compra tipo
-- Vista de carga familiar por miembro (equilibrio de tareas).
+- Casa: mantenimiento y vencimientos (ITV, seguros, revisión de la caldera), recibos y garantías.
+- Enlace de calendario (ICS) para ver la agenda en Google o Apple Calendar.
+- Avisos por correo antes de que termine el acceso gratis o la suscripción.
+- Widget de «Hoy» en Android y atajos.
+- Traducción al inglés (los textos ya están preparados).
 
-## v0.4.x - Inteligencia y automatizacion (medio-largo plazo)
+## v0.4.x - Mam-IA con IA (opcional, API de Claude)
 
-- Sugerencias de planificacion con IA:
-  - menu semanal segun preferencias/restricciones
-  - reparto de tareas equilibrado
-  - ventanas de tiempo libre recomendadas
-- Priorizacion automatica por urgencia y contexto.
-- Deteccion de conflictos de agenda.
-- Resumen semanal automatico con alertas clave.
+- Apuntar con frases libres o por voz, y foto de una circular del cole convertida en planes y tareas.
+- Menú semanal sugerido según gustos, alergias y comedor.
+- Resumen del domingo: la semana que viene, choques y lo que falta por organizar.
+- Salud de la familia, Dinero (presupuesto y recibos), Viajes (maletas con plantilla) y Para mí.
 
-## v1.0.0 - Version estable (largo plazo)
+## v1.0.0 - Versión estable
 
-- Apps moviles nativas (Android/iOS) o wrapper robusto PWA.
-- Integraciones externas:
-  - Google Calendar / Apple Calendar (opcional)
-  - proveedores de compra (opcional)
-- Seguridad reforzada:
-  - cifrado de datos sensibles
-  - auditoria de accesos
-- Observabilidad y metricas de uso anonimas.
-- Suite de tests (unitarios, integracion y e2e) con CI completo.
+- App en Google Play (con Google Play Billing) y revisión de la PWA en iPhone.
+- Suite de tests de extremo a extremo y observabilidad básica.
+- Revisión legal de los textos de privacidad y términos.
 
 ---
 
-## Prioridades tecnicas transversales
+## Prioridades técnicas transversales
 
-- Mejorar accesibilidad (teclado, contraste, lectores de pantalla).
-- Mejorar rendimiento en movil de gama media/baja.
-- Internacionalizacion (ES/EN en primera fase).
-- Documentacion tecnica y de usuario alineada por version.
+- Accesibilidad (teclado, contraste, lectores de pantalla).
+- Rendimiento en móviles de gama media y baja.
+- Privacidad: datos de menores tratados como sensibles, sin terceros salvo Stripe y el correo.

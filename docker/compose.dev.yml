@@ -1,0 +1,23 @@
+# Development with live code: docker compose -f docker/compose.dev.yml up --build   →  http://localhost:8000
+# The pages are served straight from src/frontend and the server reloads when its code changes.
+# Data: data-dev/ (not in Git). Families can sign up without paying (OPEN_SIGNUP).
+services:
+  mamia:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      COOKIE_SECURE: "0"
+      OPEN_SIGNUP: "1"
+      PUBLIC_URL: "http://localhost:8000"
+      MAMIA_ADMIN_EMAIL: "admin@mamia.local"
+      MAMIA_ADMIN_PASSWORD: "mamia-admin"
+      MAMIA_REVISION: "dev"
+      WATCHFILES_FORCE_POLLING: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../src/backend/app:/app/backend/app
+      - ../src/frontend:/app/frontend
+      - ../data-dev:/data
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/backend/app"]

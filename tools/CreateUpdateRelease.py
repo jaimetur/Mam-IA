@@ -4,8 +4,10 @@
 Adapted from DriveTest Analyzer's, BodyLens' and MeetGo's tool of the same name. A Mam-IA release is:
   - a branch named after the version (X.Y.Z), committed and pushed to origin;
   - a `## Release: vX.Y.Z` block on top of CHANGELOG.md, whose header gives the current version and release date;
-  - the same version in the service worker cache name (src/service-worker.js), so every new release replaces the files
-    that browsers and the installed PWA keep in their cache.
+  - the same version in pyproject.toml (the server) and in the service worker's cache name (src/frontend/app/sw.js), so
+    every new release replaces the files that browsers and the installed PWA keep in their cache;
+  - the major.minor of the Android app's versionName (android/app/build.gradle.kts; the patch is the CI build number).
+Every push of the release branch builds the Docker image jaimetur/mam-ia:X.Y.Z and :latest (GitHub Actions).
 
 Usage:
   python tools/CreateUpdateRelease.py                                 # window (Tk); questions in the terminal without Tk
@@ -26,8 +28,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CHANGELOG_PATH = ROOT / 'CHANGELOG.md'
-SERVICE_WORKER_PATH = ROOT / 'src' / 'service-worker.js'
-# only X.Y.Z: release branches are named like that
+SERVICE_WORKER_PATH = ROOT / 'src' / 'frontend' / 'app' / 'sw.js'
+PYPROJECT_PATH = ROOT / 'pyproject.toml'
+ANDROID_GRADLE_PATH = ROOT / 'android' / 'app' / 'build.gradle.kts'
+# only X.Y.Z: release branches are named like that and pyproject.toml needs a valid Python version
 VERSION_PATTERN = r'\d+\.\d+\.\d+'
 DATE_PATTERN = r'\d{4}-\d{2}-\d{2}'
 
@@ -81,7 +85,25 @@ def replace_service_worker_version(content: str, version: str) -> str:
     content, count = re.subn(r'^(const CACHE_NAME = "mam-ia-v)[^"]+(";)', rf'\g<1>{version}\g<2>', content, count=1,
                              flags=re.MULTILINE)
     if count != 1:
-        raise RuntimeError('Unable to update the cache name in src/service-worker.js.')
+        raise RuntimeError('Unable to update the cache name in src/frontend/app/sw.js.')
+    return content
+
+
+def replace_pyproject_version(content: str, version: str) -> str:
+    """Return pyproject content with the [project] version updated."""
+    content, count = re.subn(r'^(version\s*=\s*")[^"]+("\s*)$', rf'\g<1>{version}\g<2>', content, count=1,
+                             flags=re.MULTILINE)
+    if count != 1:
+        raise RuntimeError('Unable to update the project version in pyproject.toml.')
+    return content
+
+
+def replace_android_version(content: str, version: str) -> str:
+    """Return the Gradle script with the major.minor of versionName updated (the patch is the CI build number)."""
+    major, minor, _ = version.split('.')
+    content, count = re.subn(r'(versionName\s*=\s*")\d+\.\d+\.(")', rf'\g<1>{major}.{minor}.\g<2>', content, count=1)
+    if count != 1:
+        raise RuntimeError('Unable to update versionName in android/app/build.gradle.kts.')
     return content
 
 
@@ -117,6 +139,8 @@ def release_file_contents(version: str, release_date: str, *, create_changelog_r
         CHANGELOG_PATH: (add_changelog_release(changelog, version, release_date) if create_changelog_release
                          else replace_current_changelog_metadata(changelog, version, release_date)),
         SERVICE_WORKER_PATH: replace_service_worker_version(SERVICE_WORKER_PATH.read_text(encoding='utf-8'), version),
+        PYPROJECT_PATH: replace_pyproject_version(PYPROJECT_PATH.read_text(encoding='utf-8'), version),
+        ANDROID_GRADLE_PATH: replace_android_version(ANDROID_GRADLE_PATH.read_text(encoding='utf-8'), version),
     }
 
 
@@ -283,8 +307,8 @@ def window() -> None:
         except Exception as exc:
             messagebox.showerror('Update failed', str(exc), parent=root)
             return
-        messagebox.showinfo('Release metadata updated', 'CHANGELOG.md and src/service-worker.js were updated.',
-                            parent=root)
+        messagebox.showinfo('Release metadata updated', 'CHANGELOG.md, pyproject.toml, src/frontend/app/sw.js and '
+                            'android/app/build.gradle.kts were updated.', parent=root)
         root.destroy()
 
     def apply_create_release() -> None:

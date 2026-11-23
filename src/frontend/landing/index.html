@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mam-IA · La agenda de toda la familia, fuera de tu cabeza</title>
+<meta name="description" content="Agenda familiar, tareas, compra, menú semanal y fichas de los peques en una sola app compartida con toda la familia. Apunta en segundos y recibe los avisos a tiempo. 7 días gratis.">
+<meta name="theme-color" content="#F6F3F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141016" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Mam-IA · Todo lo que llevas en la cabeza, por fin en un sitio">
+<meta property="og:description" content="La agenda, la compra y el reparto de tareas de toda la familia en una sola app. Web y Android.">
+<meta property="og:image" content="/static/common/icons/icon-512.png">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="/static/common/logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/common/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/static/common/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="/static/common/tokens.css">
+<style>
+/* Landing de Mam-IA. Idea central: lo que una madre lleva en la cabeza se va tachando solo, porque pasa a la app y a
+   toda la familia. La propia app (maquetas en HTML con datos de ejemplo) enseña lo que hace. Solo tokens de tokens.css. */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--f-body);overflow-x:clip;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{max-width:100%}
+.wrap{width:min(1180px,100% - 32px);margin-inline:auto}
+h1,h2,h3{font-family:var(--f-display);margin:0;letter-spacing:-.02em;line-height:1.04;text-wrap:balance}
+p{margin:0}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;z-index:50;padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--paper)}
+.skip:focus{left:16px}
+.mark{background:linear-gradient(transparent 58%,color-mix(in srgb,var(--accent) 34%,transparent) 58%,color-mix(in srgb,var(--accent) 34%,transparent) 92%,transparent 92%);padding:0 .06em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.acc{color:var(--accent)}
+.kicker{font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:14px 22px;border-radius:999px;font:700 16px/1.2 var(--f-body);text-decoration:none;border:0;cursor:pointer;transition:transform .2s,box-shadow .2s,background-color .2s;white-space:nowrap}
+.btn .ic{width:18px;height:18px}
+.btn.pri{background:var(--accent);color:var(--accent-ink);box-shadow:0 14px 30px -14px color-mix(in srgb,var(--accent) 90%,transparent)}
+.btn.pri:hover{transform:translateY(-2px);box-shadow:0 18px 36px -14px var(--accent)}
+.btn.sec{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.sec:hover{box-shadow:inset 0 0 0 1px var(--ink2)}
+.btn.big{padding:17px 28px;font-size:17px}
+
+/* barra superior */
+.top{position:sticky;top:0;z-index:30;padding-top:env(safe-area-inset-top,0px);background:color-mix(in srgb,var(--paper) 80%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid transparent;transition:border-color .3s}
+.top.sc{border-color:var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;height:68px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:800 23px var(--f-display);letter-spacing:-.02em}
+.brand img{width:34px;height:34px}
+.top nav{display:flex;gap:24px;margin-left:auto;font-weight:600;font-size:15px}
+.top nav a{text-decoration:none;color:var(--ink2)}
+.top nav a:hover{color:var(--ink)}
+.top .btn{padding:10px 18px;font-size:15px}
+@media (max-width:880px){.top nav{display:none}.top .actions{margin-left:auto}}
+.top .actions{display:flex;gap:8px}
+@media (max-width:420px){.top .actions .pri{display:none}}
+
+/* portada */
+.hero{position:relative;padding:56px 0 70px;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:-20% -10% auto;height:120%;z-index:-1;pointer-events:none;
+  background:radial-gradient(40% 50% at 78% 38%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%),
+             radial-gradient(30% 40% at 12% 10%,color-mix(in srgb,var(--c2) 14%,transparent),transparent 70%),
+             radial-gradient(28% 36% at 50% 100%,color-mix(in srgb,var(--c3) 12%,transparent),transparent 70%)}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:28px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border-radius:999px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-size:14px;font-weight:600;color:var(--ink2);text-decoration:none;max-width:100%}
+.eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none;box-shadow:0 0 0 4px var(--ok-soft)}
+.eyebrow.hot{background:var(--accent-soft);color:var(--ink);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent)}
+.eyebrow.hot i{background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 25%,transparent)}
+.hero h1{font-size:clamp(40px,5.6vw,74px);font-weight:800;margin:20px 0 22px}
+.hero .lead{font-size:clamp(18px,2vw,21px);color:var(--ink2);max-width:36ch;margin-bottom:30px}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.trust{list-style:none;padding:0;margin:28px 0 0;display:flex;flex-wrap:wrap;gap:10px 20px;color:var(--ink2);font-size:15px;font-weight:600}
+.trust li{display:flex;align-items:center;gap:7px}
+.trust .ic{width:17px;height:17px;color:var(--ok)}
+.stage{position:relative;height:660px;display:grid;place-items:center}
+.stage .ph{transform:scale(1.06);transform-origin:center}
+.note{position:absolute;z-index:2;display:flex;align-items:center;gap:9px;max-width:200px;padding:10px 14px 10px 11px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow),inset 0 0 0 1px var(--line);font-size:14.5px;font-weight:600;line-height:1.25;transform:rotate(var(--r,0deg));transition:opacity .5s,transform .5s}
+.note .tick{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;box-shadow:inset 0 0 0 2px var(--line);color:transparent;transition:background-color .35s,box-shadow .35s,color .35s}
+.note .tick .ic{width:13px;height:13px;stroke-width:3}
+.note .who{width:20px;height:20px;border-radius:50%;flex:none;background:var(--mc);color:var(--paper);font:800 10px/20px var(--f-body);text-align:center}
+.note span.t{position:relative}
+.note span.t::after{content:"";position:absolute;left:0;top:52%;height:2px;width:0;background:var(--ink2);transition:width .45s ease}
+.note.done{opacity:.6;transform:rotate(var(--r,0deg)) scale(.96)}
+.note.done .tick{background:var(--ok);box-shadow:none;color:var(--surface)}
+.note.done span.t::after{width:100%}
+.n1{top:34px;left:0;--r:-4deg}.n2{top:236px;left:-1%;--r:2deg}.n3{bottom:116px;left:2%;--r:-2deg}
+.n4{top:64px;right:0;--r:4deg}.n5{top:306px;right:-1%;--r:-3deg}.n6{bottom:52px;right:1%;--r:3deg}
+@media (max-width:1060px){.n2,.n5{display:none}}
+@media (max-width:900px){
+  .hero{padding-top:34px}.hero .wrap{grid-template-columns:1fr}.hero .lead{max-width:none}
+  .stage{height:640px;margin-top:10px}.stage .ph{transform:none}
+  .n1{top:6px;left:0}.n3{bottom:40px;left:0}.n4{top:56px;right:0}.n6{bottom:2px;right:0}
+}
+@media (max-width:480px){.note{font-size:13px;max-width:190px;padding:8px 11px 8px 9px}.n3,.n4{display:none}}
+
+/* oferta de lanzamiento (código público con plazas, servido por /api/promos) */
+.promo{padding:0 0 40px}
+.pbox{position:relative;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:34px;align-items:center;padding:38px 40px;border-radius:32px;isolation:isolate;overflow:hidden;
+  background:radial-gradient(110% 140% at 0% 0%,color-mix(in srgb,var(--accent) 26%,transparent),transparent 55%),radial-gradient(90% 120% at 100% 100%,color-mix(in srgb,var(--c3) 22%,transparent),transparent 60%),var(--surface);
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--accent) 55%,transparent),var(--shadow)}
+.pbox::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 45%,color-mix(in srgb,var(--surface) 45%,transparent) 50%,transparent 55%);animation:shine 6s ease-in-out infinite;z-index:-1;pointer-events:none}
+@keyframes shine{from{transform:translateX(-40%)}to{transform:translateX(40%)}}
+.pbadge{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:14px;letter-spacing:.02em}
+.pbadge .ic{width:16px;height:16px}
+.pbox h2{margin:16px 0 4px;font-size:clamp(44px,6.4vw,80px);font-weight:800}
+.pbox .psub{font:700 clamp(20px,2.4vw,27px)/1.2 var(--f-display);color:var(--accent);margin-bottom:14px;max-width:none}
+.pbox p{color:var(--ink2);font-size:18px;max-width:520px;margin-bottom:20px}
+.pcode{display:inline-flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-radius:16px;border:2px dashed color-mix(in srgb,var(--accent) 70%,transparent);background:var(--paper);color:var(--ink);cursor:pointer;font:800 21px ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.08em}
+.pcode small{font:700 13px var(--f-body);letter-spacing:0;padding:6px 10px;border-radius:10px;background:var(--accent-soft);color:var(--accent)}
+.pr{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.pleft b{display:block;font:800 clamp(84px,12vw,140px)/.85 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.pleft span{display:block;margin-top:8px;font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink2)}
+.pbar{width:min(320px,100%);height:12px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.pbar i{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width 1.6s cubic-bezier(.2,.8,.2,1)}
+.pr small{color:var(--ink2);font-size:14px}
+@media (max-width:900px){.pbox{grid-template-columns:1fr;padding:28px 22px;gap:24px}.pcode{font-size:17px}}
+
+/* secciones */
+.sec{padding:110px 0;position:relative}
+.sh{text-align:center;max-width:780px;margin:0 auto 64px;display:grid;gap:16px;justify-items:center}
+.sh h2{font-size:clamp(36px,5vw,60px);font-weight:800}
+.sh p{color:var(--ink2);font-size:19px;max-width:60ch}
+@media (max-width:700px){.sec{padding:76px 0}.sh{margin-bottom:44px}}
+
+/* la lista que nadie ve */
+.load{background:var(--ink);color:var(--paper)}
+.load .wrap{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:60px;align-items:center}
+.load .kicker{color:var(--accent-soft)}
+.load h2{font-size:clamp(36px,5vw,62px);font-weight:800;margin:14px 0 22px}
+.load p{color:color-mix(in srgb,var(--paper) 72%,var(--ink));font-size:19px;max-width:46ch}
+.load p + p{margin-top:14px}
+.strike{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.strike li{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;font:700 clamp(21px,2.6vw,31px)/1.25 var(--f-display);letter-spacing:-.01em;padding:9px 0;border-bottom:1px solid color-mix(in srgb,var(--paper) 14%,transparent)}
+.strike li > span:first-child{text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:transparent;text-decoration-skip-ink:none;transition:text-decoration-color .6s ease var(--d,0s),color .6s ease var(--d,0s)}
+.strike .to{display:inline-flex;align-items:center;gap:7px;font:700 14px var(--f-body);letter-spacing:0;padding:4px 11px 4px 5px;border-radius:999px;background:color-mix(in srgb,var(--paper) 10%,transparent);color:var(--paper);opacity:0;transform:translateX(-8px);transition:opacity .5s calc(var(--d,0s) + .55s),transform .5s calc(var(--d,0s) + .55s)}
+.strike .to b{width:20px;height:20px;border-radius:50%;background:var(--mc);color:var(--surface);font:800 10px/20px var(--f-body);text-align:center}
+.strike.in li > span:first-child{text-decoration-color:var(--accent);color:color-mix(in srgb,var(--paper) 78%,var(--ink))}
+.strike.in .to{opacity:1;transform:none}
+@media (max-width:900px){.load .wrap{grid-template-columns:1fr;gap:36px}}
+
+/* funciones: filas con la app */
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center;padding:34px 0}
+.row + .row{margin-top:40px}
+.row.flip .vis{order:-1}
+.row .copy{display:grid;gap:16px;max-width:520px}
+.row .flip-copy{justify-self:end}
+.tag{justify-self:start;display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:14px}
+.tag .ic{width:16px;height:16px}
+.row h3{font-size:clamp(30px,3.6vw,46px);font-weight:800}
+.row p{color:var(--ink2);font-size:18px}
+.ticks{list-style:none;padding:0;margin:4px 0 0;display:grid;gap:10px}
+.ticks li{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;font-weight:500}
+.ticks .ic{width:20px;height:20px;color:var(--ok);margin-top:2px}
+.vis{display:grid;place-items:center;position:relative}
+.vis::before{content:"";position:absolute;width:min(440px,100%);aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--mc,var(--accent)) 20%,transparent),transparent);z-index:-1}
+@media (max-width:900px){.row{grid-template-columns:1fr;gap:30px}.row.flip .vis{order:0}.row .copy{max-width:none}}
+
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:70px}
+.card{background:var(--surface);border-radius:28px;padding:26px 24px 0;box-shadow:inset 0 0 0 1px var(--line);display:grid;gap:12px;align-content:start;overflow:hidden}
+.card h3{font-size:26px;font-weight:800}
+.card p{color:var(--ink2);font-size:16px}
+.card .peek{height:330px;overflow:hidden;margin:10px -4px 0;display:flex;justify-content:center;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}
+@media (max-width:980px){.trio{grid-template-columns:1fr;max-width:560px;margin-inline:auto}}
+
+/* ---------- maquetas de la app (.ph: teléfono) ---------- */
+.ph{--mw:292px;width:var(--mw);max-width:100%;border:9px solid var(--frame);border-radius:40px;background:var(--paper);box-shadow:0 40px 70px -34px rgba(20,10,30,.55),var(--shadow);overflow:hidden;position:relative;flex:none;text-align:left;font-size:13px;line-height:1.35;color:var(--ink)}
+.ph .scr{height:600px;display:flex;flex-direction:column;position:relative}
+.ph .sb{display:flex;justify-content:space-between;align-items:center;padding:.55rem 1.1rem .2rem;font-size:11px;font-weight:700}
+.ph .sb .r{display:flex;gap:4px}
+.ph .sb .ic{width:13px;height:13px}
+.ph .ah{padding:.4rem 1rem .6rem;display:flex;justify-content:space-between;align-items:flex-end;gap:.5rem}
+.ph .dt{font-size:11px;color:var(--ink2);margin:0;font-weight:600}
+.ph h4{font-family:var(--f-display);font-size:19px;font-weight:800;margin:0;line-height:1.15;letter-spacing:-.01em}
+.ph .back{display:flex;align-items:center;gap:.3rem}
+.ph .ab{flex:1;overflow:hidden;padding:0 .75rem 4.5rem;display:flex;flex-direction:column;gap:.55rem}
+.ph .blk{background:var(--surface);border-radius:16px;padding:.65rem .75rem;display:grid;gap:.4rem}
+.ph h5{margin:0;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.ph .lbl{margin:0;font-size:10px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--ink2)}
+.ph .cnt{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:0 .45rem;font-size:11px}
+.ph .now{background:var(--accent);color:var(--accent-ink);border-radius:18px;padding:.7rem .85rem;display:grid;gap:.1rem}
+.ph .now .lbl{color:var(--accent-ink);opacity:.85}
+.ph .now .t{font-family:var(--f-display);font-size:17px;font-weight:800;margin:0}
+.ph .now .s{margin:0;font-size:12px;opacity:.9}
+.m1{--mc:var(--c1)}.m2{--mc:var(--c2)}.m3{--mc:var(--c3)}.m4{--mc:var(--c4)}.m5{--mc:var(--c5)}.m6{--mc:var(--c6)}
+.ph .av{width:24px;height:24px;border-radius:50%;background:var(--mc);color:var(--paper);display:inline-grid;place-items:center;font-size:10px;font-weight:800;flex:none}
+.ph .av.xs{width:18px;height:18px;font-size:8.5px}
+.ph .avs{display:flex}
+.ph .avs .av{border:2px solid var(--paper);margin-left:-7px}
+.ph .tl{list-style:none;margin:0;padding:0;display:grid;gap:.35rem}
+.ph .tl li{display:grid;grid-template-columns:38px 1fr;gap:.45rem;align-items:start}
+.ph .tl time{font-size:11px;font-weight:700;color:var(--ink2);padding-top:1px;font-variant-numeric:tabular-nums}
+.ph .tl li>div{border-left:3px solid var(--mc);padding-left:.45rem;display:grid;min-width:0}
+.ph .tl b{font-weight:700;font-size:12.5px}
+.ph .tl span{font-size:11px;color:var(--ink2)}
+.ph .tl .past{opacity:.5}
+.ph .ck{display:flex;align-items:center;gap:.5rem;font-size:12.5px}
+.ph .ck .bx{width:17px;height:17px;border:2px solid var(--line);border-radius:6px;flex:none;display:grid;place-items:center;background:var(--surface);transition:background-color .3s,border-color .3s}
+.ph .ck .bx::after{content:"";width:4px;height:8px;border:solid transparent;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.ph .ck.on .bx{background:var(--ok);border-color:var(--ok)}
+.ph .ck.on .bx::after{border-color:var(--surface)}
+.ph .ck .tx{flex:1;min-width:0;transition:color .3s}
+.ph .ck.on .tx{text-decoration:line-through;color:var(--ink2)}
+.ph .ck small{color:var(--ink2);font-size:10.5px}
+.ph .duo{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+.ph .blk.sm b{font-size:12.5px}
+.ph .blk.sm span{font-size:11px;color:var(--ink2)}
+.ph .tiny{font-size:10.5px;color:var(--ink2)}
+.ph .nav{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:.35rem .2rem .6rem}
+.ph .nav span{display:grid;justify-items:center;gap:1px;font-size:9.5px;font-weight:600;color:var(--ink2)}
+.ph .nav span.on{color:var(--accent)}
+.ph .nav .ic{width:19px;height:19px}
+.ph .fab{position:absolute;right:14px;bottom:62px;width:46px;height:46px;border-radius:16px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 8px 18px -6px color-mix(in srgb,var(--accent) 80%,transparent)}
+.ph .fab .ic{width:22px;height:22px}
+.ph .seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--sunk);border-radius:10px;padding:2px;font-size:11px;font-weight:700;text-align:center}
+.ph .seg span{padding:.25rem;border-radius:8px;color:var(--ink2)}
+.ph .seg span.on{background:var(--surface);color:var(--ink)}
+.ph .week{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.ph .week div{border-radius:10px;padding:.3rem 0 .35rem;display:grid;gap:1px;justify-items:center}
+.ph .week div.on{background:var(--accent);color:var(--accent-ink)}
+.ph .week small{font-size:9.5px;font-weight:700;opacity:.8}
+.ph .week b{font-size:13px;font-variant-numeric:tabular-nums}
+.ph .dots{display:flex;gap:2px;height:5px}
+.ph .dots i{width:5px;height:5px;border-radius:50%;background:var(--mc)}
+.ph .week div.on .dots i{background:var(--accent-ink)}
+.ph .chips{display:flex;gap:.3rem;flex-wrap:wrap}
+.ph .chip{font-size:10.5px;font-weight:700;border-radius:999px;padding:.18rem .55rem;background:var(--surface);border:1px solid var(--line);color:var(--ink2);display:inline-flex;align-items:center;gap:.25rem}
+.ph .chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.ph .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--mc)}
+.ph .chip .ic{width:12px;height:12px}
+.ph .alert{background:var(--warn-soft);border-radius:14px;padding:.6rem .7rem;display:grid;gap:.35rem;font-size:11.5px}
+.ph .alert .h{display:flex;gap:.35rem;align-items:center;font-weight:700;color:var(--warn)}
+.ph .alert .ic{width:14px;height:14px}
+.ph .btns{display:flex;gap:.35rem;flex-wrap:wrap}
+.ph .mb{font-size:11px;font-weight:700;border-radius:10px;padding:.3rem .6rem;border:1px solid var(--line);background:var(--surface)}
+.ph .mb.p{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ph .ev{display:grid;grid-template-columns:3px 1fr auto;gap:.5rem;align-items:center}
+.ph .ev>i{align-self:stretch;border-radius:3px;background:var(--mc)}
+.ph .ev div{display:grid;min-width:0}
+.ph .ev b{font-size:12.5px}
+.ph .ev span{font-size:11px;color:var(--ink2);display:flex;align-items:center;gap:.25rem}
+.ph .ev .ic{width:11px;height:11px}
+.ph .ev time{font-size:11px;font-weight:700;color:var(--ink2);font-variant-numeric:tabular-nums}
+.ph .scrim{position:absolute;inset:0;background:var(--scrim)}
+.ph .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:.5rem .9rem .9rem;display:grid;gap:.55rem}
+.ph .grab{width:38px;height:4px;border-radius:4px;background:var(--line);justify-self:center}
+.ph .sheet h5{font-family:var(--f-display);font-size:16px;font-weight:800}
+.ph .say{display:grid;grid-template-columns:1fr 38px;gap:.4rem;align-items:center}
+.ph .say div{background:var(--sunk);border-radius:12px;padding:.55rem .65rem;font-size:13px;min-height:52px}
+.ph .caret{display:inline-block;width:2px;height:1.05em;background:var(--accent);vertical-align:-2px;margin-left:1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.ph .mic{width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+.ph .mic .ic{width:18px;height:18px}
+.ph .parsed{display:grid;grid-template-columns:auto 1fr;gap:.25rem .7rem;font-size:12px;background:var(--ok-soft);border-radius:12px;padding:.55rem .7rem;margin:0}
+.ph .parsed dt{color:var(--ink2);font-weight:600}
+.ph .parsed dd{margin:0;font-weight:700;display:flex;align-items:center;gap:.3rem}
+.ph .parsed .pv{transition:opacity .35s,transform .35s}
+.ph .parsed.wait .pv{opacity:0;transform:translateX(-6px)}
+.ph .soon{font-size:9px;font-weight:800;letter-spacing:.05em;background:var(--sunk);color:var(--ink2);border-radius:6px;padding:.05rem .3rem}
+.ph .photo{display:flex;align-items:center;gap:.45rem;font-size:12px;font-weight:700;border:1px dashed var(--line);border-radius:12px;padding:.5rem .65rem;color:var(--ink2)}
+.ph .photo .ic{width:16px;height:16px}
+.ph .sec2{font-size:10px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-top:.15rem}
+.ph .from{font-size:9.5px;font-weight:700;color:var(--ok);background:var(--ok-soft);border-radius:6px;padding:0 .3rem}
+.ph .live{display:flex;align-items:center;gap:.4rem;font-size:11px;font-weight:600;background:var(--surface);border-radius:12px;padding:.45rem .6rem}
+.ph .pulse{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft);animation:pl 1.6s ease-in-out infinite}
+@keyframes pl{50%{box-shadow:0 0 0 6px var(--ok-soft)}}
+.ph .menu{display:grid;grid-template-columns:30px 1fr;gap:.35rem .5rem;font-size:11.5px}
+.ph .menu>b{font-size:11px;color:var(--ink2);padding-top:1px}
+.ph .menu>div{display:grid;border-bottom:1px solid var(--line);padding-bottom:.35rem}
+.ph .menu span{color:var(--ink2);font-size:10.5px}
+.ph .menu .today{color:var(--accent)}
+.ph .kid{display:flex;gap:.6rem;align-items:center}
+.ph .kid .av{width:44px;height:44px;font-size:16px}
+.ph .kid b{font-family:var(--f-display);font-size:17px;font-weight:800;display:block}
+.ph .kv{display:grid;grid-template-columns:auto 1fr;gap:.2rem .6rem;font-size:11.5px;margin:0}
+.ph .kv dt{color:var(--ink2)}
+.ph .kv dd{margin:0;font-weight:600}
+.ph .allergy{background:var(--bad-soft);color:var(--bad);font-weight:700;font-size:11px;border-radius:8px;padding:.2rem .5rem;display:inline-flex;gap:.3rem;align-items:center;justify-self:start}
+.ph .allergy .ic{width:12px;height:12px}
+.ph .bars{display:grid;gap:.45rem}
+.ph .bar{display:grid;grid-template-columns:24px 1fr 30px;gap:.45rem;align-items:center;font-size:11px}
+.ph .bar .track{height:10px;background:var(--sunk);border-radius:6px;overflow:hidden}
+.ph .bar .fill{display:block;height:100%;background:var(--mc);border-radius:6px;width:var(--w)}
+.ph .bar b{text-align:right;font-variant-numeric:tabular-nums}
+.ph .rut{display:grid;grid-template-columns:1fr auto;gap:.1rem .5rem;font-size:11.5px;align-items:center}
+.ph .rut span{color:var(--ink2);font-size:10.5px;grid-column:1}
+.ph .rut .av{grid-row:1/span 2;grid-column:2}
+
+/* avisos */
+.alerts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center}
+.alerts .copy{display:grid;gap:16px}
+.alerts h2{font-size:clamp(34px,4.6vw,56px);font-weight:800}
+.alerts .copy > p{color:var(--ink2);font-size:18px}
+.shade{position:relative;border-radius:34px;padding:28px 22px;display:grid;gap:14px;background:linear-gradient(160deg,color-mix(in srgb,var(--c2) 30%,var(--ink)),var(--ink));box-shadow:var(--shadow)}
+.shade .clock{color:var(--paper);font:800 54px/1 var(--f-display);letter-spacing:-.03em;padding:0 6px}
+.shade .day{color:color-mix(in srgb,var(--paper) 75%,transparent);font-weight:600;padding:0 6px;margin-top:-6px}
+.notif{background:var(--surface);border-radius:22px;padding:14px 16px;display:grid;gap:4px;box-shadow:0 14px 30px -18px rgba(0,0,0,.6)}
+.notif .top2{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2)}
+.notif .top2 img{width:18px;height:18px;border-radius:5px}
+.notif b{font-size:16px}
+.notif p{font-size:15px;color:var(--ink2)}
+.notif .acts{display:flex;gap:20px;font-size:14px;font-weight:700;color:var(--accent);padding-top:6px}
+.notif.web{opacity:.92}
+@media (max-width:900px){.alerts{grid-template-columns:1fr;gap:36px}}
+
+/* familia */
+.fam{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center}
+.fam .copy{display:grid;gap:16px}
+.fam h2{font-size:clamp(34px,4.6vw,56px);font-weight:800}
+.fam .copy > p{color:var(--ink2);font-size:18px}
+.people{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.person{background:var(--surface);border-radius:22px;padding:18px;display:grid;grid-template-columns:52px 1fr;gap:4px 14px;align-items:center;box-shadow:inset 0 0 0 1px var(--line)}
+.person .av{grid-row:1/span 2;width:52px;height:52px;border-radius:50%;background:var(--mc);color:var(--paper);display:grid;place-items:center;font:800 20px var(--f-display)}
+.person b{font-size:17px}
+.person span{color:var(--ink2);font-size:14px}
+.person.more{background:transparent;border:2px dashed var(--line);box-shadow:none}
+.person.more .av{background:var(--sunk);color:var(--ink2)}
+.person.more .av .ic{width:22px;height:22px}
+@media (max-width:900px){.fam{grid-template-columns:1fr;gap:36px}}
+@media (max-width:420px){.people{grid-template-columns:1fr}}
+
+/* ventajas */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.tile{background:var(--surface);border-radius:24px;padding:26px;display:grid;gap:10px;align-content:start;box-shadow:inset 0 0 0 1px var(--line)}
+.tile .ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--mc,var(--accent)) 16%,var(--surface));color:var(--mc,var(--accent))}
+.tile .ico .ic{width:22px;height:22px}
+.tile h3{font-size:21px;font-weight:700}
+.tile p{color:var(--ink2);font-size:16px}
+@media (max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.tiles{grid-template-columns:1fr}}
+
+/* escritorio */
+.deskbox{position:relative;max-width:1100px;margin:0 auto}
+.desk-scale{overflow-x:auto}
+.desk{width:1080px;border:10px solid var(--frame);border-radius:20px;background:var(--paper);display:grid;grid-template-columns:190px 330px 1fr;min-height:540px;font-size:13px;line-height:1.35;overflow:hidden;transform-origin:top left;box-shadow:var(--shadow)}
+.desk .side{background:var(--surface);border-right:1px solid var(--line);padding:1rem .7rem;display:grid;align-content:start;gap:.15rem}
+.desk .side .brand2{font-family:var(--f-display);font-weight:800;font-size:18px;padding:0 .5rem .8rem;display:flex;align-items:center;gap:.45rem}
+.desk .side .brand2 img{width:26px;height:26px}
+.desk .side span{display:flex;gap:.55rem;align-items:center;padding:.42rem .55rem;border-radius:10px;color:var(--ink2);font-weight:600}
+.desk .side span.on{background:var(--accent-soft);color:var(--accent)}
+.desk .side .ic{width:16px;height:16px}
+.desk .side hr{border:0;border-top:1px solid var(--line);margin:.5rem 0;width:100%}
+.desk .dcol{padding:1rem;display:grid;align-content:start;gap:.7rem}
+.desk .dcol + .dcol{border-left:1px solid var(--line)}
+.desk .wk{display:grid;grid-template-columns:34px repeat(7,1fr);gap:0 4px;font-size:11px}
+.desk .wk .hd{text-align:center;font-weight:700;color:var(--ink2);padding-bottom:.3rem}
+.desk .wk .hd.on{color:var(--accent)}
+.desk .wk .hr{color:var(--ink2);font-size:10px;height:36px;font-variant-numeric:tabular-nums}
+.desk .wk .c{border-top:1px solid var(--line);height:36px;position:relative}
+.desk .wk .e{position:absolute;left:1px;right:1px;top:2px;border-radius:6px;background:var(--surface);border-left:3px solid var(--mc);padding:2px 4px;font-size:10px;font-weight:700;line-height:1.2;z-index:1}
+.desk .wk .e.h2{height:68px}
+
+/* descarga */
+.get{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;max-width:900px;margin:0 auto}
+.getc{background:var(--surface);border-radius:28px;padding:30px;display:grid;gap:14px;align-content:start;box-shadow:inset 0 0 0 1px var(--line)}
+.getc .ico{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.getc .ico .ic{width:26px;height:26px}
+.getc h3{font-size:26px;font-weight:800}
+.getc p{color:var(--ink2)}
+.getc .btn{justify-self:start;margin-top:6px}
+@media (max-width:760px){.get{grid-template-columns:1fr}}
+
+/* próximamente */
+.soon-sec{background:var(--sunk)}
+.soonlist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.soonc{border-radius:22px;padding:22px;display:grid;grid-template-columns:44px 1fr;gap:6px 14px;align-items:start;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line)}
+.soonc .ico{grid-row:1/span 2;width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:var(--surface);color:var(--ink2);box-shadow:inset 0 0 0 1px var(--line)}
+.soonc .ico .ic{width:21px;height:21px}
+.soonc b{font-size:17px}
+.soonc span{color:var(--ink2);font-size:15px}
+.badge-soon{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink2);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+@media (max-width:900px){.soonlist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.soonlist{grid-template-columns:1fr}}
+
+/* precios */
+.prices{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:860px;margin:0 auto}
+.price{position:relative;padding:34px;border-radius:28px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:14px}
+.price.best{box-shadow:inset 0 0 0 2px var(--accent),0 30px 60px -34px var(--accent);background:linear-gradient(165deg,var(--accent-soft),var(--surface) 55%)}
+.price .badge{position:absolute;top:-14px;right:24px;padding:6px 13px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:13px}
+.price h3{font-size:28px;font-weight:800}
+.price .amt{font:800 clamp(52px,6vw,66px)/1 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.price .amt small{font:600 18px var(--f-body);color:var(--ink2);margin-left:4px;letter-spacing:0}
+.price .eq{color:var(--ok);font-weight:700;min-height:1.6em}
+.price ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.price li{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start}
+.price li .ic{width:19px;height:19px;color:var(--ok);margin-top:2px}
+.price .btn{margin-top:auto}
+.pnote{text-align:center;color:var(--ink2);margin-top:24px;font-size:15px}
+.pnote a{color:var(--accent);font-weight:700}
+.ppromo{display:flex;justify-content:center;margin-top:18px}
+@media (max-width:720px){.prices{grid-template-columns:1fr}}
+
+/* preguntas */
+.faq{max-width:820px;margin:0 auto;display:grid;gap:12px}
+.faq details{border-radius:20px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);padding:18px 22px}
+.faq summary{cursor:pointer;font-weight:700;font-size:18px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--accent);font-size:26px;line-height:1;font-weight:600}
+.faq details[open] summary::after{content:"−"}
+.faq details p{color:var(--ink2);margin:12px 0 0}
+
+/* llamada final */
+.final{text-align:center;padding:110px 0;background:radial-gradient(60% 90% at 50% 0%,var(--accent-soft),transparent 70%)}
+.final .wrap{display:grid;gap:22px;justify-items:center}
+.final h2{font-size:clamp(38px,6vw,72px);font-weight:800;max-width:16ch}
+.final p{color:var(--ink2);font-size:19px}
+footer{border-top:1px solid var(--line);padding:34px 0 calc(46px + env(safe-area-inset-bottom,0px));color:var(--ink2);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center}
+footer a{color:var(--ink2);text-decoration:none}
+footer a:hover{color:var(--ink)}
+footer .brand{font-size:19px;color:var(--ink)}
+footer .brand img{width:26px;height:26px}
+footer .mail{user-select:all;color:var(--ink);font-weight:600}
+footer .sp{margin-left:auto}
+@media (max-width:700px){footer .sp{margin-left:0;width:100%}}
+
+/* aparición al bajar (solo si hay JavaScript) */
+.rvjs .rv{opacity:0;transform:translateY(36px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.rvjs .rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rvjs .rv{opacity:1;transform:none;transition:none}
+  .pbox::after,.ph .pulse,.ph .caret{animation:none}
+  .note,.note .tick,.note span.t::after,.strike li > span:first-child,.strike .to{transition:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+<header class="top" id="top"><div class="wrap">
+  <a class="brand" href="/" aria-label="Mam-IA, inicio"><img src="/static/common/logo.svg" alt="">Mam-IA</a>
+  <nav aria-label="Secciones"><a href="#funciones">Funciones</a><a href="#familia">Familia</a><a href="#descarga">Descargar</a><a href="#precios">Precios</a><a href="#preguntas">Preguntas</a></nav>
+  <div class="actions"><a class="btn sec" href="/entrar">Entrar</a><a class="btn pri" href="#precios">Pruébala gratis</a></div>
+</div></header>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow" id="heroEyebrow"><i></i>Para quien lleva la casa en la cabeza</span>
+        <h1>Todo lo que llevas en la cabeza, <span class="mark">por fin en un sitio.</span></h1>
+        <p class="lead">Mam-IA es la agenda, la compra y el reparto de tareas de toda tu familia en una sola app. Tú lo apuntas en segundos; los demás lo ven, lo hacen y reciben el aviso a tiempo.</p>
+        <div class="cta">
+          <a class="btn pri big" href="#precios">Pruébala 7 días gratis <svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-arrow-right"/></svg></a>
+          <a class="btn sec big" href="#funciones">Ver cómo funciona</a>
+        </div>
+        <ul class="trust">
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-users"/></svg>Una suscripción para toda la familia</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-smartphone"/></svg>Web y Android</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-shield-check"/></svg>Sin anuncios</li>
+        </ul>
+      </div>
+
+      <div class="stage" role="img" aria-label="La pantalla Hoy de Mam-IA rodeada de cosas por recordar que se van tachando: la flauta de Inés, pagar el comedor, el dentista de Lucas, el regalo del cumple de Vega, la leche y la autorización de la excursión.">
+        <div class="note n1 m3" aria-hidden="true"><span class="tick"><svg class="ic"><use href="/static/common/icons.svg#i-check"/></svg></span><span class="t">La flauta de Inés, mañana</span><span class="who">I</span></div>
+        <div class="note n2 m1" aria-hidden="true"><span class="tick"><svg class="ic"><use href="/static/common/icons.svg#i-check"/></svg></span><span class="t">Pagar el comedor</span><span class="who">L</span></div>
+        <div class="note n3 m4" aria-hidden="true"><span class="tick"><svg class="ic"><use href="/static/common/icons.svg#i-check"/></svg></span><span class="t">Dentista de Lucas, jueves</span><span class="who">P</span></div>
+        <div class="note n4 m2" aria-hidden="true"><span class="tick"><svg class="ic"><use href="/static/common/icons.svg#i-check"/></svg></span><span class="t">Regalo para el cumple de Vega</span><span class="who">P</span></div>
+        <div class="note n5 m2" aria-hidden="true"><span class="tick"><svg class="ic"><use href="/static/common/icons.svg#i-check"/></svg></span><span class="t">Queda poca leche</span><span class="who">P</span></div>
+        <div class="note n6 m3" aria-hidden="true"><span class="tick"><svg class="ic"><use href="/static/common/icons.svg#i-check"/></svg></span><span class="t">Firmar la autorización de la excursión</span><span class="who">L</span></div>
+
+        <div class="ph" aria-hidden="true"><div class="scr">
+          <div class="sb"><span>9:40</span><span class="r"><svg class="ic"><use href="/static/common/icons.svg#i-bell"/></svg></span></div>
+          <div class="ah">
+            <div><p class="dt">Lunes 23 de noviembre</p><h4>Buenos días, Laura</h4></div>
+            <div class="avs"><span class="av m1">L</span><span class="av m2">P</span><span class="av m3">I</span><span class="av m4">Lu</span></div>
+          </div>
+          <div class="ab">
+            <div class="now"><p class="lbl">Dentro de 20 min</p><p class="t">Reunión de equipo</p><p class="s">10:00 – 11:00 · videollamada</p></div>
+            <div class="blk">
+              <h5>Hoy</h5>
+              <ol class="tl">
+                <li class="m2 past"><time>08:45</time><div><b>Cole</b><span>Lleva Pablo · Inés y Lucas</span></div></li>
+                <li class="m1"><time>10:00</time><div><b>Reunión de equipo</b><span>Laura</span></div></li>
+                <li class="m3"><time>16:30</time><div><b>Natación</b><span>Recoge Laura · la bolsa está en el coche</span></div></li>
+                <li class="m1"><time>21:00</time><div><b>Yoga</b><span>Tu hora para ti</span></div></li>
+              </ol>
+            </div>
+            <div class="blk">
+              <h5>No olvides <span class="cnt">3</span></h5>
+              <div class="ck"><span class="bx"></span><span class="tx">Firmar la autorización de la excursión</span><span class="av xs m3">I</span></div>
+              <div class="ck"><span class="bx"></span><span class="tx">Llevar la flauta <small>· mañana</small></span><span class="av xs m3">I</span></div>
+              <div class="ck on"><span class="bx"></span><span class="tx">Pagar el comedor de diciembre</span><span class="av xs m1">L</span></div>
+            </div>
+            <div class="duo">
+              <div class="blk sm"><p class="lbl">Cena</p><b>Crema de calabaza y tortilla</b><span>Comedor: macarrones</span></div>
+              <div class="blk sm"><p class="lbl">Compra</p><b>7 cosas</b><span>Pablo pasa al salir</span></div>
+            </div>
+          </div>
+          <div class="fab"><svg class="ic"><use href="/static/common/icons.svg#i-plus"/></svg></div>
+          <div class="nav"><span class="on"><svg class="ic"><use href="/static/common/icons.svg#i-house"/></svg>Hoy</span><span><svg class="ic"><use href="/static/common/icons.svg#i-calendar-days"/></svg>Agenda</span><span><svg class="ic"><use href="/static/common/icons.svg#i-list-checks"/></svg>Tareas</span><span><svg class="ic"><use href="/static/common/icons.svg#i-shopping-cart"/></svg>Compras</span><span><svg class="ic"><use href="/static/common/icons.svg#i-layout-grid"/></svg>Más</span></div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="promo" id="promo" hidden aria-labelledby="pHead"><div class="wrap"><div class="pbox rv">
+    <div>
+      <span class="pbadge"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-gift"/></svg>Oferta de lanzamiento</span>
+      <h2 id="pHead">1 año gratis</h2><p class="psub" id="pSub">para las 50 primeras familias</p>
+      <p id="pTxt">Crea tu cuenta con este código y usa Mam-IA un año entero sin pagar nada. Sin tarjeta.</p>
+      <button class="pcode" id="pCode" type="button" aria-label="Copiar el código"><span id="pCodeT">LANZAMIENTO</span><small id="pCopy">Copiar</small></button>
+    </div>
+    <div class="pr">
+      <div class="pleft"><b id="pLeft">50</b><span id="pUnit">plazas libres</span></div>
+      <div class="pbar" aria-hidden="true"><i id="pBar"></i></div>
+      <small id="pOf"></small>
+      <a class="btn pri big" id="pGo" href="/alta?code=LANZAMIENTO">Quiero mi año gratis</a>
+      <small>Sin tarjeta y sin compromiso</small>
+    </div>
+  </div></div></section>
+
+  <section class="sec load" id="carga" aria-labelledby="cargaH"><div class="wrap">
+    <div class="rv">
+      <p class="kicker">La carga mental</p>
+      <h2 id="cargaH">La lista que nadie ve, pero que tú nunca sueltas.</h2>
+      <p>Recordar, prever, avisar, repartir. Es el trabajo que no sale en ningún horario y que casi siempre cae en la misma persona.</p>
+      <p>Mam-IA no hace la cena, pero sí saca esa lista de tu cabeza: la pone delante de toda la familia, avisa a quien le toca y te deja ver, por fin, quién hace qué.</p>
+    </div>
+    <ol class="strike rv" id="strike" aria-label="Ejemplos de cosas que hay que recordar y a quién pasan">
+      <li class="m2" style="--d:.1s"><span>Comprar el regalo del cumple de Vega</span><span class="to"><b>P</b>Pablo</span></li>
+      <li class="m1" style="--d:.45s"><span>Pedir cita en el pediatra</span><span class="to"><b>L</b>Laura</span></li>
+      <li class="m3" style="--d:.8s"><span>Lavar el chándal para el jueves</span><span class="to"><b>I</b>Inés</span></li>
+      <li class="m2" style="--d:1.15s"><span>Que no se acabe la leche</span><span class="to"><b>P</b>Pablo</span></li>
+      <li class="m1" style="--d:1.5s"><span>Firmar la autorización de la excursión</span><span class="to"><b>L</b>Laura</span></li>
+      <li class="m2" style="--d:1.85s"><span>Recoger a Lucas a las cinco</span><span class="to"><b>P</b>Pablo</span></li>
+    </ol>
+  </div></section>
+
+  <section class="sec" id="funciones" aria-labelledby="funH"><div class="wrap">
+    <div class="sh rv">
+      <p class="kicker">Lo que hace por ti</p>
+      <h2 id="funH">Una app para que la casa <span class="mark">no dependa de tu memoria</span></h2>
+      <p>Agenda, tareas, compra, menú y peques, conectados entre sí y compartidos con toda la familia. Sin hojas sueltas ni grupos de WhatsApp.</p>
+    </div>
+
+    <div class="row">
+      <div class="copy rv">
+        <span class="tag"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-house"/></svg>Hoy</span>
+        <h3>Abres la app y sabes qué toca</h3>
+        <p>Lo siguiente que tienes, el día de toda la familia en una sola línea, lo que no se puede olvidar, la cena y la compra. Sin buscar en cinco sitios.</p>
+        <ul class="ticks">
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Quién lleva y quién recoge a cada peque</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>«No olvides» con lo de hoy y mañana</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Un hueco para ti, que también cuenta</li>
+        </ul>
+      </div>
+      <div class="vis rv m1" aria-hidden="true">
+        <div class="ph"><div class="scr">
+          <div class="sb"><span>16:05</span><span class="r"><svg class="ic"><use href="/static/common/icons.svg#i-bell"/></svg></span></div>
+          <div class="ah"><div><p class="dt">Lunes 23 de noviembre</p><h4>Buenas tardes, Laura</h4></div><div class="avs"><span class="av m1">L</span><span class="av m2">P</span></div></div>
+          <div class="ab">
+            <div class="now"><p class="lbl">Dentro de 25 min</p><p class="t">Natación de Inés</p><p class="s">16:30 · recoges tú · la bolsa está en el coche</p></div>
+            <div class="blk">
+              <h5>Resto del día</h5>
+              <ol class="tl">
+                <li class="m3"><time>16:30</time><div><b>Natación</b><span>Recoge Laura</span></div></li>
+                <li class="m4"><time>17:00</time><div><b>Merienda en casa de los abuelos</b><span>Lleva Pablo a Lucas</span></div></li>
+                <li class="m2"><time>19:30</time><div><b>Lavadora de color</b><span>Pablo · rutina de los lunes</span></div></li>
+                <li class="m1"><time>21:00</time><div><b>Yoga</b><span>Tu hora para ti</span></div></li>
+              </ol>
+            </div>
+            <div class="blk">
+              <h5>Mañana</h5>
+              <div class="ck"><span class="bx"></span><span class="tx">Inés: llevar la flauta</span><span class="av xs m3">I</span></div>
+              <div class="ck"><span class="bx"></span><span class="tx">Revisión del pediatra, 17:00</span><span class="av xs m4">Lu</span></div>
+            </div>
+          </div>
+          <div class="fab"><svg class="ic"><use href="/static/common/icons.svg#i-plus"/></svg></div>
+          <div class="nav"><span class="on"><svg class="ic"><use href="/static/common/icons.svg#i-house"/></svg>Hoy</span><span><svg class="ic"><use href="/static/common/icons.svg#i-calendar-days"/></svg>Agenda</span><span><svg class="ic"><use href="/static/common/icons.svg#i-list-checks"/></svg>Tareas</span><span><svg class="ic"><use href="/static/common/icons.svg#i-shopping-cart"/></svg>Compras</span><span><svg class="ic"><use href="/static/common/icons.svg#i-layout-grid"/></svg>Más</span></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="row flip">
+      <div class="copy rv flip-copy">
+        <span class="tag"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-zap"/></svg>Apuntar</span>
+        <h3>Apúntalo en cinco segundos, como lo dirías</h3>
+        <p>Escribe o dicta «dentista Lucas jueves 17:30, lo lleva Pablo». Mam-IA entiende el día, la hora, para quién es y quién lleva, y lo guarda con su aviso.</p>
+        <ul class="ticks">
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Eventos, tareas, compras y recordatorios desde el mismo botón</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Entiende «mañana», «el jueves», «a las 5 y media» o «cada lunes»</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Compártelo desde WhatsApp a la app de Android</li>
+        </ul>
+      </div>
+      <div class="vis rv m4" aria-hidden="true">
+        <div class="ph" id="typeDemo"><div class="scr">
+          <div class="sb"><span>9:41</span><span class="r"><svg class="ic"><use href="/static/common/icons.svg#i-bell"/></svg></span></div>
+          <div class="ah"><div><p class="dt">Lunes 23 de noviembre</p><h4>Buenos días, Laura</h4></div></div>
+          <div class="ab"><div class="now"><p class="lbl">Dentro de 19 min</p><p class="t">Reunión de equipo</p></div></div>
+          <div class="scrim"></div>
+          <div class="sheet">
+            <span class="grab"></span>
+            <h5>Apuntar</h5>
+            <div class="chips"><span class="chip on">Evento</span><span class="chip">Tarea</span><span class="chip">Compra</span><span class="chip">Recordatorio</span></div>
+            <div class="say"><div><span id="typeText">Dentista Lucas el jueves a las 17:30, lo lleva Pablo</span><span class="caret"></span></div><span class="mic"><svg class="ic"><use href="/static/common/icons.svg#i-mic"/></svg></span></div>
+            <p class="lbl">Lo he entendido así</p>
+            <dl class="parsed" id="typeParsed">
+              <dt class="pv">Qué</dt><dd class="pv">Dentista</dd>
+              <dt class="pv">Cuándo</dt><dd class="pv">Jueves 26 nov · 17:30</dd>
+              <dt class="pv">Para</dt><dd class="pv"><span class="av xs m4">Lu</span>Lucas</dd>
+              <dt class="pv">Lleva</dt><dd class="pv"><span class="av xs m2">P</span>Pablo</dd>
+              <dt class="pv">Aviso</dt><dd class="pv">1 hora antes</dd>
+            </dl>
+            <div class="photo"><svg class="ic"><use href="/static/common/icons.svg#i-camera"/></svg>Foto de una circular del cole <span class="soon">PRONTO</span></div>
+            <div class="btns"><span class="mb p" style="flex:1;text-align:center;padding:.5rem">Guardar</span></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="copy rv">
+        <span class="tag"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-calendar-days"/></svg>Agenda familiar</span>
+        <h3>La agenda de todos, cada uno con su color</h3>
+        <p>Día, semana o mes, con filtros por persona. Las extraescolares se repiten solas y, si dos planes chocan, Mam-IA te avisa y lo resuelves en un toque.</p>
+        <ul class="ticks">
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Repeticiones: cada lunes, cada mes, hasta junio…</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Quién lleva y quién recoge, en cada plan</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Aviso de choques antes de que pasen</li>
+        </ul>
+      </div>
+      <div class="vis rv m2" aria-hidden="true">
+        <div class="ph"><div class="scr">
+          <div class="sb"><span>9:40</span><span class="r"><svg class="ic"><use href="/static/common/icons.svg#i-bell"/></svg></span></div>
+          <div class="ah"><div><p class="dt">23 – 29 de noviembre</p><h4>Agenda</h4></div></div>
+          <div class="ab">
+            <div class="seg"><span>Día</span><span class="on">Semana</span><span>Mes</span></div>
+            <div class="week">
+              <div class="on"><small>L</small><b>23</b><span class="dots"><i class="m2"></i><i class="m1"></i><i class="m3"></i></span></div>
+              <div><small>M</small><b>24</b><span class="dots"><i class="m4"></i><i class="m3"></i></span></div>
+              <div><small>X</small><b>25</b><span class="dots"><i class="m3"></i><i class="m4"></i></span></div>
+              <div><small>J</small><b>26</b><span class="dots"><i class="m4"></i><i class="m1"></i></span></div>
+              <div><small>V</small><b>27</b><span class="dots"><i class="m2"></i></span></div>
+              <div><small>S</small><b>28</b><span class="dots"><i class="m3"></i></span></div>
+              <div><small>D</small><b>29</b><span class="dots"></span></div>
+            </div>
+            <div class="chips"><span class="chip on">Todos</span><span class="chip m1"><i class="dot"></i>Laura</span><span class="chip m2"><i class="dot"></i>Pablo</span><span class="chip m3"><i class="dot"></i>Inés</span><span class="chip m4"><i class="dot"></i>Lucas</span></div>
+            <div class="alert">
+              <span class="h"><svg class="ic"><use href="/static/common/icons.svg#i-triangle-alert"/></svg>Miércoles 17:00: dos planes a la vez</span>
+              <span>Pediatra de Lucas y natación de Inés. ¿Quién lleva a cada uno?</span>
+              <span class="btns"><span class="mb p">Pablo lleva a Lucas</span><span class="mb">Elegir</span></span>
+            </div>
+            <div class="blk">
+              <h5>Lunes 23</h5>
+              <div class="ev m2"><i></i><div><b>Cole</b><span>Lleva Pablo</span></div><time>08:45</time></div>
+              <div class="ev m1"><i></i><div><b>Reunión de equipo</b><span>Laura</span></div><time>10:00</time></div>
+              <div class="ev m3"><i></i><div><b>Natación</b><span><svg class="ic"><use href="/static/common/icons.svg#i-repeat"/></svg>Lunes y miércoles · recoge Laura</span></div><time>16:30</time></div>
+            </div>
+          </div>
+          <div class="fab"><svg class="ic"><use href="/static/common/icons.svg#i-plus"/></svg></div>
+          <div class="nav"><span><svg class="ic"><use href="/static/common/icons.svg#i-house"/></svg>Hoy</span><span class="on"><svg class="ic"><use href="/static/common/icons.svg#i-calendar-days"/></svg>Agenda</span><span><svg class="ic"><use href="/static/common/icons.svg#i-list-checks"/></svg>Tareas</span><span><svg class="ic"><use href="/static/common/icons.svg#i-shopping-cart"/></svg>Compras</span><span><svg class="ic"><use href="/static/common/icons.svg#i-layout-grid"/></svg>Más</span></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="row flip">
+      <div class="copy rv flip-copy">
+        <span class="tag"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-shopping-cart"/></svg>Compras</span>
+        <h3>La compra, en directo</h3>
+        <p>Listas por tienda y ordenadas por sección, «lo de siempre» en un toque y los ingredientes del menú que faltan. Lo que tacha uno en el súper lo ve el resto al momento.</p>
+        <ul class="ticks">
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Súper, farmacia, cosas para el cole…</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Sin duplicados ni «¿lo has cogido tú?»</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Funciona sin cobertura y se sincroniza al salir</li>
+        </ul>
+      </div>
+      <div class="vis rv m4" aria-hidden="true">
+        <div class="ph" id="shopDemo"><div class="scr">
+          <div class="sb"><span>18:05</span><span class="r"><svg class="ic"><use href="/static/common/icons.svg#i-bell"/></svg></span></div>
+          <div class="ah"><div><p class="dt">Lista compartida</p><h4>Compras</h4></div><span class="chip" style="font-size:10.5px;font-weight:700;border-radius:999px;padding:.18rem .55rem;border:1px solid var(--line);color:var(--ink2);display:inline-flex;gap:.25rem;align-items:center"><svg class="ic" style="width:12px;height:12px"><use href="/static/common/icons.svg#i-repeat"/></svg>Lo de siempre</span></div>
+          <div class="ab">
+            <div class="chips"><span class="chip on">Súper · 7</span><span class="chip">Farmacia · 2</span><span class="chip">Para el cole · 1</span></div>
+            <div class="live"><span class="pulse"></span>Pablo está en el súper y va tachando</div>
+            <div class="blk">
+              <p class="sec2">Fruta y verdura</p>
+              <div class="ck on"><span class="bx"></span><span class="tx">Plátanos</span><span class="av xs m2">P</span></div>
+              <div class="ck"><span class="bx"></span><span class="tx">Calabaza <span class="from">del menú</span></span></div>
+              <p class="sec2">Lácteos</p>
+              <div class="ck"><span class="bx"></span><span class="tx">Leche entera ×2</span></div>
+              <div class="ck"><span class="bx"></span><span class="tx">Yogures naturales <small>· los de Lucas</small></span></div>
+              <p class="sec2">Despensa</p>
+              <div class="ck"><span class="bx"></span><span class="tx">Arroz redondo <span class="from">del menú</span></span></div>
+              <div class="ck"><span class="bx"></span><span class="tx">Huevos camperos</span></div>
+              <p class="sec2">Droguería</p>
+              <div class="ck"><span class="bx"></span><span class="tx">Detergente</span></div>
+            </div>
+          </div>
+          <div class="fab"><svg class="ic"><use href="/static/common/icons.svg#i-plus"/></svg></div>
+          <div class="nav"><span><svg class="ic"><use href="/static/common/icons.svg#i-house"/></svg>Hoy</span><span><svg class="ic"><use href="/static/common/icons.svg#i-calendar-days"/></svg>Agenda</span><span><svg class="ic"><use href="/static/common/icons.svg#i-list-checks"/></svg>Tareas</span><span class="on"><svg class="ic"><use href="/static/common/icons.svg#i-shopping-cart"/></svg>Compras</span><span><svg class="ic"><use href="/static/common/icons.svg#i-layout-grid"/></svg>Más</span></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="trio">
+      <article class="card rv">
+        <span class="tag"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-utensils"/></svg>Menú semanal</span>
+        <h3>Cenas pensadas con el comedor</h3>
+        <p>Planea la semana viendo qué comen en el cole y las alergias de cada uno. Lo que falta pasa a la compra en un toque.</p>
+        <div class="peek" aria-hidden="true"><div class="ph"><div class="scr">
+          <div class="sb"><span>21:30</span><span></span></div>
+          <div class="ah"><div><p class="dt">23 – 29 de noviembre</p><h4>Menú de la semana</h4></div></div>
+          <div class="ab">
+            <div class="chips"><span class="chip m3"><i class="dot"></i>Inés: sin frutos secos</span><span class="chip">Comedor del cole</span></div>
+            <div class="blk"><div class="menu">
+              <b class="today">Lun</b><div><span>Comedor: macarrones</span>Crema de calabaza y tortilla</div>
+              <b>Mar</b><div><span>Comedor: lentejas</span>Merluza al horno con patata</div>
+              <b>Mié</b><div><span>Comedor: pollo asado</span>Revuelto de setas y ensalada</div>
+              <b>Jue</b><div><span>Comedor: pescado</span>Noche de pizza casera</div>
+            </div></div>
+            <div class="blk"><h5>Faltan 12 ingredientes</h5><div class="btns"><span class="mb p">Añadir a la compra</span></div></div>
+          </div>
+        </div></div></div>
+      </article>
+      <article class="card rv">
+        <span class="tag"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-baby"/></svg>Peques</span>
+        <h3>La ficha de cada peque, a mano</h3>
+        <p>Horarios, extraescolares, salud, alergias, tallas, contactos del cole y cumples de los amigos. Lo que siempre te preguntan a ti.</p>
+        <div class="peek" aria-hidden="true"><div class="ph"><div class="scr">
+          <div class="sb"><span>12:10</span><span></span></div>
+          <div class="ah"><div class="back"><svg class="ic"><use href="/static/common/icons.svg#i-chevron-left"/></svg><h4>Peques</h4></div></div>
+          <div class="ab">
+            <div class="blk"><div class="kid"><span class="av m3">I</span><div><b>Inés</b><span class="tiny">8 años · 3.º B</span></div></div></div>
+            <div class="blk"><h5>Semana tipo</h5><dl class="kv"><dt>Cole</dt><dd>L – V · 9:00 a 16:00</dd><dt>Natación</dt><dd>L y X · 16:30</dd><dt>Inglés</dt><dd>J · 17:00</dd></dl></div>
+            <div class="blk"><h5>Salud</h5><span class="allergy"><svg class="ic"><use href="/static/common/icons.svg#i-triangle-alert"/></svg>Alergia a los frutos secos</span><dl class="kv"><dt>Pediatra</dt><dd>Dra. Ruiz</dd></dl></div>
+            <div class="blk"><h5>Tallas</h5><dl class="kv"><dt>Ropa</dt><dd>8 – 9 años</dd><dt>Calzado</dt><dd>32</dd></dl></div>
+          </div>
+        </div></div></div>
+      </article>
+      <article class="card rv">
+        <span class="tag"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-scale"/></svg>Tareas y reparto</span>
+        <h3>Quién hace qué, sin discutirlo</h3>
+        <p>Rutinas que se repiten y rotan solas, y un reparto semanal que deja ver la carga de cada uno, con ideas para equilibrarla.</p>
+        <div class="peek" aria-hidden="true"><div class="ph"><div class="scr">
+          <div class="sb"><span>20:00</span><span></span></div>
+          <div class="ah"><div><p class="dt">Semana del 16 al 22</p><h4>Reparto en casa</h4></div></div>
+          <div class="ab">
+            <div class="blk"><h5>Tareas hechas</h5><div class="bars">
+              <div class="bar m1"><span class="av xs m1">L</span><span class="track"><span class="fill" style="--w:100%"></span></span><b>18</b></div>
+              <div class="bar m2"><span class="av xs m2">P</span><span class="track"><span class="fill" style="--w:44%"></span></span><b>8</b></div>
+              <div class="bar m3"><span class="av xs m3">I</span><span class="track"><span class="fill" style="--w:11%"></span></span><b>2</b></div>
+            </div><span class="tiny">Laura hizo el 64 % de las tareas.</span></div>
+            <div class="blk"><h5>Rutinas</h5>
+              <div class="rut"><b>Poner lavadoras</b><span>Lunes, miércoles y viernes</span><span class="av xs m2">P</span></div>
+              <div class="rut"><b>Sacar la basura</b><span>Cada día · rota cada semana</span><span class="av xs m3">I</span></div>
+              <div class="rut"><b>Cambiar sábanas</b><span>Sábados</span><span class="av xs m1">L</span></div>
+            </div>
+          </div>
+        </div></div></div>
+      </article>
+    </div>
+  </div></section>
+
+  <section class="sec" id="avisos" style="padding-top:20px" aria-labelledby="avisosH"><div class="wrap alerts">
+    <div class="copy rv">
+      <span class="tag"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-bell-ring"/></svg>Avisos</span>
+      <h2 id="avisosH">Avisos que llegan, <span class="acc">a quien le toca</span></h2>
+      <p>En la app de Android, alarmas a la hora exacta aunque el móvil esté en reposo. En el navegador, notificaciones. Cada aviso le llega a la persona que tiene asignado el plan, no a todo el grupo.</p>
+      <ul class="ticks">
+        <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>«Hecho» o «Posponer» desde la propia notificación</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Elige cuánto antes: 10 minutos, una hora, el día antes</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Sin ruido: solo lo tuyo y lo que importa</li>
+      </ul>
+    </div>
+    <div class="shade rv" role="img" aria-label="Pantalla de bloqueo de Android con dos avisos de Mam-IA: recoger a Inés en natación a las 16:30 y llevar la flauta mañana.">
+      <div class="clock" aria-hidden="true">16:15</div>
+      <div class="day" aria-hidden="true">lunes, 23 de noviembre</div>
+      <div class="notif" aria-hidden="true">
+        <div class="top2"><img src="/static/common/icons/favicon-32.png" alt="">Mam-IA · ahora</div>
+        <b>Recoger a Inés en natación a las 16:30</b>
+        <p>La bolsa de natación está en el coche.</p>
+        <div class="acts"><span>Hecho</span><span>Posponer 10 min</span></div>
+      </div>
+      <div class="notif web" aria-hidden="true">
+        <div class="top2"><img src="/static/common/icons/favicon-32.png" alt="">Mam-IA · hace 2 h</div>
+        <b>Mañana: Inés lleva la flauta</b>
+        <p>Asignado a Pablo · Agenda familiar</p>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="sec" id="familia" style="padding-top:40px" aria-labelledby="famH"><div class="wrap fam">
+    <div class="people rv" aria-label="Ejemplo de familia en Mam-IA">
+      <div class="person m1"><span class="av" aria-hidden="true">L</span><b>Laura</b><span>Tú · organizas la familia</span></div>
+      <div class="person m2"><span class="av" aria-hidden="true">P</span><b>Pablo</b><span>Pareja · con su propio acceso</span></div>
+      <div class="person m3"><span class="av" aria-hidden="true">I</span><b>Inés, 8</b><span>Perfil de peque, sin cuenta</span></div>
+      <div class="person m4"><span class="av" aria-hidden="true">Lu</span><b>Lucas, 4</b><span>Perfil de peque, sin cuenta</span></div>
+      <div class="person more"><span class="av" aria-hidden="true"><svg class="ic"><use href="/static/common/icons.svg#i-user-plus"/></svg></span><b>Abuela, canguro…</b><span>Hasta 8 personas</span></div>
+      <div class="person more"><span class="av" aria-hidden="true"><svg class="ic"><use href="/static/common/icons.svg#i-mail"/></svg></span><b>Invita por correo</b><span>Entran con un enlace</span></div>
+    </div>
+    <div class="copy rv">
+      <span class="tag"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-users"/></svg>Familia</span>
+      <h2 id="famH">Una suscripción, <span class="acc">toda la familia</span></h2>
+      <p>Invita a tu pareja por correo y que tenga su propio acceso, en su móvil y en el ordenador. Los peques son perfiles con su color, su ficha y sus planes, sin necesidad de cuenta. Si la abuela o la canguro echan una mano, también caben.</p>
+      <ul class="ticks">
+        <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Hasta 8 personas por familia, sin pagar más</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Todos ven lo mismo y al momento</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Tú decides quién administra la familia</li>
+      </ul>
+    </div>
+  </div></section>
+
+  <section class="sec" style="padding-top:20px" aria-labelledby="diaH"><div class="wrap">
+    <div class="sh rv"><h2 id="diaH">Pensada para <span class="mark">el día a día</span></h2><p>Para usarla con una mano, con prisa y con un peque tirándote de la manga.</p></div>
+    <div class="tiles">
+      <div class="tile rv m4"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-wifi-off"/></svg></span><h3>Funciona sin conexión</h3><p>En el súper sin cobertura o en el metro: apunta y tacha igual. Se sincroniza en cuanto vuelve la red.</p></div>
+      <div class="tile rv m5"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-palette"/></svg></span><h3>Modo oscuro y 4 colores</h3><p>Rosa, lavanda, menta o coral, con modo claro, oscuro o el de tu móvil.</p></div>
+      <div class="tile rv m2"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-smartphone"/></svg></span><h3>Móvil y ordenador</h3><p>App para Android y la misma app en cualquier navegador: iPhone, tablet u ordenador del trabajo.</p></div>
+      <div class="tile rv m1"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-shield-check"/></svg></span><h3>Tus datos, en casa</h3><p>En un servidor propio en Europa, no en la nube de nadie. Sin anuncios y sin vender datos.</p></div>
+      <div class="tile rv m6"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-download"/></svg></span><h3>Exporta y borra</h3><p>Descarga una copia de todo cuando quieras. Y si te vas, lo borras todo con un botón.</p></div>
+      <div class="tile rv m3"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-hand-heart"/></svg></span><h3>Hecha con cariño</h3><p>Pensada con familias reales, en español y para la vida de aquí: comedor, extraescolares, ITV y cumples.</p></div>
+    </div>
+  </div></section>
+
+  <section class="sec" id="web" style="padding-top:20px" aria-labelledby="webH"><div class="wrap">
+    <div class="sh rv"><h2 id="webH">En el ordenador, <span class="mark">a lo grande</span></h2><p>Toda la semana de la familia de un vistazo, con el menú lateral y el día a la izquierda. Ideal para organizar el domingo.</p></div>
+    <div class="deskbox rv"><div class="desk-scale" id="deskScale"><div class="desk" id="desk" role="img" aria-label="Mam-IA en el ordenador: menú lateral, el día de hoy y la semana de la familia con los planes de cada persona en su color.">
+      <div class="side" aria-hidden="true">
+        <div class="brand2"><img src="/static/common/logo.svg" alt="">Mam-IA</div>
+        <span class="on"><svg class="ic"><use href="/static/common/icons.svg#i-house"/></svg>Hoy</span>
+        <span><svg class="ic"><use href="/static/common/icons.svg#i-calendar-days"/></svg>Agenda</span>
+        <span><svg class="ic"><use href="/static/common/icons.svg#i-list-checks"/></svg>Tareas</span>
+        <span><svg class="ic"><use href="/static/common/icons.svg#i-shopping-cart"/></svg>Compras</span>
+        <span><svg class="ic"><use href="/static/common/icons.svg#i-utensils"/></svg>Menú</span>
+        <span><svg class="ic"><use href="/static/common/icons.svg#i-baby"/></svg>Peques</span>
+        <span><svg class="ic"><use href="/static/common/icons.svg#i-scale"/></svg>Reparto</span>
+        <hr>
+        <span><svg class="ic"><use href="/static/common/icons.svg#i-users"/></svg>Familia</span>
+        <span><svg class="ic"><use href="/static/common/icons.svg#i-settings"/></svg>Ajustes</span>
+      </div>
+      <div class="dcol" aria-hidden="true">
+        <div><p class="kicker" style="margin:0;color:var(--ink2);letter-spacing:.08em;font-size:11px">Lunes 23 de noviembre</p><h4 style="font-family:var(--f-display);font-size:21px;font-weight:800;margin:0">Buenos días, Laura</h4></div>
+        <div class="ph" style="--mw:100%;border:0;box-shadow:none;border-radius:0;background:transparent;overflow:visible"><div style="display:grid;gap:.6rem">
+          <div class="now"><p class="lbl">Dentro de 20 min</p><p class="t">Reunión de equipo</p><p class="s">10:00 – 11:00 · videollamada</p></div>
+          <div class="blk"><h5>No olvides <span class="cnt">3</span></h5>
+            <div class="ck"><span class="bx"></span><span class="tx">Firmar la autorización de la excursión</span><span class="av xs m3">I</span></div>
+            <div class="ck"><span class="bx"></span><span class="tx">Llevar la flauta <small>· mañana</small></span><span class="av xs m3">I</span></div>
+            <div class="ck on"><span class="bx"></span><span class="tx">Pagar el comedor de diciembre</span><span class="av xs m1">L</span></div>
+          </div>
+          <div class="duo"><div class="blk sm"><p class="lbl">Cena</p><b>Crema de calabaza y tortilla</b><span>Comedor: macarrones</span></div><div class="blk sm"><p class="lbl">Compra</p><b>7 cosas</b><span>Pablo pasa al salir</span></div></div>
+        </div></div>
+      </div>
+      <div class="dcol" aria-hidden="true">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h4 style="font-family:var(--f-display);font-size:21px;font-weight:800;margin:0">Semana de la familia</h4>
+          <div class="ph" style="--mw:auto;border:0;box-shadow:none;background:transparent;border-radius:0;overflow:visible"><div class="chips"><span class="chip on">Todos</span><span class="chip m1"><i class="dot"></i>Laura</span><span class="chip m2"><i class="dot"></i>Pablo</span><span class="chip m3"><i class="dot"></i>Inés</span><span class="chip m4"><i class="dot"></i>Lucas</span></div></div></div>
+        <div class="wk">
+          <span></span><span class="hd on">L 23</span><span class="hd">M 24</span><span class="hd">X 25</span><span class="hd">J 26</span><span class="hd">V 27</span><span class="hd">S 28</span><span class="hd">D 29</span>
+          <span class="hr">09:00</span><span class="c"><span class="e m2">Cole · Pablo</span></span><span class="c"><span class="e m2">Cole</span></span><span class="c"><span class="e m1">Cole</span></span><span class="c"><span class="e m2">Cole</span></span><span class="c"><span class="e m2">Cole</span></span><span class="c"></span><span class="c"></span>
+          <span class="hr">10:00</span><span class="c"><span class="e m1">Reunión</span></span><span class="c"></span><span class="c"></span><span class="c"><span class="e m1">Cliente</span></span><span class="c"></span><span class="c"><span class="e m1 h2">Mercado</span></span><span class="c"></span>
+          <span class="hr">12:00</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"><span class="e m2">Abuelos</span></span>
+          <span class="hr">16:30</span><span class="c"><span class="e m3">Natación</span></span><span class="c"></span><span class="c"><span class="e m3">Natación</span></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span>
+          <span class="hr">17:00</span><span class="c"></span><span class="c"><span class="e m4">Pediatra</span></span><span class="c"><span class="e m4">Pediatra</span></span><span class="c"><span class="e m4">Dentista</span></span><span class="c"></span><span class="c"><span class="e m3">Cumple Vega</span></span><span class="c"></span>
+          <span class="hr">18:00</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"><span class="e m3">Inglés</span></span><span class="c"></span><span class="c"></span><span class="c"></span>
+          <span class="hr">21:00</span><span class="c"><span class="e m1">Yoga</span></span><span class="c"></span><span class="c"></span><span class="c"><span class="e m1">Yoga</span></span><span class="c"><span class="e m2">Cena fuera</span></span><span class="c"></span><span class="c"></span>
+        </div>
+      </div>
+    </div></div></div>
+  </div></section>
+
+  <section class="sec" id="descarga" style="padding-top:20px" aria-labelledby="getH"><div class="wrap">
+    <div class="sh rv"><h2 id="getH">Llévala <span class="mark">en el bolsillo</span></h2><p>La misma app y los mismos datos en el móvil y en el ordenador. Entra con tu cuenta y listo.</p></div>
+    <div class="get">
+      <div class="getc rv">
+        <span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-smartphone"/></svg></span>
+        <h3>App para Android</h3>
+        <p>Con alarmas a la hora exacta, notificaciones con botones y «Compartir con Mam-IA» desde WhatsApp o cualquier app.</p>
+        <a class="btn pri" href="/android.apk"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-download"/></svg>Descargar para Android</a>
+      </div>
+      <div class="getc rv">
+        <span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-monitor"/></svg></span>
+        <h3>iPhone, tablet y ordenador</h3>
+        <p>Ábrela en el navegador, sin instalar nada. En el iPhone, añádela a la pantalla de inicio desde Compartir y se abre como una app más.</p>
+        <a class="btn sec" href="/entrar"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-external-link"/></svg>Abrir en el navegador</a>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="sec soon-sec" id="pronto" aria-labelledby="prontoH"><div class="wrap">
+    <div class="sh rv"><span class="badge-soon"><svg class="ic" aria-hidden="true" style="width:15px;height:15px"><use href="/static/common/icons.svg#i-sparkles"/></svg>Próximamente</span><h2 id="prontoH">Lo que viene</h2><p>Mam-IA crece con cada versión, y tu suscripción incluye todo lo nuevo. Esto todavía no está disponible.</p></div>
+    <div class="soonlist">
+      <div class="soonc rv"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-camera"/></svg></span><b>La circular del cole, desde una foto</b><span>Haz una foto y la IA saca las fechas, lo que hay que llevar y lo que hay que firmar.</span></div>
+      <div class="soonc rv"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-chef-hat"/></svg></span><b>Menú sugerido</b><span>Una propuesta de cenas según vuestros gustos, las alergias y el comedor.</span></div>
+      <div class="soonc rv"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-sparkles"/></svg></span><b>El resumen del domingo</b><span>La semana que viene en un vistazo: choques, huecos y lo que falta por organizar.</span></div>
+      <div class="soonc rv"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-heart-pulse"/></svg></span><b>Salud de la familia</b><span>Vacunas, medicación, revisiones y la cartilla de cada uno.</span></div>
+      <div class="soonc rv"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-wallet"/></svg></span><b>Dinero</b><span>Recibos, gastos del cole y un presupuesto familiar sencillo.</span></div>
+      <div class="soonc rv"><span class="ico"><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-plane"/></svg></span><b>Viajes</b><span>Escapadas con la maleta de cada uno hecha a partir de una plantilla.</span></div>
+    </div>
+  </div></section>
+
+  <section class="sec" id="precios" aria-labelledby="preciosH"><div class="wrap">
+    <div class="sh rv"><p class="kicker">Precios</p><h2 id="preciosH">Un precio sencillo, <span class="mark">para toda la familia</span></h2><p>Las dos opciones lo incluyen todo. Empieza con <span class="trialN">7</span> días gratis y cancela cuando quieras.</p></div>
+    <div class="prices">
+      <div class="price rv">
+        <h3>Mensual</h3>
+        <div class="amt"><span id="pmMonthly">2,50 €</span><small>/ mes</small></div>
+        <span class="eq">Sin permanencia</span>
+        <ul>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Toda la familia, hasta 8 personas</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Todas las funciones y las que vengan</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Web y app de Android</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg><span><span class="trialN">7</span> días gratis</span></li>
+        </ul>
+        <a class="btn sec big" href="/alta?plan=monthly">Empezar gratis</a>
+      </div>
+      <div class="price best rv">
+        <span class="badge" id="yearBadge">2 meses gratis</span>
+        <h3>Anual</h3>
+        <div class="amt"><span id="pmYearly">25 €</span><small>/ año</small></div>
+        <span class="eq" id="yearEq">Solo 2,08 € al mes</span>
+        <ul>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Toda la familia, hasta 8 personas</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Todas las funciones y las que vengan</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg>Web y app de Android</li>
+          <li><svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-check"/></svg><span><span class="trialN">7</span> días gratis</span></li>
+        </ul>
+        <a class="btn pri big" href="/alta?plan=yearly">Empezar gratis</a>
+      </div>
+    </div>
+    <div class="ppromo" id="pricePromo" hidden><a class="eyebrow hot" href="#promo"><i></i><span id="pricePromoT">Oferta de lanzamiento: 1 año gratis</span></a></div>
+    <p class="pnote">Precios con impuestos incluidos. Pago seguro con Stripe (tarjeta, Google Pay o Apple Pay): tus datos de pago nunca llegan a Mam-IA. ¿Ya tienes cuenta? <a href="/entrar">Entra aquí</a>.</p>
+  </div></section>
+
+  <section class="sec" id="preguntas" style="padding-top:20px" aria-labelledby="faqH"><div class="wrap">
+    <div class="sh rv"><h2 id="faqH">Preguntas</h2></div>
+    <div class="faq rv">
+      <details><summary>¿Cuánto cuesta y qué incluye?</summary><p>2,50 € al mes o 25 € al año, impuestos incluidos. Las dos opciones incluyen todas las funciones, la web, la app de Android y todo lo que vaya llegando, para toda la familia.</p></details>
+      <details><summary>¿Una suscripción vale para toda la familia?</summary><p>Sí. La paga una persona y entra toda la familia: hasta 8 personas entre adultos con su propio acceso y peques como perfiles. Nadie más tiene que pagar.</p></details>
+      <details><summary>¿Cómo funciona la prueba gratuita?</summary><p>Los primeros <span class="trialN">7</span> días son gratis. Si cancelas antes de que terminen, no se cobra nada. Si no, empieza el plan mensual o anual que hayas elegido.</p></details>
+      <details id="faqPromo" hidden><summary>¿Qué es la oferta de lanzamiento?</summary><p id="faqPromoT">Las primeras familias que se den de alta con el código de lanzamiento usan Mam-IA un año entero gratis, sin tarjeta. Cuando termine, si quieres seguir, eliges un plan.</p></details>
+      <details><summary>¿Funciona en iPhone?</summary><p>Sí, en el navegador (Safari o el que uses). Puedes añadirla a la pantalla de inicio desde Compartir y se abre como una app. La app nativa, por ahora, es solo para Android.</p></details>
+      <details><summary>¿Mis datos están seguros?</summary><p>Están en un servidor propio en Europa, con conexión cifrada y copias de seguridad diarias. Solo tu familia los ve. Sin anuncios, sin vender datos y sin rastreadores. Puedes descargarlos o borrarlos cuando quieras.</p></details>
+      <details><summary>¿Puedo cancelar cuando quiera?</summary><p>Sí, desde tu cuenta, sin llamadas ni permanencia. La suscripción sigue activa hasta el final del periodo pagado.</p></details>
+      <details><summary>¿Y si no tengo conexión?</summary><p>La app sigue funcionando: puedes consultar, apuntar y tachar. Los cambios se envían solos en cuanto vuelve la conexión.</p></details>
+    </div>
+  </div></section>
+
+  <section class="final"><div class="wrap rv">
+    <h2>Que la casa no dependa solo de <span class="acc">tu memoria</span>.</h2>
+    <p>Pruébala <span class="trialN">7</span> días gratis con toda tu familia.</p>
+    <a class="btn pri big" href="#precios">Empezar ahora <svg class="ic" aria-hidden="true"><use href="/static/common/icons.svg#i-arrow-right"/></svg></a>
+  </div></section>
+</main>
+
+<footer><div class="wrap">
+  <a class="brand" href="/"><img src="/static/common/logo.svg" alt="">Mam-IA</a>
+  <span>© 2026 Mam-IA</span>
+  <a href="/privacidad">Privacidad</a>
+  <a href="/terminos">Términos</a>
+  <a href="/borrar-cuenta">Borrar la cuenta</a>
+  <a href="/entrar">Entrar</a>
+  <span class="sp">Contacto: <a class="mail" href="mailto:mamia@jtgcloud.com">mamia@jtgcloud.com</a></span>
+</div></footer>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // aparición al bajar: las secciones solo se ocultan cuando esto ya funciona
+  const els = [...document.querySelectorAll('.rv')];
+  document.documentElement.classList.add('rvjs');
+  const show = el => el.classList.add('in');
+  try {
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } }), { threshold: .08 });
+    els.forEach(el => io.observe(el));
+  } catch (e) { els.forEach(show); }
+  const check = () => els.forEach(el => { if (!el.classList.contains('in') && el.getBoundingClientRect().top < innerHeight * .95) show(el); });
+  addEventListener('scroll', check, { passive: true }); addEventListener('load', check); check();
+  addEventListener('scroll', () => document.getElementById('top').classList.toggle('sc', scrollY > 10), { passive: true });
+
+  // portada: la lista de la cabeza se va tachando
+  const notes = [...document.querySelectorAll('.stage .note')];
+  if (reduce) { notes.slice(0, 2).forEach(n => n.classList.add('done')); }
+  else {
+    let i = 0;
+    setInterval(() => {
+      if (document.hidden) return;
+      const vis = notes.filter(n => getComputedStyle(n).display !== 'none');
+      if (i < vis.length) { vis[i].classList.add('done'); i++; }
+      else if (i++ > vis.length + 1) { notes.forEach(n => n.classList.remove('done')); i = 0; }
+    }, 1500);
+  }
+
+  // «Apuntar»: la frase se escribe sola y aparece cómo se ha entendido
+  const tBox = document.getElementById('typeText'), tParsed = document.getElementById('typeParsed');
+  const phrase = tBox.textContent;
+  let typing = false;
+  const runType = () => {
+    if (typing || reduce) return; typing = true;
+    tBox.textContent = ''; tParsed.classList.add('wait');
+    const pv = [...tParsed.querySelectorAll('.pv')];
+    let k = 0;
+    const step = () => {
+      tBox.textContent = phrase.slice(0, ++k);
+      if (k < phrase.length) return setTimeout(step, 38 + Math.random() * 40);
+      tParsed.classList.remove('wait');
+      pv.forEach((el, j) => { el.style.transitionDelay = (Math.floor(j / 2) * 0.18) + 's'; });
+      setTimeout(() => { typing = false; }, 5200);
+    };
+    setTimeout(step, 400);
+  };
+  try {
+    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) runType(); }), { threshold: .5 }).observe(document.getElementById('typeDemo'));
+    setInterval(() => { const r = document.getElementById('typeDemo').getBoundingClientRect(); if (!document.hidden && r.top < innerHeight && r.bottom > 0) runType(); }, 7000);
+  } catch (e) {}
+
+  // «Compras en directo»: Pablo va tachando
+  const shop = [...document.querySelectorAll('#shopDemo .ck')];
+  if (!reduce) {
+    let s = 1;
+    setInterval(() => {
+      if (document.hidden) return;
+      const r = document.getElementById('shopDemo').getBoundingClientRect(); if (r.top > innerHeight || r.bottom < 0) return;
+      if (s < shop.length) shop[s++].classList.add('on');
+      else { shop.slice(1).forEach(c => c.classList.remove('on')); s = 1; }
+    }, 1700);
+  }
+
+  // la lista que nadie ve: se tacha al aparecer
+  const strike = document.getElementById('strike');
+  try { new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { strike.classList.add('in'); o.disconnect(); } }), { threshold: .35 }).observe(strike); }
+  catch (e) { strike.classList.add('in'); }
+
+  // la vista de escritorio se encoge para caber en pantallas estrechas
+  const desk = document.getElementById('desk'), deskBox = document.getElementById('deskScale');
+  const fit = () => {
+    const k = Math.min(1, deskBox.clientWidth / 1080);
+    desk.style.transform = k < 1 ? `scale(${k})` : '';
+    deskBox.style.height = k < 1 ? Math.ceil(desk.offsetHeight * k) + 'px' : '';
+    deskBox.style.overflow = k < 1 ? 'hidden' : '';
+  };
+  addEventListener('resize', fit); fit();
+
+  // precios y prueba gratuita del servidor (si no responde, se quedan los de la página)
+  const eur = c => (c / 100).toLocaleString('es-ES', { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 }) + ' €';
+  fetch('/api/web/plans').then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
+    if (!d || !Array.isArray(d.plans)) return;
+    const m = d.plans.find(p => p.plan === 'monthly'), y = d.plans.find(p => p.plan === 'yearly');
+    if (m && m.cents) document.getElementById('pmMonthly').textContent = eur(m.cents);
+    if (y && y.cents) {
+      document.getElementById('pmYearly').textContent = eur(y.cents);
+      document.getElementById('yearEq').textContent = 'Solo ' + eur(Math.round(y.cents / 12)) + ' al mes';
+      if (m && m.cents) {
+        const free = Math.round(12 - y.cents / m.cents);
+        const save = Math.round((1 - y.cents / (m.cents * 12)) * 100);
+        document.getElementById('yearBadge').textContent = free >= 1 ? (free === 1 ? '1 mes gratis' : free + ' meses gratis') : (save > 0 ? 'Ahorra un ' + save + ' %' : 'Anual');
+      }
+    }
+    if (Number.isInteger(d.trialDays) && d.trialDays > 0) document.querySelectorAll('.trialN').forEach(el => { el.textContent = d.trialDays; });
+  });
+
+  // oferta de lanzamiento: el primer código público con plazas libres
+  fetch('/api/promos').then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
+    const p = d && (d.promos || []).find(x => x.left === null || x.left > 0); if (!p) return;
+    const box = document.getElementById('promo');
+    const day = s => new Date(s + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    const head = { '1m': '1 mes gratis', '3m': '3 meses gratis', '6m': '6 meses gratis', '1y': '1 año gratis', life: 'Gratis para siempre' }[p.duration] || ('Gratis hasta el ' + day(p.duration));
+    document.getElementById('pHead').textContent = head;
+    const sub = document.getElementById('pSub');
+    if (p.max) sub.textContent = 'para las ' + p.max + ' primeras familias'; else sub.remove();
+    const what = { '1y': 'un año entero', '6m': 'seis meses', '3m': 'tres meses', '1m': 'un mes', life: 'para siempre' }[p.duration];
+    document.getElementById('pTxt').innerHTML = esc('Crea tu cuenta con este código y usa Mam-IA ' + (what ? what + ' ' : '') + 'sin pagar nada, con toda tu familia.') + ' <b>' + esc('Sin tarjeta.') + '</b>'
+      + (p.expires ? ' ' + esc('Hasta el ' + day(p.expires) + '.') : '');
+    document.getElementById('pCodeT').textContent = p.code;
+    document.getElementById('pGo').href = '/alta?code=' + encodeURIComponent(p.code);
+    const pr = box.querySelector('.pr');
+    if (p.left === null || !p.max) { pr.querySelector('.pleft').remove(); pr.querySelector('.pbar').remove(); }
+    else {
+      document.getElementById('pOf').textContent = p.left + ' de ' + p.max + ' plazas';
+      document.getElementById('pUnit').textContent = p.left === 1 ? 'plaza libre' : 'plazas libres';
+      let shown = false;
+      new IntersectionObserver((es, o) => es.forEach(e => {
+        if (!e.isIntersecting || shown) return; shown = true; o.disconnect();
+        document.getElementById('pBar').style.width = (100 * p.left / p.max) + '%';
+        const b = document.getElementById('pLeft'), t0 = performance.now(), from = p.max;   // cuenta atrás hasta las plazas que quedan
+        const step = t => { const k = Math.min(1, (t - t0) / 1400), e2 = 1 - Math.pow(1 - k, 3); b.textContent = Math.round(from - (from - p.left) * e2); if (k < 1) requestAnimationFrame(step); };
+        reduce ? (b.textContent = p.left) : requestAnimationFrame(step);
+      }), { threshold: .4 }).observe(box);
+    }
+    document.getElementById('pCode').addEventListener('click', () => {
+      const c = document.getElementById('pCopy');
+      const done = ok => { c.textContent = ok ? '¡Copiado!' : p.code; setTimeout(() => { c.textContent = 'Copiar'; }, 1600); };
+      try { navigator.clipboard.writeText(p.code).then(() => done(true), () => done(false)); } catch (e) { done(false); }
+    });
+    const left = p.left !== null && p.max ? ' · quedan ' + p.left + (p.left === 1 ? ' plaza' : ' plazas') : '';
+    const eb = document.getElementById('heroEyebrow'), a = document.createElement('a');
+    a.className = 'eyebrow hot'; a.href = '#promo'; a.id = 'heroEyebrow';
+    a.innerHTML = '<i></i>' + esc('Oferta de lanzamiento: ' + head.toLowerCase() + left);
+    eb.replaceWith(a);
+    document.getElementById('pricePromoT').textContent = '¿Llegas a tiempo? ' + head + (p.max ? ' para las ' + p.max + ' primeras familias' : '') + left;
+    document.getElementById('pricePromo').hidden = false;
+    document.getElementById('faqPromoT').textContent = (p.max ? 'Las ' + p.max + ' primeras familias' : 'Las familias') + ' que se den de alta con el código ' + p.code + ' usan Mam-IA ' + (p.duration === 'life' ? 'gratis para siempre' : what ? what + ' gratis' : 'gratis') + ', sin tarjeta. Cuando termine, si quieres seguir, eliges un plan.';
+    document.getElementById('faqPromo').hidden = false;
+    box.hidden = false;
+    box.querySelectorAll('.rv').forEach(el => { if (el.getBoundingClientRect().top < innerHeight) show(el); else try { new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { show(el); o.disconnect(); } })).observe(el); } catch (e) { show(el); } });
+  });
+})();
+</script>
+</body></html>

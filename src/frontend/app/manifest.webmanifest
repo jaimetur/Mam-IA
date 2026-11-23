@@ -1,0 +1,66 @@
+{
+  "name": "Mam-IA · la agenda de toda la familia",
+  "short_name": "Mam-IA",
+  "description": "Agenda, tareas, compra, menú y peques de toda la familia, en un solo sitio.",
+  "id": "/app",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F3F6",
+  "theme_color": "#C93E66",
+  "lang": "es",
+  "categories": [
+    "lifestyle",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/static/common/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/common/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/common/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Apuntar",
+      "url": "/app?apuntar=",
+      "icons": [
+        {
+          "src": "/static/common/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Compras",
+      "url": "/app#compras",
+      "icons": [
+        {
+          "src": "/static/common/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/app",
+    "method": "GET",
+    "params": {
+      "text": "apuntar"
+    }
+  }
+}

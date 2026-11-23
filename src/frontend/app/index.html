@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F6F3F6" id="theme-color">
+  <meta name="color-scheme" content="light dark">
+  <title>Mam-IA</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="/static/common/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Mam-IA">
+  <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
+  <link rel="stylesheet" href="/static/app/app.css?v={{v}}">
+  <script>
+    // the look chosen in Ajustes, before anything is drawn (kept by the app in localStorage)
+    try {
+      var look = JSON.parse(localStorage.getItem("mamia:look") || "{}");
+      if (look.theme && look.theme !== "auto") document.documentElement.dataset.theme = look.theme;
+      if (look.accent && look.accent !== "rosa") document.documentElement.dataset.accent = look.accent;
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <div id="shell">
+    <nav class="side" aria-label="Secciones">
+      <a class="brand" href="#hoy"><img src="/static/common/logo.svg" alt="" width="30" height="30"><span>Mam-IA</span></a>
+      <div id="side-links"></div>
+    </nav>
+    <main id="view" tabindex="-1" aria-live="polite"></main>
+  </div>
+  <nav class="tabs" id="tabs" aria-label="Secciones principales"></nav>
+  <button class="fab" id="fab" type="button" aria-label="Apuntar algo">
+    <svg class="ic"><use href="/static/common/icons.svg#i-plus"/></svg>
+  </button>
+  <div id="sheet-root"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="net" class="netpill" role="status" hidden></div>
+  <noscript><p style="padding:24px">Mam-IA necesita JavaScript para funcionar.</p></noscript>
+  <script type="module" src="/static/app/js/main.js?v={{v}}"></script>
+</body>
+</html>

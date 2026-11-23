@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mam-IA</string>
+    <string name="server_intro">La dirección de tu servidor de Mam-IA: la misma con la que abres Mam-IA en el navegador.</string>
+    <string name="server_label">Dirección del servidor</string>
+    <string name="server_go">Continuar</string>
+    <string name="server_checking">Comprobando…</string>
+    <string name="server_error">No responde ningún servidor de Mam-IA en esa dirección. Revísala y comprueba tu conexión.</string>
+    <string name="server_help">Después entra con tu correo y tu contraseña de Mam-IA, o crea tu cuenta. Puedes cambiar de servidor más adelante desde la pantalla sin conexión.</string>
+    <string name="offline">No se puede conectar con el servidor de Mam-IA. Comprueba tu conexión.</string>
+    <string name="retry">Reintentar</string>
+    <string name="change_server">Cambiar de servidor</string>
+    <string name="saved_downloads">Guardado en Descargas: %1$s</string>
+    <string name="channel_name">Avisos de Mam-IA</string>
+    <string name="channel_description">Recordatorios de eventos y tareas de tu familia, a su hora.</string>
+    <string name="action_done">Hecho</string>
+    <string name="action_snooze">Posponer 10 min</string>
+    <string name="save_failed">No se pudo guardar el archivo.</string>
+</resources>

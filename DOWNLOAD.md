@@ -1,18 +1,7 @@
-## 💾 Download
-Download the tool either for Linux, MacOS or Windows (for both x64 and arm64 architectures) or Docker version (platform & architecture independent) as you prefer, directly from following links:
+## Descargar Mam-IA
 
-**Linux:**:  
-  - [Download x64 version](https://github.com/jaimetur/PhotoMigrator/releases/download/v4.0.0/PhotoMigrator_v4.0.0_linux_x64.zip)  
-  - [Download arm64 version](https://github.com/jaimetur/PhotoMigrator/releases/download/v4.0.0/PhotoMigrator_v4.0.0_linux_arm64.zip)  
-
-**Mac OS:**
-  - [Download x64 version](https://github.com/jaimetur/PhotoMigrator/releases/download/v4.0.0/PhotoMigrator_v4.0.0_macos_x64.zip)  
-  - [Download arm64 version](https://github.com/jaimetur/PhotoMigrator/releases/download/v4.0.0/PhotoMigrator_v4.0.0_macos_arm64.zip)  
-
-**Windows:**  
-  - [Download x64 version](https://github.com/jaimetur/PhotoMigrator/releases/download/v4.0.0/PhotoMigrator_v4.0.0_windows_x64.zip)  
-  - [Download arm64 version](https://github.com/jaimetur/PhotoMigrator/releases/download/v4.0.0/PhotoMigrator_v4.0.0_windows_arm64.zip)  
-
-**Docker Launcher:**  
-  - [Download Docker Launcher](https://github.com/jaimetur/PhotoMigrator/releases/download/v4.0.0/PhotoMigrator_v4.0.0_docker.zip)  
-
+- **En el navegador** (ordenador, Android o iPhone): https://mamia.jtgcloud.com. En el móvil se puede añadir a la
+  pantalla de inicio y funciona sin conexión.
+- **App de Android**: https://mamia.jtgcloud.com/android.apk, o la última compilación en
+  [GitHub (android-latest)](https://github.com/jaimetur/Mam-IA/releases/tag/android-latest).
+- **Servidor (Docker)**: imagen `jaimetur/mam-ia` en Docker Hub. Instrucciones en [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).

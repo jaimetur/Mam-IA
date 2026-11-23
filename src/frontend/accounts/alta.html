@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Crear cuenta · Mam-IA</title>
+  <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
+  <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
+  <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
+  <script src="/static/common/pages.js?v={{v}}"></script>
+</head>
+<body>
+  <header class="top"><a class="brand" href="/"><img src="/static/common/logo.svg" width="32" height="32" alt="">Mam-IA</a>
+    <a class="btn sm" href="/entrar">Entrar</a></header>
+  <main class="wrap">
+    <section class="panel">
+      <h1>Empieza a organizar a tu familia</h1>
+      <p class="lead" id="lead">Una sola suscripción para toda la familia. Los primeros 7 días son gratis y puedes cancelar cuando quieras.</p>
+      <p class="msg info" id="promo" hidden></p>
+      <form id="f" autocomplete="on">
+        <div class="plans" id="plans" role="radiogroup" aria-label="Plan">
+          <label class="plan"><input type="radio" name="plan" value="monthly"><b>Mensual</b><span class="amt" data-p="monthly">2,50 € <small>/ mes</small></span><span class="small">Cancela cuando quieras</span></label>
+          <label class="plan"><input type="radio" name="plan" value="yearly" checked><span class="save">2 meses gratis</span><b>Anual</b><span class="amt" data-p="yearly">25 € <small>/ año</small></span><span class="small">Solo 2,08 € al mes</span></label>
+        </div>
+        <label class="field"><span>Tu nombre</span><input type="text" name="name" autocomplete="given-name" maxlength="60" required placeholder="Laura"></label>
+        <label class="field"><span>Nombre de la familia</span><input type="text" name="family" maxlength="60" placeholder="Familia García"></label>
+        <label class="field"><span>Correo electrónico</span><input type="email" name="email" autocomplete="email" required></label>
+        <label class="field"><span>Contraseña (8 caracteres o más)</span><input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+        <label class="field"><span>Código de promoción (opcional)</span><input type="text" name="code" maxlength="60" autocapitalize="characters" placeholder="LANZAMIENTO"></label>
+        <label class="small" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" name="terms" required style="margin-top:3px">
+          <span>Acepto los <a href="/terminos" target="_blank">términos</a> y la <a href="/privacidad" target="_blank">política de privacidad</a>.</span></label>
+        <p class="msg err" id="m" hidden role="alert"></p>
+        <button class="btn pri" type="submit" id="go">Continuar al pago seguro</button>
+        <p class="small center" id="how">Pagas con tarjeta, Google Pay o Apple Pay en Stripe. Mam-IA nunca ve los datos de tu tarjeta.</p>
+      </form>
+    </section>
+    <p class="small center">¿Te ha invitado alguien de tu familia? No te hace falta pagar: abre el enlace de la invitación.</p>
+  </main>
+  <script>
+    const f = document.getElementById("f"), go = document.getElementById("go"), m = document.getElementById("m");
+    let plans = { enabled: true, openSignup: false };
+    const plan = M.q("plan"); if (plan === "monthly" || plan === "yearly") f.plan.value = plan;
+    if (M.q("code")) f.code.value = M.q("code");
+    function mode() {
+      const code = f.code.value.trim();
+      const free = !!code || (!plans.enabled && plans.openSignup);
+      document.getElementById("plans").hidden = free;
+      document.getElementById("how").hidden = free;
+      go.textContent = free ? "Crear mi cuenta" : "Continuar al pago seguro";
+    }
+    f.code.addEventListener("input", mode);
+    M.api("/api/web/plans").then((p) => {
+      plans = p;
+      for (const x of p.plans) {
+        const el = document.querySelector(`[data-p="${x.plan}"]`);
+        if (el) el.firstChild.textContent = M.euros(x.cents) + " ";
+      }
+      document.getElementById("lead").textContent = `Una sola suscripción para toda la familia. Los primeros ${p.trialDays} días son gratis y puedes cancelar cuando quieras.`;
+      mode();
+    }).catch(() => {});
+    M.api("/api/promos").then((d) => {
+      const p = (d.promos || []).find((x) => x.left === null || x.left > 0);
+      if (!p) return;
+      const box = document.getElementById("promo");
+      box.textContent = `Oferta de lanzamiento: con el código ${p.code} tu familia tiene ${p.duration === "1y" ? "1 año" : "un tiempo"} gratis, sin tarjeta.` + (p.left != null ? ` Quedan ${p.left} plazas.` : "");
+      box.hidden = false;
+    }).catch(() => {});
+    mode();
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      M.msg(m, "");
+      M.busy(go, true);
+      try {
+        const r = await M.api("/api/web/signup", { method: "POST", body: {
+          plan: f.plan.value, name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value,
+          family: f.family.value.trim(), code: f.code.value.trim() } });
+        if (r.url) location.href = r.url; else location.href = "/app";
+      } catch (err) { M.msg(m, err.message); M.busy(go, false); }
+    });
+  </script>
+</body>
+</html>

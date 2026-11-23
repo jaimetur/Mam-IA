@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" type="image/png" href="/static/common/icons/favicon-32.png">
+  <link rel="stylesheet" href="/static/common/tokens.css?v={{v}}">
+  <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
+  <script src="/static/common/pages.js?v={{v}}"></script>
+  <title>Administración · Mam-IA</title>
+</head>
+<body>
+  <header class="top"><a class="brand" href="/app"><img src="/static/common/logo.svg" width="32" height="32" alt="">Administración</a>
+    <a class="btn sm" href="/app">Volver a la app</a></header>
+  <main class="wrap wide">
+    <section class="panel">
+      <h1>Servidor</h1>
+      <dl class="kv" id="ov"></dl>
+      <div class="btns"><button class="btn sm" type="button" id="bk">Hacer una copia ahora</button></div>
+      <p class="msg" id="mo" hidden></p>
+    </section>
+
+    <section class="panel">
+      <h2>Familias</h2>
+      <div class="tablewrap"><table><thead><tr><th>Familia</th><th>Quién paga</th><th>Personas</th><th>Acceso</th><th></th></tr></thead><tbody id="fams"></tbody></table></div>
+      <p class="msg" id="mf" hidden></p>
+    </section>
+
+    <section class="panel">
+      <h2>Códigos de promoción</h2>
+      <p class="small">Una familia que se da de alta con un código tiene acceso gratis durante su duración. Los públicos salen en la página de inicio con las plazas que les quedan. Duración: 1m, 3m, 6m, 1y, life o una fecha (AAAA-MM-DD).</p>
+      <div class="tablewrap"><table><thead><tr><th>Código</th><th>Alias</th><th>Duración</th><th>Caduca</th><th>Máx.</th><th>Usado</th><th>Público</th><th></th></tr></thead><tbody id="codes"></tbody></table></div>
+      <div class="btns"><button class="btn sm" type="button" id="addcode">Añadir código</button><button class="btn sm pri" type="button" id="savecodes">Guardar códigos</button></div>
+      <p class="msg" id="mc" hidden></p>
+    </section>
+
+    <section class="panel">
+      <h2>Pagos con Stripe</h2>
+      <dl class="kv" id="st"></dl>
+      <form id="fs" autocomplete="off">
+        <label class="field"><span>Clave secreta (sk_live_… o sk_test_…). Vacío: se mantiene la guardada</span><input type="password" name="secret"></label>
+        <label class="field"><span>Secreto de firma del webhook (whsec_…)</span><input type="password" name="webhook"></label>
+        <div class="btns"><button class="btn pri" type="submit">Guardar</button><button class="btn danger" type="button" id="rmstripe">Quitar Stripe</button></div>
+        <p class="msg" id="ms" hidden></p>
+      </form>
+    </section>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const fmt = (s) => s ? new Date(s).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : "—";
+    const text = (el, t) => { el.textContent = t; return el; };
+    function kv(dl, rows) { dl.innerHTML = ""; for (const [k, v] of rows) { dl.append(text(document.createElement("dt"), k), text(document.createElement("dd"), v)); } }
+
+    async function overview() {
+      const o = await M.api("/api/admin/overview");
+      kv($("ov"), [["Versión", `${o.version.version || "—"} (${(o.version.build || "").slice(0, 7)})`], ["Familias", o.families], ["Cuentas", o.accounts],
+        ["Dispositivos con avisos", o.pushDevices], ["Correo saliente", o.mail ? "Configurado" : "Sin configurar (SMTP_* en el .env)"],
+        ["Stripe", o.stripe ? "Configurado" : "Sin configurar"], ["Última copia", o.backups[0] ? o.backups[0].name : "Ninguna todavía"]]);
+    }
+
+    function access(a) {
+      if (a.kind === "web") return `De pago · ${a.plan === "yearly" ? "anual" : "mensual"} · ${a.state}${a.gift ? " + gratis" : ""}`;
+      if (a.kind === "gift") return `Gratis${a.code && a.code !== "admin" ? " (" + a.code + ")" : ""} · ${a.giftUntil ? "hasta " + fmt(a.giftUntil) : "para siempre"}`;
+      return "Sin suscripción";
+    }
+
+    async function families() {
+      const { families } = await M.api("/api/admin/families");
+      const tb = $("fams"); tb.innerHTML = "";
+      for (const f of families) {
+        const tr = document.createElement("tr");
+        const td = (t) => { const c = document.createElement("td"); if (t !== undefined) c.textContent = t; tr.appendChild(c); return c; };
+        const n = td(); n.append(text(document.createElement("b"), f.name), document.createElement("br"), text(document.createElement("span"), `Desde ${fmt(f.created)} · ${f.items} datos`));
+        n.lastChild.className = "small";
+        td(f.owner ? `${f.owner.name} · ${f.owner.email}` : "—");
+        td(`${f.members} (${f.accounts} con cuenta)`);
+        td(access(f.access));
+        const act = td();
+        const sel = document.createElement("select");
+        sel.innerHTML = '<option value="">Dar acceso…</option><option value="life">Gratis para siempre</option><option value="date">Gratis hasta una fecha</option><option value="none">Quitar el acceso gratis</option>';
+        sel.style.minHeight = "36px";
+        sel.addEventListener("change", async () => {
+          let until = sel.value;
+          if (!until) return;
+          if (until === "date") { const d = prompt("Hasta (AAAA-MM-DD)"); if (!d) { sel.value = ""; return; } until = d; }
+          try { await M.api(`/api/admin/families/${f.id}/grant`, { method: "PUT", body: { until } }); families(); }
+          catch (e) { M.msg($("mf"), e.message); sel.value = ""; }
+        });
+        act.appendChild(sel);
+        if (!f.mine) {
+          const del = text(document.createElement("button"), "Borrar"); del.className = "btn sm danger"; del.type = "button"; del.style.marginTop = "6px";
+          del.addEventListener("click", async () => {
+            if (del.dataset.sure !== "1") { del.dataset.sure = "1"; del.textContent = "¿Seguro? Pulsa otra vez"; return; }
+            try { await M.api(`/api/admin/families/${f.id}`, { method: "DELETE" }); families(); } catch (e) { M.msg($("mf"), e.message); }
+          });
+          act.appendChild(del);
+        }
+        tb.appendChild(tr);
+      }
+    }
+
+    function codeRow(c) {
+      const tr = document.createElement("tr");
+      const cell = (name, value, attrs = {}) => {
+        const td = document.createElement("td"), i = document.createElement("input");
+        i.name = name; Object.assign(i, attrs);
+        if (attrs.type === "checkbox") i.checked = !!value; else i.value = value ?? "";
+        i.style.minHeight = "36px"; if (attrs.type !== "checkbox") i.style.minWidth = attrs.size ? "" : "90px";
+        td.appendChild(i); tr.appendChild(td);
+      };
+      cell("code", c.code); cell("aliases", (c.aliases || []).join(", ")); cell("duration", c.duration || "1y", { size: 6 });
+      cell("expires", c.expires || "", { placeholder: "AAAA-MM-DD" }); cell("max", c.max ?? "", { type: "number", min: 1, size: 4 });
+      const used = document.createElement("td"); used.textContent = c.used || 0; tr.appendChild(used);
+      cell("public", c.public, { type: "checkbox" });
+      const td = document.createElement("td"), rm = text(document.createElement("button"), "Quitar"); rm.className = "btn sm"; rm.type = "button";
+      rm.addEventListener("click", () => tr.remove()); td.appendChild(rm); tr.appendChild(td);
+      $("codes").appendChild(tr);
+    }
+
+    async function codes() {
+      const { codes } = await M.api("/api/admin/codes");
+      $("codes").innerHTML = ""; codes.forEach(codeRow);
+    }
+    $("addcode").addEventListener("click", () => codeRow({ code: "", duration: "1y" }));
+    $("savecodes").addEventListener("click", async () => {
+      const list = [...$("codes").querySelectorAll("tr")].map((tr) => {
+        const v = (n) => tr.querySelector(`[name=${n}]`);
+        return { code: v("code").value.trim(), aliases: v("aliases").value.split(",").map((x) => x.trim()).filter(Boolean),
+                 duration: v("duration").value.trim(), expires: v("expires").value.trim(), max: v("max").value ? Number(v("max").value) : null,
+                 public: v("public").checked };
+      }).filter((c) => c.code);
+      try { await M.api("/api/admin/codes", { method: "PUT", body: { codes: list } }); M.msg($("mc"), "Códigos guardados.", "ok"); codes(); }
+      catch (e) { M.msg($("mc"), e.message); }
+    });
+
+    async function stripe() {
+      const s = await M.api("/api/admin/stripe");
+      kv($("st"), [["Estado", s.configured ? (s.live ? "Activo (cobros reales)" : "Activo en modo de prueba") : "Sin configurar"],
+        ["Webhook", s.webhookSet ? "Configurado" : "Falta el secreto de firma"], ["Dirección del webhook", s.webhookUrl], ["Suscripciones", s.subscriptions]]);
+    }
+    $("fs").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try { await M.api("/api/admin/stripe", { method: "PUT", body: { secret: e.target.secret.value.trim(), webhook: e.target.webhook.value.trim() } });
+        e.target.reset(); M.msg($("ms"), "Guardado. Los precios (2,50 €/mes y 25 €/año) se crean solos en Stripe.", "ok"); stripe(); }
+      catch (err) { M.msg($("ms"), err.message); }
+    });
+    $("rmstripe").addEventListener("click", async () => {
+      try { await M.api("/api/admin/stripe", { method: "PUT", body: { remove: true } }); stripe(); } catch (e) { M.msg($("ms"), e.message); }
+    });
+    $("bk").addEventListener("click", async () => {
+      try { const r = await M.api("/api/admin/backup", { method: "POST" }); M.msg($("mo"), "Copia hecha: " + r.name, "ok"); overview(); }
+      catch (e) { M.msg($("mo"), e.message); }
+    });
+    Promise.all([overview(), families(), codes(), stripe()]).catch((e) => M.msg($("mo"), e.message));
+  </script>
+</body>
+</html>
