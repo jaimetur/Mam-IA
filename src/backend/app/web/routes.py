@@ -114,9 +114,23 @@ def retired_service_worker():
     return Response(RETIRED_SW, media_type="text/javascript", headers={"Cache-Control": "no-cache"})
 
 
+# the brand's logo and icons (assets/branding in the repository, as in BodyLens), at the root of the site
+BRANDING = ("logo.svg", "favicon-32.png", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png")
+
+
+def _branding(name: str):
+    def serve():
+        return FileResponse(config.settings.branding_dir / name, headers={"Cache-Control": "public, max-age=86400"})
+    return serve
+
+
+for _name in BRANDING:
+    router.add_api_route(f"/{_name}", _branding(_name), methods=["GET"], include_in_schema=False)
+
+
 @router.get("/favicon.ico")
 def favicon():
-    return FileResponse(_front("common", "icons", "favicon-32.png"), media_type="image/png")
+    return FileResponse(config.settings.branding_dir / "favicon-32.png", media_type="image/png")
 
 
 @router.get("/android.apk")

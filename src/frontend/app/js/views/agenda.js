@@ -4,6 +4,7 @@ import { addDays, addMonths, cap, conflicts, expand, longDay, monthStart, MONTHS
 import { html, icon, mclass, on } from "../ui.js";
 import { eventEditor } from "../editors.js";
 import { evColor, evSub } from "./hoy.js";
+import { evTitle } from "../fun.js";
 
 const view = { mode: "week", day: today(), who: "" };
 
@@ -18,12 +19,32 @@ function dots(list) {
   return html`<span class="dots">${ids.slice(0, 4).map((c) => html`<i class="${c}"></i>`)}</span>`;
 }
 
+function chips(list) {
+  if (!list.length) return "";
+  return html`<span class="mchips">${list.slice(0, 3).map((o) => html`<i class="mchip ${evColor(o.ev)}">${o.time ? html`<em>${o.time}</em> ` : ""}${evTitle(o.ev)}</i>`)}
+    ${list.length > 3 ? html`<i class="more">+${list.length - 3} más</i>` : ""}</span>`;
+}
+
+/** The week as a board: one column per day, with every plan (computers and tablets). */
+function board(occs, days, d) {
+  return html`<div class="board">${days.map((x) => {
+    const list = occs.filter((o) => o.day === x);
+    return html`<section class="bcol ${x === d ? "today" : ""} ${x < d ? "past" : ""}">
+      <header><small>${WD_SHORT[weekday(x)]}</small><b>${parse(x).getDate()}</b>${x === d ? html`<span class="badge">Hoy</span>` : ""}</header>
+      <div class="bevs">${list.map((o) => html`<button class="bev ${evColor(o.ev)}" type="button" data-ev="${o.id}" data-day="${o.day}">
+        <time>${o.cont ? "Sigue" : o.time || "Todo el día"}${o.end && !o.cont ? ` – ${o.end}` : ""}</time>
+        <b>${evTitle(o.ev)}</b>${evSub({ ...o, end: null }) ? html`<span>${evSub({ ...o, end: null })}</span>` : ""}</button>`)}
+        ${list.length ? "" : html`<p class="bfree">${x < d ? "" : "Día libre"}</p>`}</div>
+      <button class="badd" type="button" data-new="${x}" aria-label="Añadir un plan el ${longDay(x)}">${icon("plus", "sm")}</button></section>`;
+  })}</div>`;
+}
+
 function dayList(occs, day) {
   const list = occs.filter((o) => o.day === day);
   return html`<section class="card"><h2 class="card-h">${cap(longDay(day))}
       <button class="link" type="button" data-new="${day}">${icon("plus", "xs")} Añadir</button></h2>
     ${list.length ? html`<div class="daylist">${list.map((o) => html`<button class="evrow ${evColor(o.ev)}" type="button" data-ev="${o.id}" data-day="${o.day}"><i></i>
-      <div><b>${o.ev.title}</b><span>${o.ev.repeat ? icon("repeat", "xs") : ""}${evSub(o)}</span></div>
+      <div><b>${evTitle(o.ev)}</b><span>${o.ev.repeat ? icon("repeat", "xs") : ""}${evSub(o)}</span></div>
       <time>${o.cont ? "Sigue" : o.time || "Todo el día"}</time></button>`)}</div>` : html`<p class="empty">Nada apuntado.</p>`}</section>`;
 }
 
@@ -53,7 +74,7 @@ export function render(root) {
     for (let x = first; x <= last; x = addDays(x, 1)) cells.push(x);
     body = html`<section class="card"><div class="month">${WD_SHORT.map((w) => html`<span class="wd">${w}</span>`)}
       ${cells.map((x) => html`<button type="button" data-pick="${x}" class="${x.slice(0, 7) !== m0.slice(0, 7) ? "out" : ""} ${x === d ? "today" : ""}"
-        aria-pressed="${x === view.day}"><b>${parse(x).getDate()}</b>${dots(occs.filter((o) => o.day === x))}</button>`)}</div></section>
+        aria-pressed="${x === view.day}"><b>${parse(x).getDate()}</b>${dots(occs.filter((o) => o.day === x))}${chips(occs.filter((o) => o.day === x))}</button>`)}</div></section>
       ${dayList(occs, view.day)}${clashes(occs)}`;
   } else if (view.mode === "week") {
     const w0 = weekStart(view.day);
@@ -62,10 +83,10 @@ export function render(root) {
     const a = parse(w0), b = parse(addDays(w0, 6));
     title = a.getMonth() === b.getMonth() ? `${a.getDate()} – ${b.getDate()} de ${MONTHS[b.getMonth()]}` : `${a.getDate()} ${MONTHS[a.getMonth()].slice(0, 3)} – ${b.getDate()} ${MONTHS[b.getMonth()].slice(0, 3)}`;
     const days = [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(w0, i));
-    body = html`<div class="week">${days.map((x) => html`<button type="button" data-pick="${x}" class="${x === d ? "today" : ""}" aria-pressed="${x === view.day}">
+    body = html`${clashes(occs)}${board(occs, days, d)}<div class="phone-week"><div class="week">${days.map((x) => html`<button type="button" data-pick="${x}" class="${x === d ? "today" : ""}" aria-pressed="${x === view.day}">
         <small>${WD_SHORT[weekday(x)]}</small><b>${parse(x).getDate()}</b>${dots(occs.filter((o) => o.day === x))}</button>`)}</div>
-      ${clashes(occs)}${dayList(occs, view.day)}
-      ${days.filter((x) => x > view.day && occs.some((o) => o.day === x)).slice(0, 3).map((x) => dayList(occs, x))}`;
+      ${dayList(occs, view.day)}
+      ${days.filter((x) => x > view.day && occs.some((o) => o.day === x)).slice(0, 3).map((x) => dayList(occs, x))}</div>`;
   } else {
     range = [view.day, view.day];
     const occs = filtered(expand(S.all("events"), view.day, view.day));

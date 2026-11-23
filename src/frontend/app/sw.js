@@ -6,7 +6,7 @@ const BUILD = "{{v}}";
 const CACHE = `${CACHE_NAME}-${BUILD}`;
 const DEV = BUILD.endsWith("-dev");
 const SHELL = ["/app", "/static/common/tokens.css", "/static/common/fonts/fonts.css", "/static/common/icons.svg",
-  "/static/common/logo.svg", "/static/app/app.css"];
+  "/logo.svg", "/static/app/app.css"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}).then(() => self.skipWaiting()));
@@ -51,7 +51,7 @@ self.addEventListener("push", (event) => {
   try { d = event.data.json(); } catch (e) { d = { title: "Mam-IA", body: event.data ? event.data.text() : "" }; }
   const actions = d.id && d.id.startsWith("tk:") ? [{ action: "hecho", title: "Hecho" }] : [];
   event.waitUntil(self.registration.showNotification(d.title || "Mam-IA", {
-    body: d.body || "", tag: d.tag || d.id, icon: "/static/common/icons/icon-192.png", badge: "/static/common/icons/favicon-32.png",
+    body: d.body || "", tag: d.tag || d.id, icon: "/icon-192.png", badge: "/favicon-32.png",
     data: { path: d.path || "/app", id: d.id || "" }, actions, renotify: true,
   }));
 });

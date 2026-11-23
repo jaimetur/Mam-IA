@@ -2,7 +2,7 @@
 FROM python:3.12-slim
 ARG SOURCE_REVISION=dev
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
-    TZ=Europe/Madrid DATA_DIR=/data FRONTEND_DIR=/app/frontend DOCS_DIR=/app/docs \
+    TZ=Europe/Madrid DATA_DIR=/data FRONTEND_DIR=/app/frontend BRANDING_DIR=/app/branding DOCS_DIR=/app/docs \
     PUID=1000 PGID=1000 MAMIA_REVISION=${SOURCE_REVISION}
 RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -rf /var/lib/apt/lists/* \
  && groupadd -g 1000 mamia && useradd -u 1000 -g 1000 -M -d /app -s /usr/sbin/nologin mamia
@@ -12,6 +12,7 @@ RUN python -c "import tomllib; print('\n'.join(tomllib.load(open('/app/pyproject
  && pip install --no-cache-dir -r /tmp/req.txt && rm /tmp/req.txt
 COPY src/backend/app ./app
 COPY src/frontend /app/frontend
+COPY assets/branding /app/branding
 COPY README.md CHANGELOG.md /app/docs/
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod 0755 /entrypoint.sh && python -c "import app.main"

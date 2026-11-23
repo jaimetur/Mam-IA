@@ -39,7 +39,8 @@ Mam-IA/
     accounts/             entrar, alta, unirse, recuperar, cuenta y bienvenida
     admin/                administración del servidor (/admin)
     legal/                privacidad, términos y borrar la cuenta
-    common/               tokens de diseño, fuentes, iconos, logo y estilos de las páginas
+    common/               tokens de diseño, fuentes, iconos de la interfaz y estilos de las páginas
+  assets/branding/        logo e iconos de la marca (favicon, PWA, Apple), servidos en la raíz del sitio
   android/                app de Android (la web en una ventana nativa, con alarmas exactas): docs/ANDROID.md
   docker/                 imagen y compose de producción y de desarrollo
   tests/                  pytest (servidor) y node --test (app web)
@@ -108,6 +109,6 @@ Sin Tk pregunta en el terminal. También acepta `--update VERSION FECHA` y
 
 ## Logo e iconos
 
-`tools/make_icons.py` dibuja el logo (`src/frontend/common/logo.svg`) y los iconos PNG de la PWA, Apple y el favicon.
+`tools/make_icons.py` dibuja el logo y los iconos PNG de la PWA, Apple y el favicon en `assets/branding/` (como BodyLens); el servidor los sirve en la raíz del sitio (`/logo.svg`, `/icon-192.png`…).
 Los iconos de la interfaz son de [Lucide](https://lucide.dev) (licencia ISC) y las fuentes, Bricolage Grotesque y
 Figtree (SIL Open Font License), se sirven desde el propio servidor.

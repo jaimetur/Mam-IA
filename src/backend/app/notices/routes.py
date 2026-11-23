@@ -24,7 +24,7 @@ def _page(title: str, text: str) -> HTMLResponse:
         '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, '
         'initial-scale=1, maximum-scale=1"><title>Mam-IA</title><link rel="stylesheet" href="/static/common/tokens.css">'
         '<link rel="stylesheet" href="/static/common/pages.css"></head><body><header class="top"><a class="brand" href="/">'
-        '<img src="/static/common/logo.svg" width="32" height="32" alt="">Mam-IA</a></header><main class="wrap">'
+        '<img src="/logo.svg" width="32" height="32" alt="">Mam-IA</a></header><main class="wrap">'
         f'<section class="panel"><h1>{esc(title)}</h1><p class="lead">{text}</p>'
         '<a class="btn pri" href="/app#ajustes">Abrir los ajustes de Mam-IA</a></section></main></body></html>',
         headers={"Cache-Control": "no-store"})

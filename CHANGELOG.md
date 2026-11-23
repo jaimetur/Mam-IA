@@ -38,6 +38,8 @@ Todas las fechas usan formato `YYYY-MM-DD`.
 - GitHub Actions pasa los tests y publica la imagen `jaimetur/mam-ia` con cada push (`:main`, y `:X.Y.Z` + `:latest` en las ramas de versión).
 - Las fuentes y los iconos se sirven desde el propio servidor (sin Google Fonts ni CDN): más privacidad y funcionan sin conexión.
 - `runMamIA.py` levanta el servidor completo en local con datos de desarrollo; los correos se escriben en la consola (`SMTP_HOST=log`).
+- **Interfaz de escritorio rediseñada**: ocupa todo el ancho (antes se quedaba en una franja estrecha), letra y tarjetas más grandes, la semana de la Agenda como tablero de 7 columnas y el mes con los planes dentro, Tareas y Compras en columnas, el Menú como semana, menú lateral con colores, cabecera de Hoy con degradado y resumen del día, emojis en planes y tareas, y confeti al terminar una tarea.
+- El logo y los iconos de la marca están en `assets/branding/` (como en BodyLens) y se sirven en la raíz del sitio (`/logo.svg`, `/icon-192.png`…); `tools/make_icons.py` los genera ahí.
 - Administración → Correo: el servidor SMTP se configura desde la web (manda sobre el `.env`; la contraseña se guarda cifrada) y se comprueba con un correo de prueba.
 - La pantalla de entrar tiene un botón «Página de inicio» (en el móvil, «Web») para volver a la web, como en BodyLens; no aparece dentro de la app de Android, que no tiene landing.
 

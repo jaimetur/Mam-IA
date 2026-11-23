@@ -14,7 +14,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "src" / "frontend" / "common"
+OUT = ROOT / "assets" / "branding"   # served at the root of the site: /logo.svg, /icon-192.png…
 TOP, BOTTOM = (0xE0, 0x5A, 0x82), (0xB2, 0x2F, 0x58)     # the background gradient (accent colour)
 HEART = (0xFF, 0xFF, 0xFF)
 SPARK = (0xFF, 0xE3, 0x9B)
@@ -86,7 +86,7 @@ def png(size: int, *, rounded: bool, pad: float = 0.0) -> Image.Image:
 
 
 def main() -> None:
-    icons = OUT / "icons"
+    icons = OUT
     icons.mkdir(parents=True, exist_ok=True)
     (OUT / "logo.svg").write_text(svg(), encoding="utf-8")
     png(192, rounded=True).save(icons / "icon-192.png")

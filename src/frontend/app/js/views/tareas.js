@@ -3,13 +3,14 @@ import * as S from "../store.js";
 import { addDays, cap, longDay, relDay, ruleText, today, weekStart } from "../dates.js";
 import { html, icon, avatar, mclass, on, toast } from "../ui.js";
 import { completeTask, taskEditor, uncompleteTask } from "../editors.js";
+import { confetti, evTitle } from "../fun.js";
 
 const view = { tab: "pend", who: "", period: 7 };
 
 function row(t, d) {
   return html`<div class="row ${t.done ? "is-done" : ""}">
     <input class="ck" type="checkbox" ${t.done ? "checked" : ""} aria-label="Hecho: ${t.title}" data-done="${t.id}">
-    <button class="txt grow" type="button" data-task="${t.id}"><span class="title">${t.title}</span>
+    <button class="txt grow" type="button" data-task="${t.id}"><span class="title">${evTitle(t)}</span>
       <span class="sub">${t.due && !t.done ? (t.due < d ? html`<span class="tag late">${relDay(t.due, d)}</span>` : relDay(t.due, d)) : ""}
       ${t.time ? html`${icon("clock")}${t.time}` : ""}${t.prio === "alta" ? html`<span class="tag hi">Importante</span>` : ""}
       ${t.repeat ? html`${icon("repeat")}${ruleText(t.repeat)}` : ""}${t.rotate ? html`<span class="tag acc">Por turnos</span>` : ""}</span></button>
@@ -107,7 +108,7 @@ export function bind(root, rerender) {
   on(root, "click", "[data-task]", (el) => taskEditor(el.dataset.task));
   on(root, "click", "[data-new]", () => taskEditor(null, view.who && view.who !== "none" ? { who: view.who } : {}));
   on(root, "click", "[data-new-routine]", () => taskEditor(null, { repeat: { freq: "weekly", every: 1 } }));
-  on(root, "change", "[data-done]", (el) => (el.checked ? completeTask(el.dataset.done) : uncompleteTask(el.dataset.done)));
+  on(root, "change", "[data-done]", (el) => { if (el.checked) { confetti(el); completeTask(el.dataset.done); } else uncompleteTask(el.dataset.done); });
   on(root, "click", "[data-move]", (el) => {
     const to = S.get("members", el.dataset.to);
     S.patch("tasks", el.dataset.move, { who: el.dataset.to });

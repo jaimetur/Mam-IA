@@ -26,6 +26,7 @@ def _int(name: str, default: int) -> int:
 class Settings:
     data_dir: Path = field(default_factory=lambda: Path(os.environ.get("DATA_DIR", "/data")))
     frontend_dir: Path = field(default_factory=lambda: Path(os.environ.get("FRONTEND_DIR", str(ROOT / "src" / "frontend"))))
+    branding_dir: Path = field(default_factory=lambda: Path(os.environ.get("BRANDING_DIR", str(ROOT / "assets" / "branding"))))
     docs_dir: Path = field(default_factory=lambda: Path(os.environ.get("DOCS_DIR", str(ROOT))))
     # public address, without the final slash (links in emails and Stripe's return pages)
     public_url: str = field(default_factory=lambda: os.environ.get("PUBLIC_URL", "").rstrip("/"))

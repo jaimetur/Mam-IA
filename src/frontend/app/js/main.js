@@ -43,9 +43,9 @@ function navLinks() {
   const active = (k) => k === cur || ROUTES[cur].parent === k;
   document.getElementById("tabs").innerHTML = html`${TABS.map((k) => html`<a href="#${k}" ${active(k) ? html`aria-current="page"` : ""}>${icon(ROUTES[k].icon)}${ROUTES[k].title}</a>`)}`;
   document.getElementById("side-links").innerHTML = html`<button class="new" type="button" data-capture>${icon("plus")}Apuntar</button>
-    ${SIDE.map((k) => html`<a class="link" href="#${k}" ${k === cur ? html`aria-current="page"` : ""}>${icon(ROUTES[k].icon)}${ROUTES[k].title}</a>`)}
-    <hr><a class="link" href="#ajustes" ${cur === "ajustes" ? html`aria-current="page"` : ""}>${icon("settings")}Ajustes</a>
-    <a class="link" href="/cuenta">${icon("user")}Tu cuenta</a>`;
+    ${SIDE.map((k) => html`<a class="link" href="#${k}" ${k === cur ? html`aria-current="page"` : ""}><span class="sico s-${k}">${icon(ROUTES[k].icon)}</span>${ROUTES[k].title}</a>`)}
+    <hr><a class="link" href="#ajustes" ${cur === "ajustes" ? html`aria-current="page"` : ""}><span class="sico">${icon("settings")}</span>Ajustes</a>
+    <a class="link" href="/cuenta"><span class="sico">${icon("user")}</span>Tu cuenta</a>`;
 }
 
 /** Draw the current screen again, keeping what is being typed in a field marked data-keep. */
@@ -70,6 +70,7 @@ function mount() {
   const view = document.getElementById("view");
   page = document.createElement("div");
   page.className = "page";
+  page.dataset.route = name;   // each screen has its own sticker in the header (app.css)
   view.replaceChildren(page);
   current = name;
   r.view.render(page);

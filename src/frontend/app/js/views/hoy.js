@@ -6,11 +6,15 @@ import { ctx } from "../ctx.js";
 import { completeTask, eventEditor, taskEditor } from "../editors.js";
 import { openCapture } from "../capture.js";
 import { notifyState, askNotifications } from "../notify.js";
+import { confetti, evTitle } from "../fun.js";
 
 function greeting(now = new Date()) {
   const h = now.getHours();
   return h < 6 ? "Buenas noches" : h < 14 ? "Buenos días" : h < 21 ? "Buenas tardes" : "Buenas noches";
 }
+
+const sky = (now = new Date()) => { const h = now.getHours(); return h < 7 || h >= 21 ? "🌙" : h < 14 ? "☀️" : "🌤️"; };
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 const nameOf = (id) => (S.get("members", id) || {}).name || "";
 
@@ -65,8 +69,11 @@ export function render(root) {
   const giftEnds = b.plan === "gift" && b.expiry && (b.expiry - Date.now()) < 15 * 86400000 && b.expiry > Date.now();
 
   root.innerHTML = html`
-    <header class="head">
-      <div><p class="kicker">${cap(longDay(d))}</p><h1>${greeting(now)}, ${first}</h1></div>
+    <header class="hero">
+      <div class="hero-txt"><p class="kicker">${cap(longDay(d))}</p><h1>${greeting(now)}, ${first} <span class="sky" aria-hidden="true">${sky(now)}</span></h1>
+        <div class="pills"><a class="pill" href="#agenda"><span aria-hidden="true">📅</span> ${todays.length ? plural(todays.length, "plan hoy", "planes hoy") : "Hoy sin planes"}</a>
+          <a class="pill" href="#tareas"><span aria-hidden="true">✅</span> ${tasks.length ? plural(tasks.length, "tarea pendiente", "tareas pendientes") : "Nada pendiente"}</a>
+          <a class="pill" href="#compras"><span aria-hidden="true">🛒</span> ${toBuy ? plural(toBuy, "cosa en la compra", "cosas en la compra") : "Compra hecha"}</a></div></div>
       <a class="avs" href="#familia" aria-label="Tu familia">${ms.slice(0, 5).map((m) => avatar(m))}</a>
     </header>
     ${b.readOnly ? html`<div class="banner bad">${icon("lock")}<div><b>Tu familia está en modo solo lectura.</b>
@@ -81,17 +88,17 @@ export function render(root) {
     </div></section>` : ""}
     <div class="cols"><div>
     ${nu ? html`<button class="now" type="button" data-ev="${nu.id}" data-day="${nu.day}"><p class="lbl">${countdown(nu, now)}</p>
-      <p class="t">${nu.ev.title}</p><p class="s">${[nu.time + (nu.end ? ` – ${nu.end}` : ""), evSub(nu)].filter(Boolean).join(" · ")}</p></button>` : ""}
+      <p class="t">${evTitle(nu.ev)}</p><p class="s">${[nu.time + (nu.end ? ` – ${nu.end}` : ""), evSub(nu)].filter(Boolean).join(" · ")}</p></button>` : ""}
     <section class="card"><h2 class="card-h">Hoy <a href="#agenda">Agenda</a></h2>
       ${todays.length ? html`<ol class="tl">${todays.map((o) => html`<li class="${o.time && (o.end || o.time) < hm(now) ? "past" : ""}">
         <time>${o.time || "Todo el día"}</time>
-        <button class="ev ${evColor(o.ev)}" type="button" data-ev="${o.id}" data-day="${o.day}"><b>${o.ev.title}</b>${evSub(o) ? html`<span>${evSub(o)}</span>` : ""}</button></li>`)}</ol>`
+        <button class="ev ${evColor(o.ev)}" type="button" data-ev="${o.id}" data-day="${o.day}"><b>${evTitle(o.ev)}</b>${evSub(o) ? html`<span>${evSub(o)}</span>` : ""}</button></li>`)}</ol>`
         : html`<p class="empty">Hoy no hay planes apuntados. ${fresh ? "" : "Disfruta del respiro."}</p>`}
     </section>
     <section class="card"><h2 class="card-h"><span>No olvides ${tasks.length ? html`<span class="cnt">${tasks.length}</span>` : ""}</span><a href="#tareas">Tareas</a></h2>
       ${tasks.length || important.length ? html`<div class="list">${[...tasks, ...important].map((t) => html`<div class="row">
         <input class="ck" type="checkbox" aria-label="Hecho: ${t.title}" data-done="${t.id}">
-        <button class="txt grow" type="button" data-task="${t.id}"><span class="title">${t.title}</span>
+        <button class="txt grow" type="button" data-task="${t.id}"><span class="title">${evTitle(t)}</span>
           <span class="sub">${t.due && t.due < d ? html`<span class="tag late">${t.due === addDays(d, -1) ? "Desde ayer" : "Atrasada"}</span>` : ""}
           ${t.prio === "alta" ? html`<span class="tag hi">Importante</span>` : ""}${t.time ? html`${icon("clock")}${t.time}` : ""}
           ${t.repeat ? icon("repeat") : ""}</span></button>
@@ -101,11 +108,11 @@ export function render(root) {
     </div><div>
     ${tomorrows.length ? html`<section class="card"><h2 class="card-h">Mañana <span class="muted" style="font-weight:600">${cap(longDay(tom))}</span></h2>
       <div class="daylist">${tomorrows.map((o) => html`<button class="evrow ${evColor(o.ev)}" type="button" data-ev="${o.id}" data-day="${o.day}"><i></i>
-        <div><b>${o.ev.title}</b>${evSub(o) ? html`<span>${evSub(o)}</span>` : ""}</div><time>${o.time || "Todo el día"}</time></button>`)}</div></section>` : ""}
+        <div><b>${evTitle(o.ev)}</b>${evSub(o) ? html`<span>${evSub(o)}</span>` : ""}</div><time>${o.time || "Todo el día"}</time></button>`)}</div></section>` : ""}
     <div class="duo">
-      <a class="mini" href="#menu"><span class="lbl">Cena</span><b>${(meal && meal.dish) || "Sin decidir"}</b>
+      <a class="mini" href="#menu"><span class="lbl">🍽️ Cena</span><b>${(meal && meal.dish) || "Sin decidir"}</b>
         <span>${lunch && lunch.school ? `Comedor: ${lunch.school}` : "Ver el menú de la semana"}</span></a>
-      <a class="mini" href="#compras"><span class="lbl">Compra</span><b>${toBuy ? `${toBuy} ${toBuy === 1 ? "cosa" : "cosas"}` : "Todo comprado"}</b>
+      <a class="mini" href="#compras"><span class="lbl">🛒 Compra</span><b>${toBuy ? `${toBuy} ${toBuy === 1 ? "cosa" : "cosas"}` : "Todo comprado"}</b>
         <span>${toBuy ? "En la lista de la compra" : "Añade lo que falte"}</span></a>
     </div>
     ${!ns.on && !fresh && ns.can ? html`<button class="banner info" type="button" data-act="notify" style="border:0;text-align:left;width:100%">${icon("bell-ring")}
@@ -116,7 +123,7 @@ export function render(root) {
 export function bind(root) {
   on(root, "click", "[data-ev]", (el) => eventEditor(el.dataset.ev, { occurrence: el.dataset.day }));
   on(root, "click", "[data-task]", (el) => taskEditor(el.dataset.task));
-  on(root, "change", "[data-done]", (el) => completeTask(el.dataset.done));
+  on(root, "change", "[data-done]", (el) => { confetti(el); completeTask(el.dataset.done); });
   on(root, "click", "[data-go]", (el) => { location.hash = el.dataset.go; });
   on(root, "click", "[data-act=capture]", () => openCapture());
   on(root, "click", "[data-act=notify]", () => askNotifications());

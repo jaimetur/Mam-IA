@@ -72,6 +72,15 @@ def test_pages(client, server):
     assert "{{v}}" not in client.get("/entrar").text
     assert client.get("/static/common/tokens.css").status_code == 200
     assert client.get("/static/common/fonts/figtree-latin.woff2").headers["content-type"] == "font/woff2"
+    # the brand (assets/branding) at the root of the site
+    for name, kind in (("logo.svg", "image/svg+xml"), ("favicon-32.png", "image/png"), ("icon-192.png", "image/png"),
+                       ("icon-512.png", "image/png"), ("icon-maskable-512.png", "image/png"), ("apple-touch-icon.png", "image/png")):
+        r = client.get(f"/{name}")
+        assert r.status_code == 200 and r.headers["content-type"] == kind, name
+    assert client.get("/favicon.ico").headers["content-type"] == "image/png"
+    assert client.get("/static/common/logo.svg").status_code == 404
+    icons = [i["src"] for i in client.get("/manifest.webmanifest").json()["icons"]]
+    assert all(client.get(src).status_code == 200 for src in icons)
     assert client.get("/static/../pyproject.toml").status_code == 404
     assert client.get("/static/app/index.html").status_code == 404
     sw = client.get("/sw.js")
