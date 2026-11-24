@@ -161,7 +161,16 @@ def main(argv: list[str]) -> int:
         if getpass.getpass("Again: ") != password:
             print("The passwords do not match.", file=sys.stderr)
             return 1
-    r = fill(email, password)
+    if password is not None:
+        from app.core.security import password_problem
+        if problem := password_problem(password):   # said plainly, before anything is made
+            print(problem, file=sys.stderr)
+            return 1
+    try:
+        r = fill(email, password)
+    except users.UserError as e:
+        print(str(e), file=sys.stderr)
+        return 1
     print(f"{'Made and filled' if r['made'] else 'Filled'} {r['account']}: {r['documents']} demo documents (family {r['family']}).")
     return 0
 
