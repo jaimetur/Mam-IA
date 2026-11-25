@@ -59,6 +59,116 @@ Todas las fechas usan formato `YYYY-MM-DD`.
 #### 📚 Documentación:
 - README nuevo, guía de despliegue en el NAS (`docs/DEPLOYMENT.md`) y de la app de Android (`docs/ANDROID.md`).
 
+#### 📱 Google Play (es-ES):
+Mam-IA se renueva por completo: ahora es una app con una cuenta para toda la familia.
+• Hoy: lo siguiente que toca, la cena y la compra de un vistazo
+• Agenda familiar con un color por persona
+• Apunta en 5 segundos escribiendo o dictando
+• Tareas, rutinas y reparto de la carga
+• Compras en directo y menú semanal
+• Ficha de cada peque
+• Avisos y alarmas exactas
+• 10 idiomas
+
+#### 📱 Google Play (en-US):
+Mam-IA has been rebuilt: it is now an app with one account for the whole family.
+• Today: what's next, dinner and shopping at a glance
+• Family calendar with a colour per person
+• Add things in 5 seconds by typing or speaking
+• Tasks, routines and a fair share of the load
+• Live shopping lists and a weekly menu
+• A profile for each child
+• Reminders and exact alarms
+• 10 languages
+
+#### 📱 Google Play (ca):
+Mam-IA es renova del tot: ara és una app amb un compte per a tota la família.
+• Avui: el que toca, el sopar i la compra d'un cop d'ull
+• Agenda familiar amb un color per persona
+• Apunta-ho en 5 segons escrivint o dictant
+• Tasques, rutines i repartiment de la càrrega
+• Compres en directe i menú setmanal
+• Fitxa de cada petit
+• Avisos i alarmes exactes
+• 10 idiomes
+
+#### 📱 Google Play (de-DE):
+Mam-IA ist komplett neu: jetzt eine App mit einem Konto für die ganze Familie.
+• Heute: was als Nächstes ansteht, Abendessen und Einkauf auf einen Blick
+• Familienkalender mit einer Farbe pro Person
+• In 5 Sekunden eintragen, getippt oder diktiert
+• Aufgaben, Routinen und eine faire Verteilung
+• Einkaufslisten in Echtzeit und Wochenmenü
+• Ein Profil für jedes Kind
+• Erinnerungen und genaue Alarme
+• 10 Sprachen
+
+#### 📱 Google Play (fr-FR):
+Mam-IA fait peau neuve : c'est maintenant une app avec un compte pour toute la famille.
+• Aujourd'hui : la suite, le dîner et les courses en un coup d'œil
+• Agenda familial avec une couleur par personne
+• Notez en 5 secondes, à l'écrit ou à la voix
+• Tâches, routines et répartition de la charge
+• Courses en direct et menu de la semaine
+• Une fiche pour chaque enfant
+• Rappels et alarmes précises
+• 10 langues
+
+#### 📱 Google Play (it-IT):
+Mam-IA si rinnova del tutto: ora è un'app con un account per tutta la famiglia.
+• Oggi: cosa viene dopo, la cena e la spesa a colpo d'occhio
+• Agenda di famiglia con un colore per persona
+• Annota in 5 secondi scrivendo o dettando
+• Compiti, routine e divisione del carico
+• Spesa in tempo reale e menù settimanale
+• Una scheda per ogni bambino
+• Promemoria e sveglie precise
+• 10 lingue
+
+#### 📱 Google Play (ja-JP):
+Mam-IA を全面的に刷新しました。家族みんなで1つのアカウントを使うアプリになりました。
+• 今日：次の予定、夕食、買い物がひと目でわかる
+• 一人ずつ色分けした家族カレンダー
+• 入力や音声で5秒で登録
+• タスク、ルーティン、家事の分担
+• リアルタイムの買い物リストと週間献立
+• 子どもごとのプロフィール
+• リマインダーと正確なアラーム
+• 10言語に対応
+
+#### 📱 Google Play (nl-NL):
+Mam-IA is helemaal vernieuwd: nu een app met één account voor het hele gezin.
+• Vandaag: wat er nu komt, het avondeten en de boodschappen in één oogopslag
+• Gezinsagenda met een kleur per persoon
+• In 5 seconden noteren, typen of inspreken
+• Taken, routines en een eerlijke verdeling
+• Live boodschappenlijsten en weekmenu
+• Een profiel voor elk kind
+• Herinneringen en exacte alarmen
+• 10 talen
+
+#### 📱 Google Play (pt-PT):
+A Mam-IA foi totalmente renovada: agora é uma app com uma conta para toda a família.
+• Hoje: o que vem a seguir, o jantar e as compras num relance
+• Agenda familiar com uma cor por pessoa
+• Aponte em 5 segundos, a escrever ou a ditar
+• Tarefas, rotinas e divisão da carga
+• Compras em tempo real e ementa semanal
+• Ficha de cada criança
+• Avisos e alarmes exatos
+• 10 idiomas
+
+#### 📱 Google Play (zh-CN):
+Mam-IA 全面焕新：现在是全家共用一个账户的应用。
+• 今天：接下来的安排、晚餐和购物一目了然
+• 家庭日程，每人一种颜色
+• 打字或语音，5 秒记下
+• 任务、日常安排和家务分工
+• 实时购物清单和每周菜单
+• 每个孩子的资料卡
+• 提醒和准时闹钟
+• 支持 10 种语言
+
 ---
 
 ## Release: v0.1.0
