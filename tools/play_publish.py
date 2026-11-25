@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 """Upload a new version of the Android app and/or the store listing to Google Play (Play Developer API, "edits").
 
-Used by GitHub Actions on the release branches (X.Y.Z), so nobody has to upload them by hand in Play Console:
-  - android.yml uploads the AAB of each build to a test track (PLAY_TRACK, by default "alpha", the closed test);
-  - play_screenshots.yml uploads the texts and images of assets/play-store/<language>/ to the listing in each language.
+Used by GitHub Actions, so nobody has to upload them by hand in Play Console:
+  - android.yml uploads the AAB of each build of a release branch (X.Y.Z) to a test track (PLAY_TRACK, by default
+    "alpha", the closed test);
+  - play_screenshots.yml uploads the texts and images of assets/play-store/<language>/ to the listing in each language;
+  - release.yml, on every push to main, promotes the version's build from the closed test to the stable track
+    (PLAY_STABLE_TRACK, e.g. "production"): the same build the testers had, without building it again.
+Every release takes its notes ("What's new") from the version's block in CHANGELOG.md (release_notes()).
 
 It signs in with a service account of the Play Console. Its JSON key is read from the environment variable
 PLAY_SERVICE_ACCOUNT_JSON (the GitHub secret of the same name), never from a file of the repository.
 
 Usage:
-  python tools/play_publish.py --aab app-release.aab --track alpha --release-name "0.2.0 (45)"
+  python tools/play_publish.py --aab app-release.aab --track alpha --release-name "0.2.0 (45)" --version 0.2.0
   python tools/play_publish.py --listing                      # texts and images of every language in assets/play-store
   python tools/play_publish.py --listing --only en-US --dry-run
+  python tools/play_publish.py --promote --version 0.2.0 --from-track alpha --track production
+  python tools/play_publish.py --promote --version 0.2.0 --dry-run      # shows the release notes Play would get
 
 The Chromebook screenshots are not in the API: they stay in Play Console, uploaded by hand when they change.
 """
@@ -23,6 +29,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -34,6 +41,10 @@ from cryptography.hazmat.primitives.asymmetric import padding
 ROOT = Path(__file__).resolve().parents[1]
 LISTING_DIR = ROOT / "assets" / "play-store"
 PACKAGE = "app.mamia.android"
+CHANGELOG = ROOT / "CHANGELOG.md"
+CHANGELOG_LANG = "es-ES"  # the language CHANGELOG.md is written in
+NOTES_MAX = 500  # Play's limit for the release notes of each language
+USER_SECTIONS = ("🌟", "🚀", "🐛")  # sections of a changelog block that users notice: new, better, fixed
 SCOPE = "https://www.googleapis.com/auth/androidpublisher"
 API = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications"
 UPLOAD = "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications"
@@ -88,9 +99,29 @@ class Edit:
                           headers={"Content-Type": "application/octet-stream"}, data=f)
         return int(r["versionCode"])
 
-    def set_track(self, track: str, version_code: int, name: str, status: str) -> None:
-        release = {"name": name, "versionCodes": [str(version_code)], "status": status}
+    def set_track(self, track: str, codes: list[str], name: str, status: str, notes: dict[str, str]) -> None:
+        """Make this the only release of the track, with the notes of the languages the listing has."""
+        have = self.languages()
+        for lang in sorted(set(notes) - have):
+            print(f"Release notes in {lang} skipped: the listing has no {lang} translation")
+        release = {"name": name, "versionCodes": codes, "status": status,
+                   "releaseNotes": [{"language": k, "text": v} for k, v in sorted(notes.items()) if k in have]}
         self.call("PUT", f"{self.base}/tracks/{track}", json={"track": track, "releases": [release]})
+
+    def languages(self) -> set[str]:
+        return {x["language"] for x in self.call("GET", f"{self.base}/listings").get("listings", [])}
+
+    def releases(self, track: str) -> list[dict]:
+        """Releases of a track (none if the track has never had one)."""
+        r = self.s.get(f"{self.base}/tracks/{track}", timeout=60)
+        if r.status_code == 404:
+            return []
+        if r.status_code >= 300:
+            sys.exit(f"Google Play: GET tracks/{track} → {r.status_code}\n{r.text[:1500]}")
+        return r.json().get("releases", [])
+
+    def discard(self) -> None:
+        self.s.delete(self.base, timeout=60)
 
     def set_texts(self, lang: str, title: str, short: str, full: str) -> None:
         self.call("PUT", f"{self.base}/listings/{lang}",
@@ -113,6 +144,57 @@ class Edit:
         self.call("POST", f"{self.base}:commit")
 
 
+def release_notes(version: str) -> dict[str, str]:
+    """Play's "What's new" for a version, by language, from its block in CHANGELOG.md.
+
+    Its "#### 📱 Google Play (<language>):" sections as they are (one per language, e.g. "(es-ES)"); without them, the
+    titles of its new features, enhancements and fixes, one per line, in the changelog's language. At most 500
+    characters per language, as Play allows."""
+    m = re.search(rf"^## Release: v{re.escape(version)}\s*$(.*?)(?=^---\s*$|^## |\Z)",
+                  CHANGELOG.read_text(encoding="utf-8"), re.M | re.S)
+    if not m:
+        return {}
+    sections = re.findall(r"^#### (.*?)\n(.*?)(?=^#### |\Z)", m.group(1), re.M | re.S)
+    own = {}
+    for head, body in sections:
+        lang = re.match(r"📱 Google Play \(([\w-]+)\):?$", head.strip())
+        if lang and body.strip():
+            text = body.strip()
+            own[lang.group(1)] = text if len(text) <= NOTES_MAX else text[:NOTES_MAX - 1].rstrip() + "…"
+    if own:
+        return own
+    lines: list[str] = []
+    for head, body in sections:
+        if not head.startswith(USER_SECTIONS):
+            continue
+        for item in re.findall(r"^- (.+)$", body, re.M):
+            bold = re.match(r"\*\*(.+?)\*\*", item)
+            title = bold.group(1) if bold else re.split(r"(?<=[.:;])\s|\s\(", item, maxsplit=1)[0]
+            title = re.sub(r"[*`]", "", title).strip().rstrip(".:;,")
+            if len(title) > 120:
+                title = title[:119].rstrip() + "…"
+            if title and len("\n".join(lines + [f"• {title}"])) <= NOTES_MAX:
+                lines.append(f"• {title}")
+    return {CHANGELOG_LANG: "\n".join(lines)} if lines else {}
+
+
+def promote(edit: Edit, version: str, source: str, target: str, notes: dict[str, str]) -> bool:
+    """Put the build of `version` that is on the `source` track (its release is named "X.Y.Z (N)") on the `target`
+    track too, for every user, with `notes`. False if it is already there."""
+    found = [r for r in edit.releases(source) if r.get("name", "").startswith(f"{version} (") and r.get("versionCodes")]
+    if not found:
+        names = ", ".join(r.get("name", "?") for r in edit.releases(source)) or "nothing"
+        sys.exit(f"Google Play: the {source} track has no {version} build (it has: {names}). Run the Android workflow on "
+                 f"the {version} branch first, so that it reaches the {source} track.")
+    rel = max(found, key=lambda r: max(int(c) for c in r["versionCodes"]))
+    if any(r.get("versionCodes") == rel["versionCodes"] for r in edit.releases(target)):
+        print(f"{rel['name']} is already on the {target} track: nothing to do.")
+        return False
+    edit.set_track(target, rel["versionCodes"], rel["name"], "completed", notes)
+    print(f"{rel['name']}: from the {source} track to the {target} track")
+    return True
+
+
 def listing_languages(only: list[str] | None) -> list[Path]:
     langs = sorted(p for p in LISTING_DIR.iterdir() if p.is_dir() and (p / "title.txt").exists())
     return [p for p in langs if not only or p.name in only]
@@ -131,13 +213,23 @@ def main() -> None:
     ap.add_argument("--status", default="completed", help="completed, or draft while the app has never been published")
     ap.add_argument("--listing", action="store_true", help="upload the texts and images of assets/play-store")
     ap.add_argument("--only", nargs="*", help="only these listing languages (e.g. en-US es-ES)")
+    ap.add_argument("--version", help="X.Y.Z: its block in CHANGELOG.md gives the release notes")
+    ap.add_argument("--promote", action="store_true", help="put the --version build of --from-track on --track")
+    ap.add_argument("--from-track", default="alpha", help="track the build to promote is on (default alpha)")
     ap.add_argument("--dry-run", action="store_true", help="say what would be uploaded, without signing in")
     a = ap.parse_args()
-    if not a.aab and not a.listing:
-        ap.error("nothing to do: give --aab and/or --listing")
+    if not a.aab and not a.listing and not a.promote:
+        ap.error("nothing to do: give --aab, --listing or --promote")
+    if a.promote and (a.aab or a.listing or not a.version):
+        ap.error("--promote goes on its own, with --version")
 
     langs = listing_languages(a.only) if a.listing else []
+    notes = release_notes(a.version) if a.version else {}
     if a.dry_run:
+        if a.promote:
+            print(f"{a.version}: from the {a.from_track} track to the {a.track} track")
+        for lang, text in notes.items():
+            print(f"Release notes ({lang}, {len(text)} characters):\n{text}")
         if a.aab:
             print(f"AAB {a.aab} → track {a.track} as {a.release_name!r} ({a.status})")
         for d in langs:
@@ -150,9 +242,16 @@ def main() -> None:
         sys.exit("PLAY_SERVICE_ACCOUNT_JSON is empty: add the service account's JSON key as a GitHub secret.")
     edit = Edit(access_token(json.loads(raw)), a.package)
 
+    if a.promote:
+        if promote(edit, a.version, a.from_track, a.track, notes):
+            edit.commit()
+            print("Committed to Google Play: Google reviews the version before it is shown.")
+        else:
+            edit.discard()
+        return
     if a.aab:
         code = edit.upload_bundle(a.aab)
-        edit.set_track(a.track, code, a.release_name or str(code), a.status)
+        edit.set_track(a.track, [str(code)], a.release_name or str(code), a.status, notes)
         print(f"AAB uploaded: versionCode {code} → track {a.track} ({a.release_name})")
     icon = LISTING_DIR / "icon-512.png"
     for d in langs:

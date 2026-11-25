@@ -6,11 +6,11 @@ name: 🤖 Android app
 #   (<DATA_DIR>/android/mamia-android.apk, served at /android.apk; /api/android says whether it is there).
 # - Called by a release workflow with a release tag, it attaches the APK to that version's release instead.
 # - On a release branch (X.Y.Z), it also uploads the AAB to Google Play (tools/play_publish.py), to the track of the
-#   repository variable PLAY_TRACK (by default alpha, the closed test; production once Google has given the app access
-#   to it, see docs/PLAY_STORE.md), when the secret PLAY_SERVICE_ACCOUNT_JSON is there. Play shows the release's version
+#   repository variable PLAY_TRACK (by default alpha, the closed test), with the release notes of the version's block
+#   in CHANGELOG.md, when the secret PLAY_SERVICE_ACCOUNT_JSON is there. Play shows the release's version
 #   (versionName = X.Y.Z, set by tools/CreateUpdateRelease.py) and the build number (versionCode). A new release branch
 #   changes android/app/build.gradle.kts, so it always builds and uploads. It runs last: a Play error leaves the job red
-#   but the APK is already published.
+#   but the APK is already published. When the version reaches main, release.yml takes this build to production.
 on:
   push:
     branches: [main, "[0-9]+.[0-9]+.[0-9]+"]
@@ -94,7 +94,7 @@ jobs:
           if [ "$VERSION" != "$GITHUB_REF_NAME" ]; then echo "::error title=Google Play::versionName $VERSION is not the release $GITHUB_REF_NAME (run tools/CreateUpdateRelease.py --update)"; exit 1; fi
           pip install -q requests==2.32.3 cryptography==44.0.0
           python tools/play_publish.py --aab android/app/build/outputs/bundle/release/app-release.aab \
-            --track "$PLAY_TRACK" --release-name "$VERSION (${{ github.run_number }})"
+            --track "$PLAY_TRACK" --release-name "$VERSION (${{ github.run_number }})" --version "$VERSION"
           echo "::notice title=Google Play::$VERSION (${{ github.run_number }}) uploaded to the $PLAY_TRACK track"
       - name: Attach to the version release
         if: ${{ inputs.release_tag }}
