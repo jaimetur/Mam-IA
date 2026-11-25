@@ -43,14 +43,14 @@ def test_language_of_the_request(langs):
     class R:
         def __init__(self, cookies=None, accept=""):
             self.cookies, self.headers = cookies or {}, {"accept-language": accept}
-    assert i18n.request_lang(R()) == "es"
-    assert i18n.request_lang(R(accept="ca-ES,ca;q=0.9,es;q=0.8")) == "ca"
-    assert i18n.request_lang(R(accept="sv-SE,en-GB;q=0.8")) == "en"
-    assert i18n.request_lang(R({"mamia_lang": "fr"}, "de")) == "fr"
+    assert i18n.request_lang(R()) == "en"                                   # nothing chosen: English
+    assert i18n.request_lang(R(accept="ca-ES,ca;q=0.9,es;q=0.8")) == "en"   # not the browser's language
+    assert i18n.request_lang(R({"mamia_lang": "fr"}, "de")) == "fr"         # the one chosen in the picker
 
 
 def test_pages_load_their_dictionary(client, langs):
-    r = client.get("/entrar", headers={"accept-language": "en-GB"})
+    client.cookies.clear()                                  # someone who has not chosen a language: English
+    r = client.get("/entrar", headers={"accept-language": "es-ES"})
     assert '<script src="/lang/en.js?v=' in r.text and '<script src="/lang/i18n.js?v=' in r.text
     assert r.text.index("/lang/en.js") < r.text.index("/static/common/pages.js")   # before the page's own scripts
     assert r.headers["content-language"] == "en"
@@ -58,8 +58,9 @@ def test_pages_load_their_dictionary(client, langs):
     assert 'window.MI_LANG="en"' in js and '"Entrar": "Sign in"' in js
     assert '"MI_I18N={}' not in client.get("/lang/es.js").text and client.get("/lang/xx.js").status_code == 404
     assert client.get("/lang/i18n.js").status_code == 200
-    client.cookies.set("mamia_lang", "en")
     assert "/lang/en.js" in client.get("/").text
+    client.cookies.set("mamia_lang", "fr")                  # the one chosen in the picker
+    assert "/lang/fr.js" in client.get("/").text
 
 
 def test_account_language_and_emails(client, langs, outbox):

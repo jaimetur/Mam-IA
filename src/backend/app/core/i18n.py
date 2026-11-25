@@ -5,8 +5,8 @@ message": "the Spanish text exactly as in the code"} (or a list of them) bridges
 lang/i18n.js translates the pages with the dictionary made here; here the same is done for the emails and the push
 notifications.
 
-Each account chooses its language (users.lang); without a session, the cookie mamia_lang, else the browser's
-Accept-Language, else Spanish. Adapted from BodyLens's app.core.i18n."""
+Each account chooses its language (users.lang); without a session, the one chosen in the language picker of the
+pages (the cookie mamia_lang), else English. Adapted from BodyLens's app.core.i18n."""
 from __future__ import annotations
 
 import json
@@ -18,6 +18,7 @@ from app.core import config
 LANGS = {"es": "Español", "en": "English", "ca": "Català", "fr": "Français", "it": "Italiano", "de": "Deutsch",
          "pt": "Português", "nl": "Nederlands", "zh": "中文", "ja": "日本語"}
 DEFAULT = "es"
+VISITOR = "en"   # the pages of someone who has not chosen a language (the picker of the landing and the other pages)
 COOKIE = "mamia_lang"
 EDGE = re.compile(r"^([\s ·—–\-:,;|.]*)(.*?)([\s ·—–\-:,;|]*)$", re.S)
 LETTER = re.compile(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]")
@@ -38,10 +39,10 @@ def from_header(accept: str | None) -> str | None:
 
 
 def request_lang(request, user=None) -> str:
-    """The language of a request: the account's, else the cookie's, else the browser's, else Spanish."""
+    """The language of a request: the account's, else the one chosen in the picker (cookie), else English."""
     if user is not None and getattr(user, "lang", None) in LANGS:
         return user.lang
-    return clean(request.cookies.get(COOKIE)) or from_header(request.headers.get("accept-language")) or DEFAULT
+    return clean(request.cookies.get(COOKIE)) or VISITOR
 
 
 def _file(lang: str):

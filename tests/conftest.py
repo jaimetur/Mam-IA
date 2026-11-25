@@ -37,7 +37,8 @@ def client(server):
     from fastapi.testclient import TestClient
 
     from app.main import app
-    with TestClient(app, headers={"x-mamia": "1"}) as c:
+    # the tests are written in Spanish: the person chose Spanish in the language picker (without it, English)
+    with TestClient(app, headers={"x-mamia": "1"}, cookies={"mamia_lang": "es"}) as c:
         yield c
 
 
@@ -50,7 +51,7 @@ def new_client(server):
     clients = []
 
     def make():
-        c = TestClient(app, headers={"x-mamia": "1"})
+        c = TestClient(app, headers={"x-mamia": "1"}, cookies={"mamia_lang": "es"})
         c.__enter__()
         clients.append(c)
         return c
