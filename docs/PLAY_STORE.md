@@ -190,15 +190,16 @@ repositorio, del CHANGELOG y del servidor. `versionCode` es el número de compil
 en cada subida. En Play Console se ve como `0.2.0 (45)`. Si la versión de Gradle no coincide con la rama, la subida
 falla.
 
-Lo hace `tools/play_publish.py` con la API de Google Play. Google sigue revisando cada versión y cada cambio de la ficha,
-y pasar una versión a producción se hace a mano con «Promocionar versión».
+Lo hace `tools/play_publish.py` con la API de Google Play. Google sigue revisando cada versión y cada cambio de la ficha.
+Mam-IA, BodyLens y MeetGo suben igual: mismo canal por defecto, mismo nombre de versión y mismos avisos. Cuando Google
+dé acceso a producción, pasar a producción es cambiar una variable (sección 10).
 
 **Configuración (una vez):**
 
 1. **Play Console → Usuarios y permisos**: abre la cuenta de servicio de la sección 5. En **Permisos de la app →
    Mam-IA**, añade «Publicar aplicaciones en canales de prueba» y «Gestionar la presencia en Google Play Store», sin
-   quitar los de pedidos y suscripciones. Si algún día quieres subir a producción directamente, también «Publicar en
-   producción». **Aplicar → Guardar cambios.**
+   quitar los de pedidos y suscripciones. Para producción hará falta también «Publicar en producción» (sección 10).
+   **Aplicar → Guardar cambios.**
 2. **Google Cloud** (el proyecto de esa cuenta): **APIs y servicios → Biblioteca**, busca «Google Play Android
    Developer API» y pulsa **Habilitar** (si ya lo está, no hay que hacer nada).
 3. **GitHub → jaimetur/Mam-IA → Settings → Secrets and variables → Actions**:
@@ -206,8 +207,50 @@ y pasar una versión a producción se hace a mano con «Promocionar versión».
      JSON de la cuenta de servicio (o, desde la carpeta del repositorio, `gh secret set PLAY_SERVICE_ACCOUNT_JSON <
      ruta/clave.json`);
    - pestaña **Variables → New repository variable** (opcional): `PLAY_TRACK`, con `internal` (prueba interna),
-     `alpha` (prueba cerrada, por defecto), `beta` (prueba abierta) o `production`.
+     `alpha` (prueba cerrada, por defecto), `beta` (prueba abierta) o `production`. `alpha` es el canal que Play crea
+     para la prueba cerrada («Alpha» en **Probar y publicar → Pruebas → Pruebas cerradas**). Si tu prueba cerrada es
+     un canal que creaste tú, pon aquí su nombre.
 4. Prueba: **Actions → 🤖 Android app → Run workflow**, rama `0.2.0`. El registro debe terminar con
    «0.2.0 (N) uploaded to the alpha track», y en Play Console → Prueba cerrada aparece la versión nueva.
 
 Sin el secreto, los workflows siguen funcionando y avisan de que no han subido nada a Google Play.
+
+## 10. Pasar a producción
+
+Con una cuenta de desarrollador personal, Google pide antes una prueba cerrada con al menos 12 testers durante 14 días
+seguidos. Después, en Play Console → **Panel → Solicitar acceso a producción**. Cuando Google lo conceda:
+
+1. **Play Console → Usuarios y permisos**: abre la cuenta de servicio. En **Permisos de la app → Mam-IA**, añade
+   «Publicar en producción, excluir dispositivos y usar la firma de aplicaciones de Play». **Aplicar → Guardar
+   cambios.**
+2. **Play Console → Probar y publicar → Producción → pestaña Países/regiones**: añade los países donde se publica. Sin
+   países, la subida a producción falla.
+3. Cambia el canal (en el terminal, desde cualquier carpeta):
+
+   ```bash
+   gh variable set PLAY_TRACK --body production -R jaimetur/Mam-IA
+   ```
+
+   Las 3 apps (Mam-IA, BodyLens y MeetGo) a la vez:
+
+   ```bash
+   for r in Mam-IA BodyLens MeetGo; do gh variable set PLAY_TRACK --body production -R jaimetur/$r; done
+   ```
+
+4. Prueba: **Actions → 🤖 Android app → Run workflow**, rama de la versión. El registro debe terminar con
+   «X.Y.Z (N) uploaded to the production track».
+
+Desde entonces:
+
+- Cada compilación de una rama de release va a producción, para todos los usuarios en cuanto Google la aprueba. Solo
+  compila cuando cambia `android/`: los cambios de la web llegan sin versión nueva de la app.
+- No hay despliegue progresivo (porcentaje de usuarios). Con pocos usuarios no aporta nada, y habría que subir el
+  porcentaje a mano en Play Console.
+- No hace falta subir también a la prueba cerrada. Play da a cada persona la versión con el número más alto de los
+  canales a los que tiene acceso, así que los testers también reciben la de producción.
+- Si alguna vez quieres probar una versión antes de que llegue a todos, vuelve a la prueba cerrada y pásala a mano con
+  **Promocionar versión → Producción**:
+
+  ```bash
+  gh variable delete PLAY_TRACK -R jaimetur/Mam-IA
+  ```
