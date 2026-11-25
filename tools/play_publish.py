@@ -44,7 +44,18 @@ PACKAGE = "app.mamia.android"
 CHANGELOG = ROOT / "CHANGELOG.md"
 CHANGELOG_LANG = "en-US"  # the language CHANGELOG.md is written in
 NOTES_MAX = 500  # Play's limit for the release notes of each language
-USER_SECTIONS = ("🌟", "🚀", "🐛")  # sections of a changelog block that users notice: new, better, fixed
+USER_SECTIONS = ("🌟", "🚀", "🐛")
+RETRIES, RETRY_WAIT = 3, 30  # a change committed meanwhile to the same app (another workflow) deletes this one: start again
+
+
+class EditDeleted(Exception):
+    """Google Play deleted the open edit because another one was committed meanwhile (e.g. the listing and the AAB)."""
+
+
+def _failed(r, what: str):
+    if r.status_code == 400 and "This Edit has been deleted" in r.text:
+        raise EditDeleted(what)
+    sys.exit(f"Google Play: {what} → {r.status_code}\n{r.text[:1500]}")  # sections of a changelog block that users notice: new, better, fixed
 SCOPE = "https://www.googleapis.com/auth/androidpublisher"
 API = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications"
 UPLOAD = "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications"
@@ -90,7 +101,7 @@ class Edit:
     def call(self, method: str, url: str, **kw) -> dict:
         r = self.s.request(method, url, timeout=300, **kw)
         if r.status_code >= 300:
-            sys.exit(f"Google Play: {method} {url.split('/applications/')[-1]} → {r.status_code}\n{r.text[:1500]}")
+            _failed(r, f"{method} {url.split('/applications/')[-1]}")
         return r.json() if r.content else {}
 
     def upload_bundle(self, aab: Path) -> int:
@@ -117,7 +128,7 @@ class Edit:
         if r.status_code == 404:
             return []
         if r.status_code >= 300:
-            sys.exit(f"Google Play: GET tracks/{track} → {r.status_code}\n{r.text[:1500]}")
+            _failed(r, f"GET tracks/{track}")
         return r.json().get("releases", [])
 
     def discard(self) -> None:
@@ -240,8 +251,19 @@ def main() -> None:
     raw = os.environ.get("PLAY_SERVICE_ACCOUNT_JSON", "").strip()
     if not raw:
         sys.exit("PLAY_SERVICE_ACCOUNT_JSON is empty: add the service account's JSON key as a GitHub secret.")
-    edit = Edit(access_token(json.loads(raw)), a.package)
+    token = access_token(json.loads(raw))
+    for attempt in range(1, RETRIES + 1):
+        try:
+            return publish(Edit(token, a.package), a, notes, langs)
+        except EditDeleted as e:
+            if attempt == RETRIES:
+                sys.exit(f"Google Play deleted the edit {RETRIES} times ({e}): another change to the app kept being committed.")
+            print(f"Google Play deleted the edit ({e}): another change was committed meanwhile; again in {RETRY_WAIT * attempt} s")
+            time.sleep(RETRY_WAIT * attempt)
 
+
+def publish(edit: Edit, a, notes: dict[str, str], langs: list[Path]) -> None:
+    """Everything that goes to Google Play in one edit: the promotion, or the AAB and/or the listing."""
     if a.promote:
         if promote(edit, a.version, a.from_track, a.track, notes):
             edit.commit()
