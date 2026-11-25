@@ -14,7 +14,10 @@ own folder, named with Play's language code:
 
 It starts the server on a free local port with a throwaway database (nothing is sent anywhere), signs in to the demo
 family and photographs each screen with the interface and the family's texts in each language. The dates are fixed
-(the week of 23 November 2026, a Wednesday morning), so the images only change when the app does.
+(the week of 23 November 2026, a Wednesday morning) and the animations are off. Even so, two runs do not draw exactly
+the same pixels (anti-aliasing of the fonts), so an image is only rewritten when it really changes: more than
+CHANGED_PIXELS pixels differ by more than PIXEL_TOLERANCE (keep()). Without it, every run committed dozens of images
+that look the same, and each one went to Google Play's review again.
 
 Needs Pillow and Playwright: pip install -e ".[dev]" && python -m playwright install chromium
 (locally you can use an installed Edge or Chrome instead: --channel msedge).
@@ -25,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import io
 import os
 import secrets
 import socket
@@ -104,15 +108,44 @@ def fill(data_dir: Path, lang: str, password: str | None) -> None:
     con.close()
 
 
-def shoot(pw, channel: str | None, base: str, password: str, lang: str, device: str) -> None:
+PIXEL_TOLERANCE = 48   # a difference of a pixel (0-255, the largest of its channels) that is only rendering noise
+CHANGED_PIXELS = 50    # an image with more pixels than this differing more than PIXEL_TOLERANCE has changed
+
+
+def same_image(old, new) -> bool:
+    """The two images look the same: same size and at most CHANGED_PIXELS pixels differ more than PIXEL_TOLERANCE.
+    (Measured on the images of 25 November 2026: the noise between runs is a few pixels differing by 2-37; a changed
+    word is thousands of pixels differing by more than 100.)"""
+    from PIL import ImageChops
+    if old.size != new.size:
+        return False
+    hist = ImageChops.difference(old.convert("RGB"), new.convert("RGB")).convert("L").histogram()
+    return sum(hist[PIXEL_TOLERANCE + 1:]) <= CHANGED_PIXELS
+
+
+def keep(path: Path, png: bytes) -> bool:
+    """Save a screenshot as Play wants it (RGB, no transparency), unless the image already there looks the same: then
+    the file is not touched. True if it was written."""
     from PIL import Image
+    new = Image.open(io.BytesIO(png)).convert("RGB")
+    if path.exists():
+        try:
+            if same_image(Image.open(path), new):
+                return False
+        except OSError:
+            pass
+    new.save(path, format="PNG", optimize=True)
+    return True
+
+
+def shoot(pw, channel: str | None, base: str, password: str, lang: str, device: str) -> None:
     w, h, ratio, touch = DEVICES[device]
     out = OUT / LOCALES[lang] / device
     out.mkdir(parents=True, exist_ok=True)
     browser = pw.chromium.launch(channel=channel) if channel else pw.chromium.launch()
     ctx = browser.new_context(viewport={"width": w, "height": h}, device_scale_factor=ratio, is_mobile=touch,
                               has_touch=touch, locale=BROWSER_LOCALE[lang], timezone_id="Europe/Madrid",
-                              color_scheme="light")
+                              color_scheme="light", reduced_motion="reduce")
     ctx.add_cookies([{"name": "mamia_lang", "value": lang, "url": base}])
     page = ctx.new_page()
     page.clock.install(time=CLOCK)
@@ -126,13 +159,11 @@ def shoot(pw, channel: str | None, base: str, password: str, lang: str, device: 
         page.wait_for_load_state("networkidle")
         page.wait_for_timeout(900)
         path = out / f"{i:02d}-{view}.png"
-        page.screenshot(path=str(path))
-        Image.open(path).convert("RGB").save(path, optimize=True)   # Play wants no transparency
+        print(f"  {path.relative_to(ROOT)}: {'changed' if keep(path, page.screenshot(animations='disabled', caret='hide')) else 'the same'}")
     browser.close()
 
 
 def feature_graphic(pw, channel: str | None, lang: str) -> None:
-    from PIL import Image
     title, sub = TAGLINE[lang]
     folder = OUT / LOCALES[lang]
     logo = (ROOT / "assets" / "branding" / "logo.svg").read_text(encoding="utf-8")
@@ -166,9 +197,9 @@ p{{font-size:22px;font-weight:600;color:#5B4F63}}
     page.set_content(doc, wait_until="networkidle")
     page.wait_for_timeout(400)
     path = folder / "feature-graphic.png"
-    page.screenshot(path=str(path))
+    png = page.screenshot(animations="disabled", caret="hide")
     browser.close()
-    Image.open(path).convert("RGB").save(path, optimize=True)
+    print(f"  {path.relative_to(ROOT)}: {'changed' if keep(path, png) else 'the same'}")
 
 
 def main() -> int:
