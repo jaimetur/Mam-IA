@@ -1,7 +1,9 @@
 # Mam-IA
 
 <p align="center">
-  <a href="https://mamia.jtgcloud.com"><img src="https://img.shields.io/badge/Visita_la_web-mamia.jtgcloud.com-C93E66?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Visita la web de Mam-IA: mamia.jtgcloud.com" height="40"></a>
+  <a href="https://mamia.jtgcloud.com"><img src="https://img.shields.io/badge/Visita_la_web-mamia.jtgcloud.com-C93E66?style=for-the-badge&labelColor=2B1622&logo=googlechrome&logoColor=white" alt="Visita la web de Mam-IA: mamia.jtgcloud.com" height="40"></a>
+  &nbsp;
+  <a href="https://mamia.jtgcloud.com/app"><img src="https://img.shields.io/badge/Abre_la_app-mamia.jtgcloud.com%2Fapp-FFE39B?style=for-the-badge&labelColor=2B1622&logo=pwa&logoColor=white" alt="Abre la app de Mam-IA: mamia.jtgcloud.com/app" height="40"></a>
 </p>
 
 Mam-IA es la agenda compartida de toda la familia, pensada para las madres que llevan la casa, los peques y el
