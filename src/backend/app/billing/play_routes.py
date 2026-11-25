@@ -132,6 +132,7 @@ class PlayIn(BaseModel):
     product: str = ""
     serviceAccount: str = ""        # the JSON key of the service account; empty = keep the stored one
     storeUrl: str | None = None     # the app's page in Google Play, once published (the landing page links it)
+    reportsBucket: str | None = None  # the Cloud Storage URI of Play Console's reports (pubsite_prod_…), for Negocio
     remove: bool = False            # forget the service account
 
 
@@ -141,9 +142,11 @@ def get_play(u: User = Depends(admin_user)):
     sa = s["sa"] or {}
     with db.ro() as con:
         n = con.execute("SELECT COUNT(*) FROM play_subs").fetchone()[0]
+    from app.admin.business import hint
+    stored = db.get_setting("play", {}) or {}
     return {"package": s["package"], "product": s["product"], "configured": play.configured(),
-            "serviceAccount": sa.get("client_email", ""), "subscriptions": n,
-            "storeUrl": (db.get_setting("play", {}) or {}).get("storeUrl", "")}
+            "serviceAccount": sa.get("client_email", ""), "keyHint": hint(sa.get("private_key_id")), "subscriptions": n,
+            "storeUrl": stored.get("storeUrl", ""), "reportsBucket": stored.get("reportsBucket", "")}
 
 
 @router.put("/api/admin/play")
@@ -151,12 +154,17 @@ def put_play(body: PlayIn, u: User = Depends(admin_user)):
     stored = db.get_setting("play", {}) or {}
     new = {"package": body.package.strip() or stored.get("package") or play.DEFAULT_PACKAGE,
            "product": body.product.strip() or stored.get("product") or play.DEFAULT_PRODUCT,
-           "storeUrl": stored.get("storeUrl", ""), "sa": stored.get("sa")}
+           "storeUrl": stored.get("storeUrl", ""), "reportsBucket": stored.get("reportsBucket", ""), "sa": stored.get("sa")}
     if body.storeUrl is not None:
         url = body.storeUrl.strip()
         if url and not url.startswith("https://play.google.com/"):
             raise HTTPException(400, "El enlace tiene que ser de Google Play (https://play.google.com/…).")
         new["storeUrl"] = url
+    if body.reportsBucket is not None:
+        bucket = body.reportsBucket.strip().removeprefix("gs://").strip("/")
+        if bucket and not bucket.startswith("pubsite_prod_"):
+            raise HTTPException(400, "Pega el URI de Cloud Storage de los informes de Play Console (empieza por pubsite_prod_).")
+        new["reportsBucket"] = bucket
     if body.remove:
         new["sa"] = None
     elif body.serviceAccount.strip():

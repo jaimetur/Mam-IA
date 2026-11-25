@@ -8,8 +8,10 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from app.admin import business
+
 from app.accounts.users import User
-from app.billing import codes, stripe
+from app.billing import codes, play, stripe
 from app.billing.status import cancel_for, summary
 from app.core import backup, db, mailer, version
 from app.core.deps import admin_user
@@ -90,3 +92,41 @@ def delete_family(family_id: int, u: User = Depends(admin_user)):
 async def backup_now(u: User = Depends(admin_user)):
     p = await asyncio.to_thread(backup.make)
     return {"ok": True, "name": p.name, "backups": backup.listing()[:10]}
+
+
+# ---------- Negocio ----------
+
+@router.get("/api/admin/business")
+async def get_business(period: str = "30d", refresh: bool = False, u: User = Depends(admin_user)):
+    """The dashboard of the period (7d, 30d, 12m or all); refresh=1 asks Stripe and Google again."""
+    return await asyncio.to_thread(business.dashboard, period, refresh)
+
+
+@router.get("/api/admin/keys")
+def get_keys(u: User = Depends(admin_user)):
+    """Every key the server uses: whether it is there and how it ends (never the key itself)."""
+    st, pl, ml = stripe.settings(), play.settings(), mailer.settings()
+    sa = pl["sa"] or {}
+    vapid = db.get_setting("vapid") or {}
+    return {"keys": [
+        {"id": "stripe-secret", "name": "Stripe · clave secreta", "set": bool(st["secret"]), "hint": business.hint(st["secret"]), "where": "stripe"},
+        {"id": "stripe-webhook", "name": "Stripe · secreto del webhook", "set": bool(st["webhook"]), "hint": business.hint(st["webhook"]), "where": "stripe"},
+        {"id": "play-sa", "name": "Google Play · cuenta de servicio", "set": play.configured(),
+         "hint": business.hint(sa.get("private_key_id")), "account": sa.get("client_email", ""), "where": "play"},
+        {"id": "smtp", "name": "Correo · contraseña SMTP", "set": bool(ml.get("password")), "hint": None, "where": "mail"},
+        {"id": "vapid", "name": "Notificaciones push (VAPID)", "set": bool(vapid.get("private")), "hint": None, "where": None,
+         "auto": True},
+    ]}
+
+
+@router.post("/api/admin/business/test/{what}")
+async def test_connection(what: str, u: User = Depends(admin_user)):
+    fn = {"stripe": business.test_stripe, "play": business.test_play, "reports": business.test_reports}.get(what)
+    if not fn:
+        raise HTTPException(404, "No hay nada que probar con ese nombre.")
+    try:
+        msg = await asyncio.to_thread(fn)
+    except Exception as e:   # noqa: BLE001 — the error is the answer
+        raise HTTPException(400, str(e) or "No responde.")
+    business.clear_cache()
+    return {"ok": True, "message": msg}

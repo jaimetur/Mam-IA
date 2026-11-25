@@ -90,7 +90,7 @@ suscripción cubre a toda la familia.
 2. En Play Console: **Gestionar cuenta → Usuarios y permisos → Invitar a nuevos usuarios**, con el correo de la
    cuenta de servicio (`…@….iam.gserviceaccount.com`). Los permisos que necesita, también para la subida automática,
    están en la sección 9.
-3. En Mam-IA, entra en **Administración → Google Play** y rellena:
+3. En Mam-IA, entra en **Administración → Negocio → Google Play** y rellena:
    - Paquete: `app.mamia.android`.
    - Suscripción: `mamia`.
    - Pega el **contenido** del JSON.
@@ -98,6 +98,12 @@ suscripción cubre a toda la familia.
    Guarda. La clave se guarda cifrada y nunca se vuelve a mostrar: solo se ve su `client_email`.
 4. Cuando la app esté publicada, pon allí también el enlace de la ficha
    (`https://play.google.com/store/apps/details?id=app.mamia.android`). La landing mostrará el botón de Google Play.
+5. Para que **Negocio** enseñe las instalaciones y los ingresos de Google Play, pon también el URI de los informes. En
+   Play Console: **Gestionar cuenta → Informes de aplicaciones de Play**, elige **Estadísticas** y pulsa **Copiar URI de
+   Cloud Storage** (empieza por `pubsite_prod_rev_`). Pégalo en «URI de Cloud Storage de los informes» y pulsa «Probar
+   los informes». La cuenta de servicio necesita, en Usuarios y permisos, **Ver información de la aplicación** y **Ver
+   datos financieros** para toda la cuenta (no solo para Mam-IA). Google publica las estadísticas con unos días de
+   retraso, y el informe de ingresos de cada mes hacia el día 5 del mes siguiente.
 
 Mientras no hay cuenta de servicio, la app no ofrece pagar con Google Play: se entra con un código, por invitación o
 con una suscripción de la web.

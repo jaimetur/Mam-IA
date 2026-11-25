@@ -130,6 +130,13 @@ CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+-- downloads of the Android app from this server (/android.apk), per day (Administración → Negocio)
+CREATE TABLE IF NOT EXISTS downloads (
+  day TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  n INTEGER NOT NULL,
+  PRIMARY KEY (day, kind)
+);
 CREATE TABLE IF NOT EXISTS counters (
   name TEXT PRIMARY KEY,
   value INTEGER NOT NULL
@@ -207,6 +214,16 @@ def get_setting(key: str, default=None):
 def set_setting(con: sqlite3.Connection, key: str, value) -> None:
     con.execute("INSERT INTO settings(key, value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, json.dumps(value, ensure_ascii=False)))
+
+
+def count_download(kind: str = "apk") -> None:
+    """One more download today (UTC). Never fails the download itself."""
+    try:
+        with tx() as con:
+            con.execute("INSERT INTO downloads(day, kind, n) VALUES(?,?,1) ON CONFLICT(day, kind) DO UPDATE SET n = n + 1",
+                        (datetime.now(timezone.utc).date().isoformat(), kind))
+    except sqlite3.Error:
+        pass
 
 
 def next_rev(con: sqlite3.Connection) -> int:

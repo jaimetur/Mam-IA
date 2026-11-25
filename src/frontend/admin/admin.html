@@ -8,93 +8,192 @@
   <link rel="stylesheet" href="/static/common/pages.css?v={{v}}">
   <script src="/static/common/pages.js?v={{v}}"></script>
   <title>Administración · Mam-IA</title>
+  <style>
+    .wrap.wide { max-width: 980px; }
+    .tabs { display: flex; gap: 6px; background: var(--sunk); border-radius: 14px; padding: 4px; width: max-content; max-width: 100%; }
+    .tabs button { font: 700 15px var(--f-body); color: var(--ink2); background: none; border: 0; border-radius: 11px; padding: 9px 18px; cursor: pointer; }
+    .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+    .bizhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .seg { display: inline-flex; gap: 4px; background: var(--sunk); border-radius: 12px; padding: 3px; flex-wrap: wrap; }
+    .seg button { font: 700 13px var(--f-body); color: var(--ink2); background: none; border: 0; border-radius: 9px; padding: 7px 12px; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+    .card { background: var(--surface); border-radius: 20px; padding: 18px 18px 14px; box-shadow: var(--shadow); display: grid; gap: 10px; align-content: start; min-width: 0; }
+    .card h3 { font-size: 16px; font-weight: 800; }
+    .big { font: 800 32px/1.05 var(--f-display); letter-spacing: -0.02em; }
+    .big small { font: 600 13px var(--f-body); color: var(--ink2); letter-spacing: 0; }
+    .rows { display: grid; gap: 4px; margin: 0; }
+    .rows > div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+    .rows dt { color: var(--ink2); }
+    .rows dd { margin: 0; font-weight: 700; text-align: right; white-space: nowrap; }
+    .sub { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--ink2); margin-top: 4px; }
+    .src { font-size: 12px; color: var(--ink2); border-top: 1px solid var(--line); padding-top: 8px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .src .err { color: var(--bad); font-weight: 700; }
+    .off { font-size: 14px; color: var(--ink2); }
+    .note { font-size: 12.5px; color: var(--ink2); margin: 0; }
+    .bars { display: flex; align-items: flex-end; gap: 2px; height: 64px; }
+    .bars span { flex: 1; min-width: 2px; background: var(--accent); border-radius: 3px 3px 0 0; opacity: .85; }
+    .bars span.zero { background: var(--line); }
+    .barlbl { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink2); }
+    .cfgnav { display: flex; gap: 8px; flex-wrap: wrap; }
+    .copyrow { display: flex; gap: 8px; align-items: center; }
+    .copyrow code { flex: 1; min-width: 0; overflow-wrap: anywhere; background: var(--sunk); border-radius: 8px; padding: 6px 9px; font-size: 13px; }
+  </style>
 </head>
 <body>
   <header class="top"><a class="brand" href="/app"><img src="/logo.svg" width="32" height="32" alt="">Administración</a>
     <a class="btn sm" href="/app">Volver a la app</a></header>
   <main class="wrap wide">
-    <section class="panel">
-      <h1>Servidor</h1>
-      <dl class="kv" id="ov"></dl>
-      <div class="btns"><button class="btn sm" type="button" id="bk">Hacer una copia ahora</button></div>
-      <p class="msg" id="mo" hidden></p>
-    </section>
+    <div class="tabs" role="tablist" aria-label="Administración">
+      <button type="button" role="tab" id="tab-server" aria-controls="pane-server" aria-selected="true">Servidor</button>
+      <button type="button" role="tab" id="tab-business" aria-controls="pane-business" aria-selected="false">Negocio</button>
+    </div>
 
-    <section class="panel">
-      <h2>Familias</h2>
-      <div class="tablewrap"><table><thead><tr><th>Familia</th><th>Quién paga</th><th>Personas</th><th>Acceso</th><th></th></tr></thead><tbody id="fams"></tbody></table></div>
-      <p class="msg" id="mf" hidden></p>
-    </section>
+    <!-- ===================== Servidor ===================== -->
+    <div id="pane-server" role="tabpanel" aria-labelledby="tab-server" style="display:grid;gap:16px">
+      <section class="panel">
+        <h1>Servidor</h1>
+        <dl class="kv" id="ov"></dl>
+        <div class="btns"><button class="btn sm" type="button" id="bk">Hacer una copia ahora</button></div>
+        <p class="msg" id="mo" hidden></p>
+      </section>
 
-    <section class="panel">
-      <h2>Códigos de promoción</h2>
-      <p class="small">Una familia que se da de alta con un código tiene acceso gratis durante su duración. Los públicos salen en la página de inicio con las plazas que les quedan. Duración: 1m, 3m, 6m, 1y, life o una fecha (AAAA-MM-DD).</p>
-      <div class="tablewrap"><table><thead><tr><th>Código</th><th>Alias</th><th>Duración</th><th>Caduca</th><th>Máx.</th><th>Usado</th><th>Público</th><th></th></tr></thead><tbody id="codes"></tbody></table></div>
-      <div class="btns"><button class="btn sm" type="button" id="addcode">Añadir código</button><button class="btn sm pri" type="button" id="savecodes">Guardar códigos</button></div>
-      <p class="msg" id="mc" hidden></p>
-    </section>
+      <section class="panel">
+        <h2>Familias</h2>
+        <div class="tablewrap"><table><thead><tr><th>Familia</th><th>Quién paga</th><th>Personas</th><th>Acceso</th><th></th></tr></thead><tbody id="fams"></tbody></table></div>
+        <p class="msg" id="mf" hidden></p>
+      </section>
+    </div>
 
-    <section class="panel">
-      <h2>Correo</h2>
-      <p class="small" style="margin:0">Con él se envían los códigos para crear cuentas, las invitaciones, las contraseñas olvidadas, los
-        recordatorios, el resumen del día y los avisos de la suscripción. Lo que guardes aquí manda sobre las variables SMTP_* del .env.</p>
-      <dl class="kv" id="mk"></dl>
-      <form id="fm" autocomplete="off">
-        <label class="field"><span>Servidor SMTP</span><input type="text" name="host" placeholder="mail.jtgcloud.com"></label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <label class="field"><span>Seguridad</span><select name="security"><option value="ssl">SSL (465)</option><option value="starttls">STARTTLS (587)</option><option value="none">Ninguna (25)</option></select></label>
-          <label class="field"><span>Puerto</span><input type="number" name="port" min="1" max="65535" value="465"></label>
+    <!-- ===================== Negocio ===================== -->
+    <div id="pane-business" role="tabpanel" aria-labelledby="tab-business" hidden style="display:grid;gap:16px">
+      <section class="panel">
+        <div class="bizhead">
+          <h1>Negocio</h1>
+          <div class="seg" id="period" role="group" aria-label="Periodo">
+            <button type="button" data-p="7d" aria-pressed="false">7 días</button>
+            <button type="button" data-p="30d" aria-pressed="true">30 días</button>
+            <button type="button" data-p="12m" aria-pressed="false">12 meses</button>
+            <button type="button" data-p="all" aria-pressed="false">Desde el principio</button>
+          </div>
         </div>
-        <label class="field"><span>Usuario</span><input type="text" name="username" placeholder="mamia@jtgcloud.com" autocomplete="off"></label>
-        <label class="field"><span>Contraseña (vacío: se mantiene la guardada)</span><input type="password" name="password" autocomplete="new-password"></label>
-        <label class="field"><span>Remitente</span><input type="email" name="from_address" placeholder="mamia@jtgcloud.com"></label>
-        <label class="field"><span>Nombre del remitente</span><input type="text" name="from_name" placeholder="Mam-IA"></label>
-        <div class="btns"><button class="btn pri" type="submit">Guardar</button><button class="btn" type="button" id="testmail">Enviarme un correo de prueba</button>
-          <button class="btn danger" type="button" id="rmmail">Usar el .env</button></div>
-        <p class="msg" id="mm" hidden></p>
-      </form>
-    </section>
+        <p class="small" style="margin:0">Cada cifra dice de dónde sale y cuándo se ha leído. Stripe y Google Play se consultan como mucho cada 10 y 30 minutos.
+          <button class="linkbtn" type="button" id="refresh">Actualizar ahora</button></p>
+        <div class="cfgnav"><a class="btn sm" href="#cfg-subs">Suscripciones y códigos</a><a class="btn sm" href="#cfg-stripe">Pagos · Stripe</a>
+          <a class="btn sm" href="#cfg-play">Google Play</a><a class="btn sm" href="#cfg-mail">Correo</a><a class="btn sm" href="#cfg-keys">Claves de API</a></div>
+        <p class="msg" id="mb" hidden></p>
+      </section>
 
-    <section class="panel">
-      <h2>Pagos con Stripe</h2>
-      <dl class="kv" id="st"></dl>
-      <form id="fs" autocomplete="off">
-        <label class="field"><span>Clave secreta (sk_live_… o sk_test_…). Vacío: se mantiene la guardada</span><input type="password" name="secret"></label>
-        <label class="field"><span>Secreto de firma del webhook (whsec_…)</span><input type="password" name="webhook"></label>
-        <div class="btns"><button class="btn pri" type="submit">Guardar</button><button class="btn danger" type="button" id="rmstripe">Quitar Stripe</button></div>
-        <p class="msg" id="ms" hidden></p>
-      </form>
-    </section>
-    <section class="panel">
-      <h2>Google Play</h2>
-      <p class="small" style="margin:0">Para las familias que se suscriben desde la app de Android: el servidor comprueba cada compra con Google
-        usando una cuenta de servicio con acceso a la Play Console. Mientras no esté configurado, la app no ofrece suscribirse
-        (se puede entrar con un código o con una suscripción de la web). Los pasos están en docs/PLAY_STORE.md.</p>
-      <dl class="kv" id="gpkv"></dl>
-      <form id="fg" autocomplete="off">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <label class="field"><span>Paquete de la app</span><input type="text" name="package" placeholder="app.mamia.android"></label>
-          <label class="field"><span>Suscripción (ID del producto)</span><input type="text" name="product" placeholder="mamia"></label>
-        </div>
-        <label class="field"><span>Clave de la cuenta de servicio (el contenido del fichero JSON). Vacío: se mantiene la guardada</span>
-          <textarea name="sa" rows="4" spellcheck="false" placeholder="(sin cambios)" style="font:13px/1.4 ui-monospace,monospace;width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px"></textarea></label>
-        <label class="field"><span>Enlace de la app en Google Play (cuando esté publicada: la página de inicio lo muestra)</span>
-          <input type="url" name="url" placeholder="https://play.google.com/store/apps/details?id=app.mamia.android"></label>
-        <div class="btns"><button class="btn pri" type="submit">Guardar</button><button class="btn danger" type="button" id="rmplay">Quitar la clave</button></div>
-        <p class="msg" id="mg" hidden></p>
-      </form>
-    </section>
+      <div class="cards" id="cards" aria-live="polite"></div>
+
+      <section class="panel" id="cfg-subs">
+        <h2>Suscripciones y códigos</h2>
+        <dl class="kv" id="plans"></dl>
+        <p class="small" style="margin:0">Los precios de la web los crea Mam-IA en Stripe al guardar su clave. Los de la app de Android se ponen en Play Console, en la suscripción de la app; el servidor solo comprueba cada compra. El acceso gratis a una familia se da en Servidor → Familias.</p>
+        <h3 style="font-size:16px">Códigos de promoción</h3>
+        <p class="small" style="margin:0">Una familia que se da de alta con un código tiene acceso gratis durante su duración. Los públicos salen en la página de inicio con las plazas que les quedan. Duración: 1m, 3m, 6m, 1y, life o una fecha (AAAA-MM-DD).</p>
+        <div class="tablewrap"><table><thead><tr><th>Código</th><th>Alias</th><th>Duración</th><th>Caduca</th><th>Máx.</th><th>Usado</th><th>Público</th><th></th></tr></thead><tbody id="codes"></tbody></table></div>
+        <div class="btns"><button class="btn sm" type="button" id="addcode">Añadir código</button><button class="btn sm pri" type="button" id="savecodes">Guardar códigos</button></div>
+        <p class="msg" id="mc" hidden></p>
+      </section>
+
+      <section class="panel" id="cfg-stripe">
+        <h2>Pagos · Stripe</h2>
+        <dl class="kv" id="st"></dl>
+        <div><div class="small" style="font-weight:700;margin-bottom:4px">Dirección del webhook (en Stripe: Desarrolladores → Webhooks)</div>
+          <div class="copyrow"><code id="whurl" data-noi18n></code><button class="btn sm" type="button" id="copywh">Copiar</button></div></div>
+        <form id="fs" autocomplete="off">
+          <label class="field"><span>Clave secreta (sk_live_… o sk_test_…). Vacío: se mantiene la guardada</span><input type="password" name="secret"></label>
+          <label class="field"><span>Secreto de firma del webhook (whsec_…)</span><input type="password" name="webhook"></label>
+          <div class="btns"><button class="btn pri" type="submit">Guardar</button><button class="btn" type="button" data-test="stripe">Probar conexión</button>
+            <button class="btn danger" type="button" id="rmstripe">Quitar Stripe</button></div>
+          <p class="msg" id="ms" hidden></p>
+        </form>
+      </section>
+
+      <section class="panel" id="cfg-play">
+        <h2>Google Play</h2>
+        <p class="small" style="margin:0">Para las familias que se suscriben desde la app de Android: el servidor comprueba cada compra con Google
+          usando una cuenta de servicio con acceso a la Play Console. Mientras no esté configurado, la app no ofrece suscribirse
+          (se puede entrar con un código o con una suscripción de la web). Los pasos están en docs/PLAY_STORE.md.</p>
+        <dl class="kv" id="gpkv"></dl>
+        <form id="fg" autocomplete="off">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <label class="field"><span>Paquete de la app</span><input type="text" name="package" placeholder="app.mamia.android"></label>
+            <label class="field"><span>Suscripción (ID del producto)</span><input type="text" name="product" placeholder="mamia"></label>
+          </div>
+          <label class="field"><span>Clave de la cuenta de servicio (el contenido del fichero JSON). Vacío: se mantiene la guardada</span>
+            <textarea name="sa" rows="4" spellcheck="false" placeholder="(sin cambios)" style="font:13px/1.4 ui-monospace,monospace;width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px"></textarea></label>
+          <label class="field"><span>Enlace de la app en Google Play (cuando esté publicada: la página de inicio lo muestra)</span>
+            <input type="url" name="url" placeholder="https://play.google.com/store/apps/details?id=app.mamia.android"></label>
+          <label class="field"><span>URI de Cloud Storage de los informes (para las descargas y los ingresos de Google Play)</span>
+            <input type="text" name="bucket" placeholder="pubsite_prod_rev_01234567890987654321" spellcheck="false"></label>
+          <p class="small" style="margin:0">En Play Console: Gestionar cuenta → Informes de aplicaciones de Play → Estadísticas → «Copiar URI de Cloud Storage».
+            La cuenta de servicio necesita, en Usuarios y permisos, «Ver información de la aplicación» y «Ver datos financieros» para toda la cuenta.</p>
+          <div class="btns"><button class="btn pri" type="submit">Guardar</button><button class="btn" type="button" data-test="play">Probar conexión</button>
+            <button class="btn" type="button" data-test="reports">Probar los informes</button><button class="btn danger" type="button" id="rmplay">Quitar la clave</button></div>
+          <p class="msg" id="mg" hidden></p>
+        </form>
+      </section>
+
+      <section class="panel" id="cfg-mail">
+        <h2>Correo</h2>
+        <p class="small" style="margin:0">Con él se envían los códigos para crear cuentas, las invitaciones, las contraseñas olvidadas, los
+          recordatorios, el resumen del día y los avisos de la suscripción. Lo que guardes aquí manda sobre las variables SMTP_* del .env.</p>
+        <dl class="kv" id="mk"></dl>
+        <form id="fm" autocomplete="off">
+          <label class="field"><span>Servidor SMTP</span><input type="text" name="host" placeholder="mail.jtgcloud.com"></label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <label class="field"><span>Seguridad</span><select name="security"><option value="ssl">SSL (465)</option><option value="starttls">STARTTLS (587)</option><option value="none">Ninguna (25)</option></select></label>
+            <label class="field"><span>Puerto</span><input type="number" name="port" min="1" max="65535" value="465"></label>
+          </div>
+          <label class="field"><span>Usuario</span><input type="text" name="username" placeholder="mamia@jtgcloud.com" autocomplete="off"></label>
+          <label class="field"><span>Contraseña (vacío: se mantiene la guardada)</span><input type="password" name="password" autocomplete="new-password"></label>
+          <label class="field"><span>Remitente</span><input type="email" name="from_address" placeholder="mamia@jtgcloud.com"></label>
+          <label class="field"><span>Nombre del remitente</span><input type="text" name="from_name" placeholder="Mam-IA"></label>
+          <div class="btns"><button class="btn pri" type="submit">Guardar</button><button class="btn" type="button" id="testmail">Enviarme un correo de prueba</button>
+            <button class="btn danger" type="button" id="rmmail">Usar el .env</button></div>
+          <p class="msg" id="mm" hidden></p>
+        </form>
+      </section>
+
+      <section class="panel" id="cfg-keys">
+        <h2>Claves de API</h2>
+        <p class="small" style="margin:0">Todas las claves que usa el servidor. Se guardan cifradas y nunca se vuelven a mostrar: solo cómo terminan. Para cambiar una, ve a su apartado.</p>
+        <div class="tablewrap"><table><thead><tr><th>Clave</th><th>Estado</th><th></th></tr></thead><tbody id="keys"></tbody></table></div>
+      </section>
+    </div>
   </main>
   <script>
     const $ = (id) => document.getElementById(id);
-    const fmt = (s) => s ? new Date(s).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : "—";
+    const LOC = document.documentElement.lang || "es";
+    const T = (s) => (window.miT ? window.miT(s) : s);
+    const fmt = (s) => s ? new Date(s).toLocaleDateString(LOC, { day: "numeric", month: "short", year: "numeric" }) : "—";
     const text = (el, t) => { el.textContent = t; return el; };
+    const el = (tag, cls, t) => { const e = document.createElement(tag); if (cls) e.className = cls; if (t !== undefined) e.textContent = t; return e; };
     function kv(dl, rows) { dl.innerHTML = ""; for (const [k, v] of rows) { dl.append(text(document.createElement("dt"), k), text(document.createElement("dd"), v)); } }
 
+    // ---------- tabs ----------
+    function show(tab) {
+      const biz = tab === "business";
+      $("tab-server").setAttribute("aria-selected", String(!biz));
+      $("tab-business").setAttribute("aria-selected", String(biz));
+      $("pane-server").hidden = biz;
+      $("pane-business").hidden = !biz;
+      if (biz && !loaded) business();
+    }
+    let loaded = false;
+    $("tab-server").addEventListener("click", () => { history.replaceState(null, "", "#"); show("server"); });
+    $("tab-business").addEventListener("click", () => { history.replaceState(null, "", "#negocio"); show("business"); });
+    document.querySelectorAll('.cfgnav a').forEach((a) => a.addEventListener("click", (e) => {
+      e.preventDefault(); document.querySelector(a.getAttribute("href")).scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
+
+    // ---------- Servidor ----------
     async function overview() {
       const o = await M.api("/api/admin/overview");
       kv($("ov"), [["Versión", `${o.version.version || "—"} (${(o.version.build || "").slice(0, 7)})`], ["Familias", o.families], ["Cuentas", o.accounts],
-        ["Dispositivos con avisos", o.pushDevices], ["Correo saliente", o.mail ? "Configurado" : "Sin configurar (sección Correo)"],
+        ["Dispositivos con avisos", o.pushDevices], ["Correo saliente", o.mail ? "Configurado" : "Sin configurar (Negocio → Correo)"],
         ["Stripe", o.stripe ? "Configurado" : "Sin configurar"], ["Última copia", o.backups[0] ? o.backups[0].name : "Ninguna todavía"]]);
     }
 
@@ -139,7 +238,191 @@
         tb.appendChild(tr);
       }
     }
+    $("bk").addEventListener("click", async () => {
+      try { const r = await M.api("/api/admin/backup", { method: "POST" }); M.msg($("mo"), "Copia hecha: " + r.name, "ok"); overview(); }
+      catch (e) { M.msg($("mo"), e.message); }
+    });
 
+    // ---------- Negocio: the dashboard ----------
+    let period = "30d";
+    const euros = (cents) => (cents / 100).toLocaleString(LOC, { style: "currency", currency: "EUR", minimumFractionDigits: cents % 100 ? 2 : 0 });
+    const money = (n, cur) => n.toLocaleString(LOC, { style: "currency", currency: cur || "EUR" });
+    const num = (n) => (n ?? 0).toLocaleString(LOC);
+    const SOURCE = { db: "Base de datos", server: "Servidor", stripe: "Stripe", play: "Google Play", "play-reports": "Informes de Play Console" };
+    function ago(isoDate) {
+      const min = Math.round((Date.now() - new Date(isoDate)) / 60000);
+      if (min < 1) return T("ahora");
+      if (min < 60) return T("hace {0} min").replace("{0}", min);
+      return T("hace {0} h").replace("{0}", Math.round(min / 60));
+    }
+    function monthName(yyyymm) {
+      const s = String(yyyymm).replace("-", "");
+      return new Date(Number(s.slice(0, 4)), Number(s.slice(4, 6)) - 1, 1).toLocaleDateString(LOC, { month: "long", year: "numeric" });
+    }
+    function card(title) { const c = el("section", "card"); c.append(el("h3", "", title)); $("cards").append(c); return c; }
+    function rows(c, list) {
+      const dl = el("dl", "rows");
+      for (const [k, v] of list) { if (v === undefined) continue; const d = el("div"); d.append(el("dt", "", k)); const dd = el("dd", "", String(v)); dd.setAttribute("data-noi18n", ""); d.append(dd); dl.append(d); }
+      c.append(dl); return dl;
+    }
+    function big(c, value, label) { const b = el("div", "big"); const v = el("span", "", value); v.setAttribute("data-noi18n", ""); b.append(v); if (label) { b.append(" ", el("small", "", label)); } c.append(b); }
+    function src(c, part, extra) {
+      const s = el("div", "src");
+      const left = el("span");
+      left.append(T(SOURCE[part.source] || part.source));
+      if (part.updated) { const t = el("span", "", " · " + (extra || ago(part.updated))); t.setAttribute("data-noi18n", ""); left.append(t); }
+      s.append(left);
+      if (part.error) s.append(el("span", "err", part.error));
+      c.append(s);
+    }
+    function off(c, part, href, what) {
+      const p = el("p", "off");
+      p.append(T("Sin configurar") + (what ? " (" + T(what) + ")" : "") + ". ");
+      const a = el("a", "", "Configurar"); a.href = href; a.addEventListener("click", (e) => { e.preventDefault(); document.querySelector(href).scrollIntoView({ behavior: "smooth" }); });
+      p.append(a); c.append(p); src(c, { source: part.source });
+    }
+    function chart(c, points, fmtv) {
+      if (!points || !points.length) return;
+      const max = Math.max(...points.map((p) => p.value), 0);
+      const bars = el("div", "bars");
+      for (const p of points) {
+        const s = el("span"); s.style.height = max ? Math.max(3, (p.value / max) * 100) + "%" : "3px";
+        if (!p.value) s.className = "zero";
+        s.title = `${p.label}: ${fmtv ? fmtv(p.value) : num(p.value)}`; bars.append(s);
+      }
+      const lbl = el("div", "barlbl"); lbl.setAttribute("data-noi18n", "");
+      lbl.append(el("span", "", points[0].label), el("span", "", points[points.length - 1].label));
+      c.append(bars, lbl);
+    }
+
+    async function business(refresh) {
+      loaded = true;
+      M.msg($("mb"), "Cargando…", "info");
+      let d;
+      try { d = await M.api(`/api/admin/business?period=${period}${refresh ? "&refresh=1" : ""}`); }
+      catch (e) { M.msg($("mb"), e.message); return; }
+      M.msg($("mb"), "");
+      $("cards").innerHTML = "";
+      const u = d.users, s = d.subscriptions, m = d.mrr;
+
+      let c = card("Familias");
+      big(c, num(u.families), T("familias"));
+      rows(c, [["Altas en el periodo", num(u.newFamilies)], ["Personas con cuenta", num(u.accounts)], ["Cuentas nuevas en el periodo", num(u.newAccounts)],
+        ["Activas en 7 días", num(u.active7)], ["Activas en 30 días", num(u.active30)]]);
+      c.append(el("div", "sub", "Altas"));
+      chart(c, u.chart); src(c, u);
+
+      c = card("Suscripciones");
+      big(c, num(s.web.paid + s.play.paid), T("de pago"));
+      rows(c, [["En prueba gratis (web)", num(s.web.trial)], ["Se dan de baja al final del periodo", num(s.web.cancelAtEnd + s.play.cancelAtEnd)],
+        ["Terminadas o canceladas", num(s.web.ended + s.play.ended)], ["En solo lectura", num(s.readOnly)], ["Con acceso gratis", num(s.free)]]);
+      c.append(el("div", "sub", "De pago por canal y plan"));
+      rows(c, [["Web (Stripe) · mensual", num(s.web.monthly)], ["Web (Stripe) · anual", num(s.web.yearly)],
+        ["Google Play · mensual", num(s.play.monthly)], ["Google Play · anual", num(s.play.yearly)]]);
+      if (s.promos.length) {
+        c.append(el("div", "sub", "Códigos de promoción"));
+        rows(c, s.promos.map((p) => [p.code, p.max != null ? `${num(p.used)} / ${num(p.max)} · ${T("quedan {0}").replace("{0}", num(p.left))}` : num(p.used)]));
+      }
+      src(c, s);
+
+      c = card("Ingresos");
+      big(c, euros(m.total), T("al mes (MRR)"));
+      rows(c, [["MRR web (Stripe)", euros(m.web)], ["MRR Google Play", euros(m.play)]]);
+      c.append(el("p", "note", "Precios de lista de las suscripciones de pago (las anuales cuentan ÷12). Las que están en su prueba gratis no cuentan; en Google Play, antes de la comisión de Google."));
+      src(c, m);
+      const st = d.stripe;
+      c.append(el("div", "sub", "Stripe (web)"));
+      if (!st.configured) off(c, st, "#cfg-stripe");
+      else if (st.money.error) src(c, { source: "stripe", ...st.money });
+      else {
+        const x = st.money.data;
+        rows(c, [["Cobrado en el periodo", euros(x.charged)], ["Devoluciones", euros(x.refunded)], ["Neto", euros(x.charged - x.refunded)],
+          ...(st.live ? [] : [["Modo", T("de prueba")]])]);
+        chart(c, x.chart, euros); src(c, { source: "stripe", ...st.money });
+      }
+      const pe = d.playEarnings;
+      c.append(el("div", "sub", "Google Play"));
+      if (!pe.configured) off(c, pe, "#cfg-play", pe.missing === "bucket" ? "falta el URI de los informes" : "");
+      else if (pe.error) src(c, pe);
+      else {
+        const x = pe.data;
+        if (!x.latest) c.append(el("p", "off", "Todavía no hay informes de ingresos para este periodo."));
+        else {
+          const t = Object.values(x.months).reduce((a, v) => ({ sales: a.sales + v.sales, fees: a.fees + v.fees, taxes: a.taxes + v.taxes, refunds: a.refunds + v.refunds }), { sales: 0, fees: 0, taxes: 0, refunds: 0 });
+          rows(c, [["Ventas", money(t.sales, x.currency)], ["Comisión de Google", money(t.fees, x.currency)], ["Impuestos", money(t.taxes, x.currency)],
+            ["Devoluciones", money(t.refunds, x.currency)], ["Neto", money(x.net, x.currency)]]);
+        }
+        c.append(el("p", "note", "Los informes de ingresos de Google Play son mensuales: el de cada mes suele estar hacia el día 5 del mes siguiente."));
+        src(c, pe, x.latest ? T("informe de {0}").replace("{0}", monthName(x.latest)) : null);
+      }
+
+      c = card("Pruebas y bajas");
+      const fu = st.configured ? st.funnel : null;
+      c.append(el("div", "sub", "Web (Stripe)"));
+      if (!st.configured) off(c, st, "#cfg-stripe");
+      else if (fu.error) src(c, { source: "stripe", ...fu });
+      else {
+        const f = fu.data;
+        rows(c, [["Pruebas gratis terminadas", num(f.trialsEnded)], ["Pasan a pago", num(f.converted)],
+          ["Conversión de prueba a pago", f.rate == null ? "—" : (f.rate * 100).toLocaleString(LOC, { maximumFractionDigits: 1 }) + " %"], ["Bajas en el periodo", num(f.cancelled)]]);
+        src(c, { source: "stripe", ...fu });
+      }
+      c.append(el("div", "sub", "Google Play"));
+      rows(c, [["Suscripciones nuevas", num(d.playSubs.new)], ["Terminadas en el periodo", num(d.playSubs.ended)]]);
+      src(c, d.playSubs);
+
+      c = card("Descargas");
+      const a = d.apk;
+      big(c, num(a.period), T("APK descargados"));
+      rows(c, [["APK · desde siempre", num(a.total)], ["Se cuentan desde", a.countingSince ? fmt(a.countingSince) : "—"]]);
+      chart(c, a.chart); src(c, a);
+      const pi = d.playInstalls;
+      c.append(el("div", "sub", "Instalaciones desde Google Play"));
+      if (!pi.configured) off(c, pi, "#cfg-play", pi.missing === "bucket" ? "falta el URI de los informes" : "");
+      else if (pi.error) src(c, pi);
+      else {
+        const x = pi.data;
+        rows(c, [["Instalaciones en el periodo", num(x.installs)], ["Dispositivos activos", x.activeDevices == null ? "—" : num(x.activeDevices)],
+          ["Último día con datos", x.lastDay ? fmt(x.lastDay) : "—"]]);
+        c.append(el("p", "note", "Google publica estas estadísticas en Cloud Storage con unos días de retraso."));
+        src(c, pi);
+      }
+
+      c = card("Google Play · versiones");
+      const pt = d.playTracks;
+      if (!pt.configured) off(c, pt, "#cfg-play");
+      else if (pt.error) src(c, pt);
+      else {
+        const NAMES = { production: "Producción", alpha: "Prueba cerrada (alpha)", beta: "Prueba abierta (beta)", internal: "Prueba interna" };
+        const list = [];
+        for (const t of pt.data) for (const r of t.releases) list.push([T(NAMES[t.track] || t.track), `${r.name || r.versionCodes.join(", ")} · ${r.status}`]);
+        if (list.length) rows(c, list); else c.append(el("p", "off", "No hay ninguna versión en Play Console."));
+        src(c, pt);
+      }
+
+      c = card("Salud del servidor");
+      const h = d.health;
+      rows(c, [["Última copia de seguridad", h.lastBackup || T("Ninguna todavía")], ["Copias guardadas", num(h.backups)],
+        ["Correo (SMTP)", T(h.mail.logOnly ? "Solo al registro" : h.mail.configured ? "Configurado" : "Sin configurar")],
+        ["Espacio libre", h.disk ? (h.disk.free / 1e9).toLocaleString(LOC, { maximumFractionDigits: 1 }) + " GB" : "—"]]);
+      src(c, h);
+    }
+    $("period").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-p]"); if (!b) return;
+      period = b.dataset.p;
+      document.querySelectorAll("#period button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      business();
+    });
+    $("refresh").addEventListener("click", () => business(true));
+    document.querySelectorAll("[data-test]").forEach((b) => b.addEventListener("click", async () => {
+      const out = b.closest("form").querySelector(".msg");
+      M.busy(b, true, T("Probando…"));
+      try { const r = await M.api(`/api/admin/business/test/${b.dataset.test}`, { method: "POST" }); M.msg(out, r.message, "ok"); }
+      catch (e) { M.msg(out, e.message); }
+      finally { M.busy(b, false); }
+    }));
+
+    // ---------- Negocio: configuration ----------
     function codeRow(c) {
       const tr = document.createElement("tr");
       const cell = (name, value, attrs = {}) => {
@@ -177,16 +460,23 @@
     async function stripe() {
       const s = await M.api("/api/admin/stripe");
       kv($("st"), [["Estado", s.configured ? (s.live ? "Activo (cobros reales)" : "Activo en modo de prueba") : "Sin configurar"],
-        ["Webhook", s.webhookSet ? "Configurado" : "Falta el secreto de firma"], ["Dirección del webhook", s.webhookUrl], ["Suscripciones", s.subscriptions]]);
+        ["Clave secreta", s.secretHint ? T("Configurada · termina en {0}").replace("{0}", s.secretHint) : "Sin configurar"],
+        ["Webhook", s.webhookHint ? T("Configurado · termina en {0}").replace("{0}", s.webhookHint) : "Falta el secreto de firma"], ["Suscripciones", s.subscriptions]]);
+      $("whurl").textContent = s.webhookUrl;
+      kv($("plans"), [["Mensual", euros(s.plans.monthly.cents) + " / " + T("mes")], ["Anual", euros(s.plans.yearly.cents) + " / " + T("año")],
+        ["Prueba gratis", T("{0} días").replace("{0}", s.trialDays)], ["Unidad", "Una suscripción por familia (hasta 8 personas)"]]);
     }
+    $("copywh").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText($("whurl").textContent); M.msg($("ms"), "Copiada.", "ok"); } catch (e) { M.msg($("ms"), "No se ha podido copiar: cópiala a mano."); }
+    });
     $("fs").addEventListener("submit", async (e) => {
       e.preventDefault();
       try { await M.api("/api/admin/stripe", { method: "PUT", body: { secret: e.target.secret.value.trim(), webhook: e.target.webhook.value.trim() } });
-        e.target.reset(); M.msg($("ms"), "Guardado. Los precios (2,50 €/mes y 25 €/año) se crean solos en Stripe.", "ok"); stripe(); }
+        e.target.reset(); M.msg($("ms"), "Guardado. Los precios (2,50 €/mes y 25 €/año) se crean solos en Stripe.", "ok"); stripe(); keys(); }
       catch (err) { M.msg($("ms"), err.message); }
     });
     $("rmstripe").addEventListener("click", async () => {
-      try { await M.api("/api/admin/stripe", { method: "PUT", body: { remove: true } }); stripe(); } catch (e) { M.msg($("ms"), e.message); }
+      try { await M.api("/api/admin/stripe", { method: "PUT", body: { remove: true } }); stripe(); keys(); } catch (e) { M.msg($("ms"), e.message); }
     });
     async function mail() {
       const s = await M.api("/api/admin/mail");
@@ -203,7 +493,7 @@
       try {
         await M.api("/api/admin/mail", { method: "PUT", body: { host: f.host.value.trim(), port: Number(f.port.value) || 465, security: f.security.value,
           username: f.username.value.trim(), password: f.password.value, from_address: f.from_address.value.trim(), from_name: f.from_name.value.trim() } });
-        M.msg($("mm"), "Guardado. Pulsa «Enviarme un correo de prueba» para comprobarlo.", "ok"); mail(); overview();
+        M.msg($("mm"), "Guardado. Pulsa «Enviarme un correo de prueba» para comprobarlo.", "ok"); mail(); overview(); keys();
       } catch (err) { M.msg($("mm"), err.message); }
     });
     $("testmail").addEventListener("click", async () => {
@@ -212,34 +502,50 @@
       catch (err) { M.msg($("mm"), err.message); }
     });
     $("rmmail").addEventListener("click", async () => {
-      try { await M.api("/api/admin/mail", { method: "PUT", body: { remove: true } }); M.msg($("mm"), "Ahora se usan las variables SMTP_* del .env.", "ok"); mail(); overview(); }
+      try { await M.api("/api/admin/mail", { method: "PUT", body: { remove: true } }); M.msg($("mm"), "Ahora se usan las variables SMTP_* del .env.", "ok"); mail(); overview(); keys(); }
       catch (err) { M.msg($("mm"), err.message); }
     });
     async function gplay() {
       const g = await M.api("/api/admin/play");
       kv($("gpkv"), [["Estado", g.configured ? "Configurado con " + g.serviceAccount : "Sin configurar: la app no ofrece suscribirse"],
-        ["Familias con suscripción de Google Play", g.subscriptions], ["Ficha en Google Play", g.storeUrl || "Todavía no publicada"]]);
-      const f = $("fg"); f.package.value = g.package; f.product.value = g.product; f.sa.value = ""; f.url.value = g.storeUrl || "";
+        ["Clave", g.keyHint ? T("Configurada · termina en {0}").replace("{0}", g.keyHint) : "Sin configurar"],
+        ["Familias con suscripción de Google Play", g.subscriptions], ["Ficha en Google Play", g.storeUrl || "Todavía no publicada"],
+        ["Informes de Play Console", g.reportsBucket || "Sin configurar"]]);
+      const f = $("fg"); f.package.value = g.package; f.product.value = g.product; f.sa.value = ""; f.url.value = g.storeUrl || ""; f.bucket.value = g.reportsBucket || "";
     }
     $("fg").addEventListener("submit", async (e) => {
       e.preventDefault();
       const f = e.target;
       try {
         await M.api("/api/admin/play", { method: "PUT", body: { package: f.package.value.trim(), product: f.product.value.trim(),
-          serviceAccount: f.sa.value, storeUrl: f.url.value.trim() } });
-        M.msg($("mg"), "Guardado.", "ok"); gplay();
+          serviceAccount: f.sa.value, storeUrl: f.url.value.trim(), reportsBucket: f.bucket.value.trim() } });
+        M.msg($("mg"), "Guardado.", "ok"); gplay(); keys();
       } catch (err) { M.msg($("mg"), err.message); }
     });
     $("rmplay").addEventListener("click", async () => {
       if (!confirm("¿Quitar la clave de Google Play? Las suscripciones de la app no podrán comprobarse hasta que la vuelvas a poner.")) return;
-      try { await M.api("/api/admin/play", { method: "PUT", body: { remove: true } }); M.msg($("mg"), "Quitada.", "ok"); gplay(); }
+      try { await M.api("/api/admin/play", { method: "PUT", body: { remove: true } }); M.msg($("mg"), "Quitada.", "ok"); gplay(); keys(); }
       catch (err) { M.msg($("mg"), err.message); }
     });
-    $("bk").addEventListener("click", async () => {
-      try { const r = await M.api("/api/admin/backup", { method: "POST" }); M.msg($("mo"), "Copia hecha: " + r.name, "ok"); overview(); }
-      catch (e) { M.msg($("mo"), e.message); }
-    });
-    Promise.all([overview(), families(), codes(), mail(), stripe(), gplay()]).catch((e) => M.msg($("mo"), e.message));
+    async function keys() {
+      const { keys } = await M.api("/api/admin/keys");
+      const tb = $("keys"); tb.innerHTML = "";
+      for (const k of keys) {
+        const tr = document.createElement("tr");
+        tr.append(el("td", "", k.name));
+        const state = el("td");
+        state.append(el("span", "tag " + (k.set ? "ok" : "bad"), k.auto ? (k.set ? "Generadas por el servidor" : "Se generan solas") : k.set ? "Configurada" : "Sin configurar"));
+        if (k.hint) { const h = el("span", "small", " " + T("termina en {0}").replace("{0}", k.hint)); h.setAttribute("data-noi18n", ""); state.append(h); }
+        if (k.account) { const h = el("div", "small", k.account); h.setAttribute("data-noi18n", ""); state.append(h); }
+        tr.append(state);
+        const go = el("td");
+        if (k.where) { const a = el("a", "", "Cambiar"); a.href = "#cfg-" + k.where; a.addEventListener("click", (e) => { e.preventDefault(); $("cfg-" + k.where).scrollIntoView({ behavior: "smooth" }); }); go.append(a); }
+        tr.append(go); tb.append(tr);
+      }
+    }
+
+    show(location.hash === "#negocio" ? "business" : "server");
+    Promise.all([overview(), families(), codes(), mail(), stripe(), gplay(), keys()]).catch((e) => M.msg($("mo"), e.message));
   </script>
 </body>
 </html>

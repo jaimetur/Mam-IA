@@ -403,7 +403,10 @@ def get_stripe(request: Request, u: User = Depends(admin_user)):
     s = stripe.settings()
     with db.ro() as con:
         n = con.execute("SELECT COUNT(*) FROM stripe_subs").fetchone()[0]
+    from app.admin.business import hint
     return {"configured": stripe.configured(), "webhookSet": bool(s["webhook"]), "prices": s["prices"],
+            "secretHint": hint(s["secret"]), "webhookHint": hint(s["webhook"]),
+            "plans": {p: {"cents": c, "interval": i} for p, (i, c, _) in stripe.PLANS.items()}, "trialDays": stripe.TRIAL_DAYS,
             "live": bool(s["secret"] and s["secret"].startswith("sk_live")), "subscriptions": n,
             "webhookUrl": f"{base_url(request)}/api/web/webhook"}
 

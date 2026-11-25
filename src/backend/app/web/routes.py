@@ -9,7 +9,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 
-from app.core import config, i18n, version
+from app.core import config, db, i18n, version
 from app.core.deps import optional_user
 
 router = APIRouter()
@@ -172,6 +172,7 @@ def android_info():
 @router.get("/android.apk")
 def android_apk():
     apk = config.settings.data_dir / "android" / "mamia-android.apk"
+    db.count_download("apk")   # counted for Administración → Negocio (also when it goes to GitHub)
     if apk.is_file():
         return FileResponse(apk, media_type="application/vnd.android.package-archive", filename="mamia-android.apk")
     return RedirectResponse(config.settings.android_url, status_code=302)

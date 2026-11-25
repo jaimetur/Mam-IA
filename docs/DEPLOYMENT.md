@@ -15,10 +15,10 @@ En el NAS, crea la carpeta del stack (por ejemplo `/volume1/docker/stacks/mamia`
     `MAMIA_ADMIN_PASSWORD` provisional (se pide cambiarla al entrar la primera vez).
   - `HOST_DATA_DIR`, `PUID` y `PGID` (un usuario o grupo con permiso de escritura en la carpeta de datos; en Synology
     `1034:65544` = docker_limited:docker_users).
-  - El correo saliente (`SMTP_*`, o después en Administración → Correo, que manda sobre el `.env`): **sin él no se
+  - El correo saliente (`SMTP_*`, o después en Administración → Negocio → Correo, que manda sobre el `.env`): **sin él no se
     pueden crear cuentas**, porque cada alta confirma su dirección con un código de 6 cifras. También envía las
     invitaciones, las contraseñas olvidadas, los recordatorios y el resumen del día, y los avisos de la cuenta y de
-    la suscripción. «Enviarme un correo de prueba» en Administración → Correo lo comprueba.
+    la suscripción. «Enviarme un correo de prueba» en Administración → Negocio → Correo lo comprueba.
   - `OPEN_SIGNUP` vacío en el servidor público (las familias entran pagando, con un código o por invitación).
 
 ## 2. Arrancar
@@ -52,7 +52,7 @@ En «Encabezado personalizado» añade WebSocket (no es obligatorio) y comprueba
 ## 4. Pagos (Stripe)
 
 1. En el panel de Stripe, crea una clave secreta restringida o usa la secreta (`sk_live_…`; `sk_test_…` para probar).
-2. Entra en `https://mamia.jtgcloud.com/admin` → **Pagos con Stripe** y pégala: Mam-IA crea el producto «Mam-IA
+2. Entra en `https://mamia.jtgcloud.com/admin` → **Negocio → Pagos · Stripe** y pégala: Mam-IA crea el producto «Mam-IA
    (familia)» y los precios de 2,50 €/mes y 25 €/año.
 3. En Stripe → Desarrolladores → Webhooks, añade el punto de conexión que muestra Administración
    (`https://mamia.jtgcloud.com/api/web/webhook`) con los eventos `checkout.session.completed` y
@@ -65,7 +65,7 @@ Sin Stripe configurado, solo se puede entrar con un código de promoción o por 
 ## 5. Oferta de lanzamiento y códigos
 
 Por defecto existe el código público `LANZAMIENTO` (alias `LAUNCH`): 1 año gratis para las 50 primeras familias, que se
-muestra en la página de inicio con las plazas que quedan. Se cambia en Administración → Códigos de promoción (duración,
+muestra en la página de inicio con las plazas que quedan. Se cambia en Administración → Negocio → Suscripciones y códigos (duración,
 fecha de caducidad, número máximo de familias, si es público).
 
 ## 6. Copias de seguridad

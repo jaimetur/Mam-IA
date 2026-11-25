@@ -30,7 +30,11 @@ PAGES = [*sorted(FRONT.rglob("*.html")), *sorted((FRONT / "app" / "js").rglob("*
 SKIP_JS = {"parse.js"}
 # texts of the code that are not shown (HTTP headers, CSS classes)
 IGNORE = {"Vary", "Cookie, Accept-Language", "small center langrow", "Authorization", "Bearer {0}", "PRIVATE KEY",
-          "btn pri", "msg info", "mamia", "Google Play"}
+          "btn pri", "msg info", "mamia", "Google Play", "tag {0}", "{0} GB",
+          # the columns of Play Console's reports (app.admin.business reads them)
+          "Active Device Installs", "Current Device Installs", "Daily Device Installs", "Daily User Installs",
+          "Installs on active devices", "Amount (Merchant Currency)", "Merchant Currency", "Package ID", "Transaction Type",
+          "charge rebill", "charge refund", "google fee"}
 
 LETTER = re.compile(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]")
 SPANISH = re.compile(r"[áéíóúüñÁÉÍÓÚÜÑ¿¡]")

@@ -97,7 +97,8 @@ Con Docker (código en caliente): `docker compose -f docker/compose.dev.yml up -
 En el NAS, con Docker y el proxy inverso de Synology en `https://mamia.jtgcloud.com`: ver
 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). La imagen `jaimetur/mam-ia` la construye GitHub Actions
 (`.github/workflows/build_docker.yml`): `:main` con cada push a `main` y `:X.Y.Z` + `:latest` con cada push a una rama de
-versión. Los pagos (Stripe) y los códigos de promoción se configuran en **Administración** (`/admin`).
+versión. Los pagos (Stripe y Google Play), los códigos de promoción y el correo se configuran en **Administración →
+Negocio** (`/admin#negocio`), que también enseña las cifras: familias, suscripciones, ingresos y descargas.
 
 ## Publicar una nueva release
 
