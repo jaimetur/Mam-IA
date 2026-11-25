@@ -43,9 +43,9 @@ export function render(root) {
     ${al.length ? html`<div class="chips">${al.map(({ m, a }) => html`<span class="alert-chip">${icon("triangle-alert", "xs")}${m.name}: ${a}</span>`)}</div>` : ""}
     <section class="card">${days.map((x) => {
       const c = S.get("meals", mealId(x, "comida")), n = S.get("meals", mealId(x, "cena"));
-      return html`<div class="menu-day ${x === d ? "today" : ""}"><b>${cap(WEEKDAYS[(parse(x).getDay() + 6) % 7].slice(0, 3))} ${parse(x).getDate()}</b>
+      return html`<div class="menu-day ${x === d ? "today" : ""}"><b data-noi18n>${cap(parse(x).toLocaleDateString("es-ES", { weekday: "short" }).replace(/\.$/, ""))} ${parse(x).getDate()}</b>
         <div class="slots">
-          <button class="slot" type="button" data-slot="${mealId(x, "comida")}"><small>Comida${c && c.school ? " · comedor" : ""}</small>
+          <button class="slot" type="button" data-slot="${mealId(x, "comida")}"><small>${c && c.school ? "Comida · Comedor" : "Comida"}</small>
             ${c && (c.dish || c.school) ? html`<span>${c.dish || ""}${c.dish && c.school ? " · " : ""}${c.school ? html`<span class="muted">Cole: ${c.school}</span>` : ""}</span>` : html`<span class="ph">Añadir</span>`}</button>
           <button class="slot" type="button" data-slot="${mealId(x, "cena")}"><small>Cena</small>
             ${n && n.dish ? html`<span>${n.dish}</span>` : html`<span class="ph">Añadir</span>`}</button>

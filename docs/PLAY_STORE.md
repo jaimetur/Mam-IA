@@ -55,6 +55,14 @@ APK modernos.)
 - Categoría: **Productividad** o **Crianza** (Parenting).
 - Contacto: `mamia@jtgcloud.com`, web `https://mamia.jtgcloud.com`.
 - Icono de la ficha: `assets/branding/icon-maskable-512.png` (512×512, cuadrado completo: Play redondea las esquinas).
+- Imágenes de la ficha, en los 10 idiomas: `assets/play-store/<código de Play>/` (`es-ES`, `en-US`, `ca`, `fr-FR`,
+  `it-IT`, `de-DE`, `pt-PT`, `nl-NL`, `zh-CN`, `ja-JP`), con `feature-graphic.png` (1024×500), `phone/` (1080×1920),
+  `tablet/` (1440×2560, las mismas para 7" y 10") y `chromebook/` (2880×1620), y los textos de la ficha en ese idioma
+  (`title.txt`, `short_description.txt`, `full_description.txt`). Google Play enseña a cada visitante la traducción de
+  la ficha en su idioma, con sus capturas; si su idioma no tiene traducción, le enseña la predeterminada (en-US). Las hace
+  `tools/play_screenshots.py` con la app real y la familia de ejemplo de `app.demo.play_review`, con la interfaz y los
+  textos de la familia en cada idioma. El workflow «📸 Google Play images» las vuelve a hacer y las sube al repositorio
+  cada vez que cambian la interfaz, las traducciones o la familia de ejemplo.
 - Firma de la app: **clave generada por Google** (Play App Signing), como en BodyLens. `mamia-upload.jks` es solo la
   clave de subida. Por eso la app de Play y el APK del servidor tienen firmas distintas: quien tenga instalada una
   tiene que desinstalarla para pasar a la otra.

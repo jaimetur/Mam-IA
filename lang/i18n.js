@@ -102,6 +102,12 @@
   function cap(src, w) { return src[0] === src[0].toUpperCase() && src[0] !== src[0].toLowerCase() ? w.charAt(0).toUpperCase() + w.slice(1) : w; }
   function words(s) {
     if (LANG === 'es') return null;   // the page is written in Spanish: its dates stay as they are («20 de noviembre»)
+    // a list of days («lunes y miércoles», «martes, jueves y sábados»): each day, joined with the language's own «and»
+    var list = s.split(/, | y /);
+    if (list.length > 1 && list.every(function (w) { return WORDS[w.toLowerCase()]; })) {
+      var tr = list.map(function (w) { return WORDS[w.toLowerCase()]; });
+      try { return new Intl.ListFormat(LOC, { type: 'conjunction' }).format(tr); } catch (e) { return tr.join(', '); }
+    }
     // solo en textos con cifras («19 nov», «lun 3») o que son una de esas palabras
     if (!/\d/.test(s) && !WORDS[s.toLowerCase()]) return null;
     var ch = false;

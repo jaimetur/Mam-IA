@@ -19,6 +19,7 @@ test = [
 ]
 dev = [
   "Pillow==13.0.0",
+  "playwright==1.65.2",   # tools/play_screenshots.py
 ]
 
 [tool.setuptools]
