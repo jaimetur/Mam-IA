@@ -87,7 +87,7 @@ suscripción cubre a toda la familia.
 
 1. En Google Cloud, en el proyecto vinculado a la Play Console: **IAM → Cuentas de servicio → Crear**. Después,
    **Claves → Añadir clave → JSON** y descarga el fichero.
-2. En Play Console: **Usuarios y permisos → Invitar**, con el correo de la cuenta de servicio
+2. En Play Console: **Gestionar cuenta → Usuarios y permisos → Invitar**, con el correo de la cuenta de servicio
    (`…@….iam.gserviceaccount.com`). Dale, para la app Mam-IA, «Ver datos financieros» y «Gestionar pedidos y
    suscripciones».
 3. En Mam-IA, entra en **Administración → Google Play** y rellena:
@@ -196,9 +196,10 @@ la versión llega a `main`, se publica sola: release de GitHub y, con acceso a p
 
 **Configuración (una vez):**
 
-1. **Play Console → Usuarios y permisos**: abre la cuenta de servicio de la sección 5. En **Permisos de la app →
-   Mam-IA**, añade «Publicar aplicaciones en canales de prueba» y «Gestionar la presencia en Google Play Store», sin
-   quitar los de pedidos y suscripciones. Para producción hará falta también «Publicar en producción» (sección 10).
+1. **Play Console → Gestionar cuenta → Usuarios y permisos**: abre la cuenta de servicio de la sección 5. En
+   **Permisos de la app → Mam-IA**, añade «Publicar aplicaciones en canales de prueba» y «Gestionar la presencia en
+   Google Play Store», sin quitar los de pedidos y suscripciones. Para producción hará falta también «Publicar en
+   producción» (sección 10).
    **Aplicar → Guardar cambios.**
 2. **Google Cloud** (el proyecto de esa cuenta): **APIs y servicios → Biblioteca**, busca «Google Play Android
    Developer API» y pulsa **Habilitar** (si ya lo está, no hay que hacer nada).
@@ -250,9 +251,9 @@ Para ver lo que recibiría Play: `python tools/play_publish.py --promote --versi
 menos 12 testers durante 14 días seguidos. Después, en Play Console → **Panel → Solicitar acceso a producción**. Cuando
 Google lo conceda:
 
-1. **Play Console → Usuarios y permisos**: abre la cuenta de servicio. En **Permisos de la app → Mam-IA**, añade
-   «Publicar en producción, excluir dispositivos y usar la firma de aplicaciones de Play». **Aplicar → Guardar
-   cambios.**
+1. **Play Console → Gestionar cuenta → Usuarios y permisos**: abre la cuenta de servicio. En **Permisos de la app →
+   Mam-IA**, añade «Publicar en producción, excluir dispositivos y usar la firma de aplicaciones de Play».
+   **Aplicar → Guardar cambios.**
 2. **Play Console → Probar y publicar → Producción → pestaña Países/regiones**: añade los países donde se publica. Sin
    países, la subida a producción falla.
 3. Activa el canal estable (en el terminal, desde cualquier carpeta):
