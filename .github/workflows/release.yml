@@ -93,6 +93,6 @@ jobs:
         run: |
           if [ -z "$PLAY_STABLE_TRACK" ]; then echo "::notice title=Google Play::No PLAY_STABLE_TRACK variable: $VERSION stays in the $PLAY_TRACK track. Set it to production once Google gives the app access to production."; exit 0; fi
           if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then echo "::warning title=Google Play::No PLAY_SERVICE_ACCOUNT_JSON secret: $VERSION was not sent to the $PLAY_STABLE_TRACK track."; exit 0; fi
-          pip install -q requests==2.32.3 cryptography==44.0.0
+          pip install -q requests cryptography
           python tools/play_publish.py --promote --version "$VERSION" --from-track "$PLAY_TRACK" --track "$PLAY_STABLE_TRACK"
           echo "::notice title=Google Play::$VERSION sent to the $PLAY_STABLE_TRACK track"

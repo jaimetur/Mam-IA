@@ -92,7 +92,7 @@ jobs:
           if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then echo "::warning title=Google Play::No PLAY_SERVICE_ACCOUNT_JSON secret: the AAB was not uploaded to Google Play."; exit 0; fi
           VERSION=$(sed -n 's/^ *versionName *= *"\([^"]*\)".*/\1/p' android/app/build.gradle.kts)
           if [ "$VERSION" != "$GITHUB_REF_NAME" ]; then echo "::error title=Google Play::versionName $VERSION is not the release $GITHUB_REF_NAME (run tools/CreateUpdateRelease.py --update)"; exit 1; fi
-          pip install -q requests==2.32.3 cryptography==44.0.0
+          pip install -q requests cryptography
           python tools/play_publish.py --aab android/app/build/outputs/bundle/release/app-release.aab \
             --track "$PLAY_TRACK" --release-name "$VERSION (${{ github.run_number }})" --version "$VERSION"
           echo "::notice title=Google Play::$VERSION (${{ github.run_number }}) uploaded to the $PLAY_TRACK track"
