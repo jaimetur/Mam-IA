@@ -13,7 +13,7 @@ name: 🤖 Android app
 #   but the APK is already published. When the version reaches main, release.yml takes this build to production.
 on:
   push:
-    branches: [main, "[0-9]+.[0-9]+.[0-9]+"]
+    branches: ["[0-9]+.[0-9]+.[0-9]+"]   # not main: the push that makes a version final runs release.yml, which builds and attaches it
     paths: ["android/**", ".github/workflows/android.yml"]   # not tools/play_publish.py: a new upload script needs no new app version
   workflow_dispatch:
   workflow_call:
