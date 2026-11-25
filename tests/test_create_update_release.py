@@ -8,7 +8,7 @@ spec = importlib.util.spec_from_file_location('release_tool', ROOT / 'tools' / '
 rt = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(rt)
 
-CHANGELOG = '# CHANGELOG\n\n---\n\n## Release: v0.1.0\n### Release Date: 2026-03-26\n#### 🌟 Novedades:\n- X\n'
+CHANGELOG = '# CHANGELOG\n\n---\n\n## Release: v0.1.0\n### Release Date: 2026-03-26\n#### 🌟 New Features:\n- X\n'
 SERVICE_WORKER = 'const CACHE_NAME = "mam-ia-v0.1.0";\nconst ASSETS = [];\n'
 
 

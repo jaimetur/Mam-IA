@@ -1,80 +1,82 @@
 # Mam-IA
 
+[Leer en español](README_ES.md)
+
 <p align="center">
-  <a href="https://mamia.jtgcloud.com"><img src="https://img.shields.io/badge/Visita_la_web-mamia.jtgcloud.com-C93E66?style=for-the-badge&labelColor=2B1622&logo=googlechrome&logoColor=white" alt="Visita la web de Mam-IA: mamia.jtgcloud.com" height="40"></a>
+  <a href="https://mamia.jtgcloud.com"><img src="https://img.shields.io/badge/Visit_the_website-mamia.jtgcloud.com-C93E66?style=for-the-badge&labelColor=2B1622&logo=googlechrome&logoColor=white" alt="Visit the Mam-IA website: mamia.jtgcloud.com" height="40"></a>
   &nbsp;
-  <a href="https://mamia.jtgcloud.com/app"><img src="https://img.shields.io/badge/Abre_la_app-mamia.jtgcloud.com%2Fapp-FFE39B?style=for-the-badge&labelColor=2B1622&logo=pwa&logoColor=white" alt="Abre la app de Mam-IA: mamia.jtgcloud.com/app" height="40"></a>
+  <a href="https://mamia.jtgcloud.com/app"><img src="https://img.shields.io/badge/Open_the_app-mamia.jtgcloud.com%2Fapp-FFE39B?style=for-the-badge&labelColor=2B1622&logo=pwa&logoColor=white" alt="Open the Mam-IA app: mamia.jtgcloud.com/app" height="40"></a>
 </p>
 
-Mam-IA es la agenda compartida de toda la familia, pensada para las madres que llevan la casa, los peques y el
-trabajo a la vez: todo lo que hay que recordar, en un solo sitio y repartido entre la familia.
+Mam-IA is the shared organiser for the whole family, made for mothers who run the household, the kids and their jobs
+all at once: everything there is to remember, in one place and shared across the family.
 
-- **Hoy**: lo siguiente que toca, el día de todos en una línea de tiempo, lo que no se puede olvidar, la cena y la compra.
-- **Agenda familiar**: día, semana y mes, un color por persona, planes que se repiten, quién lleva y quién recoge, y
-  aviso cuando dos planes chocan.
-- **Apuntar en 5 segundos**: escribe o dicta «Dentista Lucas el jueves a las 17:30, lo lleva Pablo» y se rellena solo
-  (sin IA).
-- **Tareas y rutinas**: con fecha, persona, aviso, repetición y turnos que rotan; y el **reparto** de la carga de la
-  semana con sugerencias para equilibrarla.
-- **Compras en directo**: listas por tienda y sección, «lo de siempre» en un toque; lo que uno tacha lo ven todos.
-- **Menú semanal** con el comedor del cole y las alergias; los ingredientes que faltan van a la compra.
-- **Peques**: la ficha de cada uno (cole, horarios, salud, alergias, tallas, contactos, cumpleaños).
-- **Avisos que llegan**: alarmas exactas en Android y notificaciones push en el navegador.
-- **Familia**: hasta 8 personas; las adultas con su propia cuenta (invitación por correo o por enlace) y los peques como
-  perfiles. Funciona sin conexión, con modo oscuro y 4 colores.
+- **Today**: what comes next, everyone's day on a timeline, what must not be forgotten, dinner and the shopping.
+- **Family calendar**: day, week and month views, one colour per person, repeating plans, who drops off and who picks
+  up, and a warning when two plans clash.
+- **Jot it down in 5 seconds**: type or dictate «Dentista Lucas el jueves a las 17:30, lo lleva Pablo» (Lucas's dentist
+  on Thursday at 17:30, Pablo takes him) and it fills itself in (no AI).
+- **Tasks and routines**: with a date, person, reminder, repetition and rotating turns; and the **split** of the
+  week's workload, with suggestions to balance it.
+- **Live shopping**: lists by shop and section, "the usual" in one tap; what one person ticks off, everyone sees.
+- **Weekly meals** with the school canteen menu and allergies; missing ingredients go onto the shopping list.
+- **Kids**: each child's profile (school, schedules, health, allergies, sizes, contacts, birthdays).
+- **Reminders that arrive**: exact alarms on Android and push notifications in the browser.
+- **Family**: up to 8 people; the adults with their own account (invitation by email or by link) and the kids as
+  profiles. Works offline, with dark mode and 4 colours.
 
-Se vende como servicio en **https://mamia.jtgcloud.com**: 2,50 €/mes o 25 €/año por familia, 7 días de prueba, y una
-oferta de lanzamiento de 1 año gratis para las 50 primeras familias (código público `LANZAMIENTO`).
+It is sold as a service at **https://mamia.jtgcloud.com**: €2.50/month or €25/year per family, a 7-day trial, and a
+launch offer of 1 free year for the first 50 families (public code `LANZAMIENTO`).
 
-## Cómo está hecho
+## How it is built
 
 ```text
 Mam-IA/
-  src/backend/app/        servidor FastAPI + SQLite (paquete app)
-    core/                 configuración, base de datos, seguridad, cifrado, correo, copias, versión
-    accounts/             cuentas, sesiones y contraseñas
-    families/             familias, invitaciones, permisos, exportar e importar
-    data/                 los datos de cada familia (documentos validados) y su sincronización
-    push/                 repeticiones, recordatorios y notificaciones Web Push
-    billing/              códigos de promoción, suscripciones con Stripe y modo de solo lectura
-    admin/                administración del servidor
-    web/                  páginas y ficheros estáticos
+  src/backend/app/        FastAPI + SQLite server (package app)
+    core/                 settings, database, security, encryption, email, backups, version
+    accounts/             accounts, sessions and passwords
+    families/             families, invitations, permissions, export and import
+    data/                 each family's data (validated documents) and its sync
+    push/                 repeats, reminders and Web Push notifications
+    billing/              promotion codes, Stripe and Google Play subscriptions and read-only mode
+    admin/                server administration and the Business dashboard
+    web/                  pages and static files
   src/frontend/
-    landing/              la página pública (/) con los planes y la oferta
-    app/                  la app (/app): JavaScript por módulos, sin compilar; PWA con service worker
-    accounts/             entrar, alta, unirse, recuperar, cuenta y bienvenida
-    admin/                administración del servidor (/admin)
-    legal/                privacidad, términos y borrar la cuenta
-    common/               tokens de diseño, fuentes, iconos de la interfaz y estilos de las páginas
-  assets/branding/        logo e iconos de la marca (favicon, PWA, Apple), servidos en la raíz del sitio
-  lang/                   idiomas: catálogo en inglés y una traducción por idioma (lang/README.md)
-  android/                app de Android (la web en una ventana nativa, con alarmas exactas): docs/ANDROID.md
-  docker/                 imagen y compose de producción y de desarrollo
-  tests/                  pytest (servidor) y node --test (app web)
-  tools/                  CreateUpdateRelease.py y make_icons.py
+    landing/              the public page (/) with the plans and the offer
+    app/                  the app (/app): JavaScript modules, no build step; PWA with a service worker
+    accounts/             sign in, sign up, join, password reset, account and welcome
+    admin/                server administration (/admin)
+    legal/                privacy, terms and account deletion
+    common/               design tokens, fonts, interface icons and page styles
+  assets/branding/        brand logo and icons (favicon, PWA, Apple), served at the site root
+  lang/                   languages: English catalog and one translation per language (lang/README.md)
+  android/                Android app (the web app in a native window, with exact alarms): docs/ANDROID.md
+  docker/                 production and development image and compose files
+  tests/                  pytest (server) and node --test (web app)
+  tools/                  CreateUpdateRelease.py, make_icons.py, play_screenshots.py and play_publish.py
 ```
 
-La app guarda en el dispositivo una copia de los datos de la familia y los cambios que no se han enviado: funciona sin
-conexión y se sincroniza al volver la red. Mientras está abierta pregunta al servidor cada pocos segundos, así que lo que
-apunta una persona lo ven las demás al momento.
+The app keeps a copy of the family's data on the device, plus any changes not yet sent: it works offline and syncs when
+the network returns. While open it polls the server every few seconds, so what one person adds, the others see
+immediately.
 
-## Desarrollo en local
+## Local development
 
-Con Python 3.12 (el de Homebrew, con Tk para la herramienta de releases):
+With Python 3.12 (the Homebrew one, with Tk for the release tool):
 
 ```bash
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -e ".[test,dev]"
 ```
 
-En PyCharm, selecciona `.venv/bin/python` como intérprete del proyecto y ejecuta **runMamIA** (`runMamIA.py`): levanta el
-servidor con datos de desarrollo en `data-dev/` y abre `http://127.0.0.1:5173`. Con la base vacía crea la cuenta de
-administración `admin@mamia.local` (contraseña inicial `mamia-admin`, se pide cambiarla). En local las familias se dan de
-alta sin pagar. Argumentos: `--port 5180`, `--no-browser`, `--reload`, `--host 0.0.0.0` (para abrirla desde el móvil en la
-misma red).
+In PyCharm, select `.venv/bin/python` as the project interpreter and run **runMamIA** (`runMamIA.py`): it starts the
+server with development data in `data-dev/` and opens `http://127.0.0.1:5173`. With an empty database it creates the
+administration account `admin@mamia.local` (initial password `mamia-admin`, you are asked to change it). Locally,
+families can sign up without paying. Arguments: `--port 5180`, `--no-browser`, `--reload`, `--host 0.0.0.0` (to open it
+from a phone on the same network).
 
-Para que el bytecode (`.pyc`) se genere fuera del proyecto, como indica `sitecustomize.py`: con el Python de Homebrew,
-cuyo propio `sitecustomize` tiene prioridad, añade un archivo `.pth` al `site-packages` del entorno:
+To have the bytecode (`.pyc`) generated outside the project, as `sitecustomize.py` intends: with the Homebrew Python,
+whose own `sitecustomize` takes precedence, add a `.pth` file to the environment's `site-packages`:
 
 ```bash
 echo "import sys; sys.pycache_prefix = \"$HOME/development/python_cache/Mam-IA/pycache\"" > .venv/lib/python3.12/site-packages/mamia_pycache_prefix.pth
@@ -90,33 +92,32 @@ Tests:
 TZ=Europe/Madrid node --test tests/frontend/*.test.mjs
 ```
 
-Con Docker (código en caliente): `docker compose -f docker/compose.dev.yml up --build` → `http://localhost:8000`.
+With Docker (hot reload): `docker compose -f docker/compose.dev.yml up --build` → `http://localhost:8000`.
 
-## Despliegue
+## Deployment
 
-En el NAS, con Docker y el proxy inverso de Synology en `https://mamia.jtgcloud.com`: ver
-[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). La imagen `jaimetur/mam-ia` la construye GitHub Actions
-(`.github/workflows/build_docker.yml`): `:main` con cada push a `main` y `:X.Y.Z` + `:latest` con cada push a una rama de
-versión. Los pagos (Stripe y Google Play), los códigos de promoción y el correo se configuran en **Administración →
-Negocio** (`/admin#negocio`), que también enseña las cifras: familias, suscripciones, ingresos y descargas.
+On the NAS, with Docker and the Synology reverse proxy at `https://mamia.jtgcloud.com`: see
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). The `jaimetur/mam-ia` image is built by GitHub Actions
+(`.github/workflows/build_docker.yml`): `:main` on every push to `main`, and `:X.Y.Z` + `:latest` on every push to a
+version branch. Payments (Stripe and Google Play), promo codes and email are configured under **Administration →
+Business** (`/admin#negocio`), which also shows the figures: families, subscriptions, revenue and downloads.
 
-## Publicar una nueva release
+## Publishing a new release
 
-Ejecuta `tools/CreateUpdateRelease.py` con el intérprete del proyecto (configuración de ejecución de PyCharm
-**CreateUpdateRelease**). La versión y la fecha de la release actual salen de la primera cabecera `## Release:` de
-`CHANGELOG.md`.
+Run `tools/CreateUpdateRelease.py` with the project interpreter (PyCharm run configuration **CreateUpdateRelease**).
+The current release's version and date come from the first `## Release:` heading in `CHANGELOG.md`.
 
-- **Update Current Release** reescribe esa cabecera y pone la misma versión en `pyproject.toml`, en la caché del service
-  worker (`src/frontend/app/sw.js`) y en el `versionName` de Android (`android/app/build.gradle.kts`).
-- **Create New Release** crea una rama con el nombre de la nueva versión (`X.Y.Z`), añade un bloque de release vacío al
-  principio de `CHANGELOG.md`, actualiza esas versiones, y confirma y sube la rama a `origin` (lo que publica la imagen
-  `:X.Y.Z` y `:latest`).
+- **Update Current Release** rewrites that heading and sets the same version in `pyproject.toml`, in the service worker
+  cache (`src/frontend/app/sw.js`) and in the Android `versionName` (`android/app/build.gradle.kts`).
+- **Create New Release** creates a branch named after the new version (`X.Y.Z`), adds an empty release block at the top
+  of `CHANGELOG.md`, updates those versions, and commits and pushes the branch to `origin` (which publishes the
+  `:X.Y.Z` and `:latest` image).
 
-Sin Tk pregunta en el terminal. También acepta `--update VERSION FECHA` y
-`--create VERSION FECHA [--dirty commit|carry|discard]`.
+Without Tk it asks in the terminal. It also accepts `--update VERSION DATE` and
+`--create VERSION DATE [--dirty commit|carry|discard]`.
 
-## Logo e iconos
+## Logo and icons
 
-`tools/make_icons.py` dibuja el logo y los iconos PNG de la PWA, Apple y el favicon en `assets/branding/` (como BodyLens); el servidor los sirve en la raíz del sitio (`/logo.svg`, `/icon-192.png`…).
-Los iconos de la interfaz son de [Lucide](https://lucide.dev) (licencia ISC) y las fuentes, Bricolage Grotesque y
-Figtree (SIL Open Font License), se sirven desde el propio servidor.
+`tools/make_icons.py` draws the logo and the PNG icons for the PWA, Apple and the favicon into `assets/branding/` (like BodyLens); the server serves them at the site root (`/logo.svg`, `/icon-192.png`…).
+The interface icons are from [Lucide](https://lucide.dev) (ISC licence), and the fonts, Bricolage Grotesque and
+Figtree (SIL Open Font License), are served from the server itself.

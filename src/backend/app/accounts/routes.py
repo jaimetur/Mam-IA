@@ -188,6 +188,6 @@ def delete_me(body: DeleteIn, response: Response, u: User = Depends(signed_in_us
             families.leave(con, u)
     except UserError as e:
         raise HTTPException(400, str(e))
-    emails.account_deleted(u.email, u.name, family_too=f["owner_id"] == u.id and alone)
+    emails.account_deleted(u.email, u.name, family_too=f["owner_id"] == u.id and alone, lang=u.lang)
     clear_session_cookie(response)
     return {"ok": True}

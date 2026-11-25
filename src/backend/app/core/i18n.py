@@ -6,7 +6,8 @@ lang/i18n.js translates the pages with the dictionary made here; here the same i
 notifications.
 
 Each account chooses its language (users.lang); without a session, the one chosen in the language picker of the
-pages (the cookie mamia_lang), else English. Adapted from BodyLens's app.core.i18n."""
+pages (the cookie mamia_lang). When the language of someone is not known, English (DEFAULT): the pages, the emails and
+the notifications. The code itself is written in Spanish (SOURCE), so Spanish needs no dictionary. Adapted from BodyLens's app.core.i18n."""
 from __future__ import annotations
 
 import json
@@ -17,8 +18,8 @@ from app.core import config
 
 LANGS = {"es": "Español", "en": "English", "ca": "Català", "fr": "Français", "it": "Italiano", "de": "Deutsch",
          "pt": "Português", "nl": "Nederlands", "zh": "中文", "ja": "日本語"}
-DEFAULT = "es"
-VISITOR = "en"   # the pages of someone who has not chosen a language (the picker of the landing and the other pages)
+SOURCE = "es"    # the language the code is written in (its texts need no translation)
+DEFAULT = "en"   # the language of someone whose language is not known (a visitor, an account without one)
 COOKIE = "mamia_lang"
 EDGE = re.compile(r"^([\s ·—–\-:,;|.]*)(.*?)([\s ·—–\-:,;|]*)$", re.S)
 LETTER = re.compile(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]")
@@ -42,7 +43,7 @@ def request_lang(request, user=None) -> str:
     """The language of a request: the account's, else the one chosen in the picker (cookie), else English."""
     if user is not None and getattr(user, "lang", None) in LANGS:
         return user.lang
-    return clean(request.cookies.get(COOKIE)) or VISITOR
+    return clean(request.cookies.get(COOKIE)) or DEFAULT
 
 
 def _file(lang: str):
@@ -93,7 +94,7 @@ def _compose(lang: str, version: int) -> tuple[dict, list]:
 
 def dictionary(lang: str) -> tuple[dict, list]:
     """Spanish text → text in ``lang``, and the patterns of the texts with {0}… (Spanish has none: it is the source)."""
-    if lang not in LANGS or lang == DEFAULT:
+    if lang not in LANGS or lang == SOURCE:
         return {}, []
     return _compose(lang, stamp(lang))
 
@@ -124,7 +125,7 @@ def tr(lang: str, text: str, _depth: int = 0) -> str:
 
 def tr_html(lang: str, html_text: str) -> str:
     """Translate the texts between the tags of an HTML (the emails)."""
-    if lang == DEFAULT:
+    if lang == SOURCE:
         return html_text
     out = re.sub(r">([^<>]+)<", lambda m: ">" + tr(lang, m.group(1)) + "<", html_text)
     return out.replace('<html lang="es">', f'<html lang="{lang}">')

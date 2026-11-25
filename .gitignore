@@ -225,3 +225,10 @@ cython_debug/
 # Mam-IA: local data of the development server (runMamIA.py) and macOS files
 data-dev/
 .DS_Store
+
+# Local files of each developer: PyCharm run configurations, Claude Code's settings and scratch scripts at the root
+# (only the root ones: src/backend/app/main.py is the server)
+.run/
+.claude/
+/main.py
+/run.py

@@ -74,7 +74,8 @@ def test_new_family_notice_to_the_server_admins(server, monkeypatch, new_client)
     c = new_client()
     signup(c, email="ana@x.test", name="Ana", family="Los Ruiz", code="LANZAMIENTO")
     m = mails_to("jaime@jtgcloud.test")[-1]
-    assert "Nueva familia: Los Ruiz" in m["subject"] and "LANZAMIENTO" in m["text"]
+    # the administrator's account (made from MAMIA_ADMIN_EMAIL) has no language chosen: English
+    assert m["subject"].startswith("Mam-IA · New family: ") and "Ruiz" in m["subject"] and "LANZAMIENTO" in m["text"]
 
 
 def test_change_email_with_a_code(client, family, new_client):
@@ -207,6 +208,9 @@ def test_admin_mail_settings_and_test_email(server, monkeypatch, new_client):
     from app.core import db
     assert "clave-smtp" not in json.dumps(db.get_setting("mail"))  # kept encrypted
     assert c.post("/api/admin/test-email", json={}).json()["to"] == "jaime@jtgcloud.test"
+    assert "Email check" in mails_to("jaime@jtgcloud.test")[-1]["subject"]   # no language chosen: English
+    assert c.put("/api/me", json={"lang": "es"}).status_code == 200
+    c.post("/api/admin/test-email", json={})
     assert "Comprobación del correo" in mails_to("jaime@jtgcloud.test")[-1]["subject"]
     assert c.put("/api/admin/mail", json={"security": "tls"}).status_code == 400
     assert c.put("/api/admin/mail", json={"remove": True}).json()["from_address"] == "mamia@mamia.test"   # the .env again

@@ -75,15 +75,16 @@ def email_changed(old_email: str, u) -> None:
         f"Tu cuenta de Mam-IA ahora usa la dirección <b>{esc(u.email)}</b>: con ella entras y a ella te llegarán los "
         "avisos. Esta dirección ya no se usa.",
         f"Si no has sido tú, escríbenos cuanto antes a {esc(config.settings.contact_email)}.",
-    ]))
+    ]), lang=u.lang)   # the old address is no longer an account: its language comes with it
 
 
-def account_deleted(email: str, name: str, family_too: bool) -> None:
+def account_deleted(email: str, name: str, family_too: bool, lang: str | None = None) -> None:
+    """(The account no longer exists when it leaves: its language comes with it.)"""
     mailer.send_later(email, "Tu cuenta se ha borrado", mailer.page("Tu cuenta se ha borrado", [
         _hello(name),
         "Hemos borrado tu cuenta de Mam-IA" + (", y con ella tu familia y todos sus datos." if family_too else "."),
         "Gracias por haberla usado. Si algún día quieres volver, aquí estaremos.",
-    ]))
+    ]), lang=lang)
 
 
 # ---------- family ----------
@@ -110,12 +111,12 @@ def member_joined(u) -> None:
         joined(admins, u, f["name"])
 
 
-def removed(email: str, name: str, by_name: str, family_name: str) -> None:
+def removed(email: str, name: str, by_name: str, family_name: str, lang: str | None = None) -> None:
     mailer.send_later(email, f"Ya no estás en {family_name}", mailer.page(f"Ya no estás en {family_name}", [
         _hello(name),
         f"{esc(by_name)} te ha quitado de <b>{esc(family_name)}</b> en Mam-IA, y tu cuenta se ha borrado.",
         "Si crees que es un error, habla con esa persona: puede volver a invitarte.",
-    ]))
+    ]), lang=lang)
 
 
 def new_owner(u, by_name: str, family_name: str) -> None:
@@ -126,19 +127,20 @@ def new_owner(u, by_name: str, family_name: str) -> None:
     ], ("Ver la suscripción", f"{base()}/cuenta")))
 
 
-def family_deleted_by_owner(emails: list[str], by_name: str, family_name: str) -> None:
+def family_deleted_by_owner(emails: list[str], by_name: str, family_name: str, langs: dict | None = None) -> None:
+    """langs: {address: language} of the accounts (deleted with the family)."""
     mailer.send_later(emails, f"{family_name} se ha borrado de Mam-IA", mailer.page("Vuestra familia se ha borrado", [
         f"{esc(by_name)} ha borrado <b>{esc(family_name)}</b> de Mam-IA, y con ella vuestras cuentas y todos los datos "
         "de la familia.",
         "Si crees que es un error, habla con esa persona.",
-    ]))
+    ]), lang=langs)
 
 
-def family_deleted_by_admin(emails: list[str], family_name: str) -> None:
+def family_deleted_by_admin(emails: list[str], family_name: str, langs: dict | None = None) -> None:
     mailer.send_later(emails, f"{family_name} se ha borrado de Mam-IA", mailer.page("Vuestra familia se ha borrado", [
         f"La administración del servidor ha borrado <b>{esc(family_name)}</b> de Mam-IA, con sus cuentas y sus datos.",
         f"Si crees que es un error, escríbenos a {esc(config.settings.contact_email)}.",
-    ]))
+    ]), lang=langs)
 
 
 def new_family_to_admins(admins: list, owner, family_name: str, how: str) -> None:

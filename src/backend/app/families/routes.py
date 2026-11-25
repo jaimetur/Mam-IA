@@ -163,7 +163,7 @@ def remove_account(user_id: int, u: User = Depends(family_admin)):
             out = families.info(con, u.family_id)
     except UserError as e:
         _fail(e)
-    emails.removed(target.email, target.name, u.name, fam["name"])
+    emails.removed(target.email, target.name, u.name, fam["name"], lang=target.lang)
     return out
 
 
@@ -230,8 +230,8 @@ def delete_family(body: DeleteFamilyIn, response: Response, u: User = Depends(si
             families.delete_family(con, u.family_id)
     except UserError as e:
         _fail(e)
-    emails.account_deleted(u.email, u.name, family_too=True)
+    emails.account_deleted(u.email, u.name, family_too=True, lang=u.lang)
     if others:
-        emails.family_deleted_by_owner([x.email for x in others], u.name, f["name"])
+        emails.family_deleted_by_owner([x.email for x in others], u.name, f["name"], langs={x.email: x.lang for x in others})
     clear_session_cookie(response)
     return {"ok": True}

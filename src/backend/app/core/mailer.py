@@ -154,26 +154,28 @@ def _deliver(s: dict, msg: EmailMessage) -> None:
         raise RuntimeError(f"No se pudo enviar el correo: {type(e).__name__}.") from e
 
 
-def _by_lang(to: list[str], lang: str | None) -> dict[str, list[str]]:
-    """The recipients grouped by language: the one given, else each account's (looked up by address), else Spanish."""
+def _by_lang(to: list[str], lang: str | dict | None) -> dict[str, list[str]]:
+    """The recipients grouped by language: the one given (one for all, or {address: language} for the accounts that
+    no longer exist when the email leaves), else each account's (looked up by address), else English."""
     from app.core import db, i18n
-    if i18n.clean(lang):
+    if isinstance(lang, str) and i18n.clean(lang):
         return {i18n.clean(lang): to}
+    given = {k.lower(): v for k, v in lang.items()} if isinstance(lang, dict) else {}
     try:
         with db.ro() as con:
             found = {r["e"]: r["lang"] for r in con.execute(
                 f"SELECT lower(email) AS e, lang FROM users WHERE lower(email) IN ({','.join('?' * len(to))})",
                 [t.lower() for t in to])}
-    except Exception:   # noqa: BLE001 — an email always goes, in Spanish if need be
+    except Exception:   # noqa: BLE001 — an email always goes, in English if need be
         found = {}
     out: dict[str, list[str]] = {}
     for t in to:
-        out.setdefault(i18n.clean(found.get(t.lower())) or i18n.DEFAULT, []).append(t)
+        out.setdefault(i18n.clean(given.get(t.lower())) or i18n.clean(found.get(t.lower())) or i18n.DEFAULT, []).append(t)
     return out
 
 
 def send(to: str | list[str], subject: str, html_body: str, unsubscribe: str | None = None,
-         lang: str | None = None) -> None:
+         lang: str | dict | None = None) -> None:
     """Send one email (to one or more addresses, each sees them all), in the language of each recipient (or `lang`).
     Raises RuntimeError with a message in Spanish."""
     from app.core import i18n
@@ -188,7 +190,7 @@ def send(to: str | list[str], subject: str, html_body: str, unsubscribe: str | N
 
 
 def send_later(to: str | list[str], subject: str, html_body: str, unsubscribe: str | None = None,
-               lang: str | None = None) -> bool:
+               lang: str | dict | None = None) -> bool:
     """Send in the background (the request does not wait for the SMTP server); failures go to the log.
     False when mail is not configured or there is nobody to send it to."""
     s = settings()

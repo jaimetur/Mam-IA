@@ -78,6 +78,41 @@ def test_account_language_and_emails(client, langs, outbox):
     assert "/lang/de.js" in client.get("/app").text
 
 
+def test_english_when_the_language_is_not_known(client, outbox):   # the real dictionaries of lang/
+    """English for whoever's language is not known: pages (their lang, title and description) and emails; and the
+    goodbye emails go in the language of the account, which no longer exists when they leave."""
+    client.cookies.clear()
+    page = client.get("/").text
+    assert '<html lang="en"' in page and "<title>Mam-IA · The whole family's calendar, out of your head</title>" in page
+    client.cookies.set("mamia_lang", "es")
+    assert '<html lang="es"' in client.get("/").text and "fuera de tu cabeza</title>" in client.get("/").text
+    client.cookies.set("mamia_lang", "fr")
+    r = client.post("/api/web/signup", json={"name": "Anne", "email": "anne@x.test", "password": "secreto-largo", "code": "LANZAMIENTO"})
+    import re
+    code = re.search(r"(\d{6})", mails_to("anne@x.test")[-1]["subject"]).group(1)   # «Votre code est …»
+    assert client.post("/api/web/verify", json={"id": r.json()["verify"], "code": code}).json()["signedIn"]
+    assert client.post("/api/me/delete", json={"password": "secreto-largo"}).status_code == 200
+    assert mails_to("anne@x.test")[-1]["subject"].startswith("Mam-IA · Ton compte a été supprimé")   # in French, after the deletion
+    from app.core import mailer
+    assert mailer._by_lang(["nadie@x.test"], None) == {"en": ["nadie@x.test"]}
+
+
+def test_accounts_from_before_keep_spanish(client):
+    """The accounts made before English became the default (lang NULL) keep Spanish, once."""
+    from app.core import db
+    with db.tx() as con:
+        fid = con.execute("INSERT INTO families(name, created_at) VALUES('F', datetime('now'))").lastrowid
+        con.execute("INSERT INTO users(email, name, pw_hash, family_id, created_at) VALUES('old@x.test','Old','x',?,datetime('now'))", (fid,))
+        con.execute("DELETE FROM settings WHERE key='langs_backfilled'")
+    db.init_db()
+    with db.tx() as con:
+        assert con.execute("SELECT lang FROM users WHERE email='old@x.test'").fetchone()[0] == "es"
+        con.execute("INSERT INTO users(email, name, pw_hash, family_id, created_at) VALUES('new@x.test','New','x',?,datetime('now'))", (fid,))
+    db.init_db()
+    with db.ro() as con:
+        assert con.execute("SELECT lang FROM users WHERE email='new@x.test'").fetchone()[0] is None   # only once
+
+
 def test_real_translations_are_complete():
     """lang/: every language translates every English message, with the same placeholders, and the catalog is
     up to date with the code (python3 tools/i18n_extract.py)."""

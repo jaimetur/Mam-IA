@@ -32,6 +32,11 @@ def _html(request: Request, *parts: str, **extra: str) -> HTMLResponse:
         html = html.replace("{{" + k + "}}", v)
     lang = i18n.request_lang(request, optional_user(request))
     html = re.sub(r"(<head[^>]*>)", lambda m: m.group(1) + i18n.head(lang), html, count=1)
+    if lang != i18n.SOURCE:   # the language, the title and the description already right for search engines and previews
+        html = html.replace('<html lang="es"', f'<html lang="{lang}"', 1)
+        html = re.sub(r"<title>([^<]*)</title>", lambda m: f"<title>{i18n.tr(lang, m.group(1))}</title>", html, count=1)
+        html = re.sub(r'(<meta name="description" content=")([^"]*)(")',
+                      lambda m: m.group(1) + i18n.tr(lang, m.group(2)).replace('"', "&quot;") + m.group(3), html, count=1)
     return HTMLResponse(html, headers={"Cache-Control": "no-cache", "Content-Language": lang, "Vary": "Cookie, Accept-Language"})
 
 

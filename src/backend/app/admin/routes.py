@@ -81,10 +81,11 @@ def delete_family(family_id: int, u: User = Depends(admin_user)):
             raise HTTPException(404, "Esa familia no existe.")
         if con.execute("SELECT 1 FROM users WHERE family_id=? AND is_admin=1", (family_id,)).fetchone():
             raise HTTPException(400, "Esa familia tiene una cuenta de administración del servidor.")
-        to = [r["email"] for r in con.execute("SELECT email FROM users WHERE family_id=?", (family_id,))]
+        rows = con.execute("SELECT email, lang FROM users WHERE family_id=?", (family_id,)).fetchall()
+        to, langs = [r["email"] for r in rows], {r["email"]: r["lang"] for r in rows}
         cancel_for(con, family_id)
         families.delete_family(con, family_id)
-    emails.family_deleted_by_admin(to, f["name"])
+    emails.family_deleted_by_admin(to, f["name"], langs=langs)
     return {"ok": True}
 
 

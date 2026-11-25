@@ -22,7 +22,7 @@ KINDS = {"recordatorios": ("mail_reminders", "los recordatorios por correo"),
 def _page(request: Request, title: str, text: str) -> HTMLResponse:
     lang = i18n.request_lang(request, optional_user(request))
     return HTMLResponse(
-        '<!doctype html><html lang="es"><head>' + i18n.head(lang) + '<meta charset="utf-8"><meta name="viewport" content="width=device-width, '
+        '<!doctype html><html lang="' + lang + '"><head>' + i18n.head(lang) + '<meta charset="utf-8"><meta name="viewport" content="width=device-width, '
         'initial-scale=1, maximum-scale=1"><title>Mam-IA</title><link rel="stylesheet" href="/static/common/tokens.css">'
         '<link rel="stylesheet" href="/static/common/pages.css"></head><body><header class="top"><a class="brand" href="/">'
         '<img src="/logo.svg" width="32" height="32" alt="">Mam-IA</a></header><main class="wrap">'

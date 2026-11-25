@@ -1,63 +1,63 @@
 # CHANGELOG
 
-Todas las fechas usan formato `YYYY-MM-DD`.
+All dates use the `YYYY-MM-DD` format.
 
 ---
 
 ## Release: v0.2.0
 ### Release Date: 2026-11-23
-#### ⚠️ Cambios incompatibles:
-- **De una página en el navegador a un servicio con servidor propio.** Los datos ya no viven solo en el navegador: cada familia tiene su cuenta en el servidor de Mam-IA (FastAPI + SQLite en Docker, en el NAS) y se comparten al momento entre todos sus móviles. La imagen de Docker ahora es el servidor (antes, nginx con ficheros estáticos) y escucha en el puerto 8000. Los datos de la versión anterior se pueden traer desde Ajustes si se abre la app nueva en el mismo navegador.
-- Dominio de producción: `https://mamia.jtgcloud.com`.
+#### ⚠️ Breaking Changes:
+- **From a single browser page to a service with its own server.** Data no longer lives only in the browser: each family has an account on the Mam-IA server (FastAPI + SQLite in Docker, on the NAS) and it is shared instantly across all their phones. The Docker image is now the server (it used to be nginx serving static files) and listens on port 8000. Data from the previous version can be brought over from Settings by opening the new app in the same browser.
+- Production domain: `https://mamia.jtgcloud.com`.
 
-#### 🌟 Novedades:
-- **Interfaz nueva, primero para el móvil**: navegación inferior, botón «+» siempre a mano y menú lateral en el ordenador.
-- **Hoy**: lo siguiente que toca con su cuenta atrás, el día de toda la familia, lo que no se puede olvidar, mañana, la cena y la compra.
-- **Agenda familiar** de día, semana y mes: un color por persona, filtros, planes que se repiten, quién lleva y quién recoge, planes de varios días y aviso cuando dos planes chocan.
-- **Apuntar en 5 segundos**: escribe o dicta en lenguaje normal («Dentista Lucas el jueves a las 17:30, lo lleva Pablo», «comprar leche y pan», «recuérdame pagar el comedor mañana a las 10») y se convierte en plan, tarea, recordatorio o compra, sin IA.
-- **Tareas y rutinas**: fecha, hora, persona, aviso, importancia, repetición y turnos que rotan; apartados de pendientes, rutinas, hechas y **reparto de la carga** con sugerencias para equilibrarla.
-- **Compras en directo**: listas por tienda ordenadas por sección, cantidades, «lo de siempre» en un toque y aviso de quién está tachando ahora mismo.
-- **Menú semanal** con el comedor del cole y las alergias de la familia; los ingredientes que faltan pasan a la compra y se puede repetir la semana anterior.
-- **Peques**: ficha de cada niño (cole, horarios y extraescolares, alergias, salud, pediatra, tallas, contactos, cumpleaños) y sus próximos planes.
-- **Familia**: hasta 8 personas; las adultas con su propia cuenta (invitación por correo o enlace para WhatsApp), los peques como perfiles, permisos de administración y pasar la familia a otra persona.
-- **Avisos**: notificaciones push en el navegador (con botón «Hecho» en las tareas) y alarmas exactas en la app de Android.
-- **App de Android** (`android/`): la web a pantalla completa con alarmas exactas aunque el móvil esté en reposo, notificaciones con «Hecho» y «Posponer 10 min», y «Compartir con Mam-IA» desde otras apps. El APK lo compila GitHub Actions.
-- **Funciona sin conexión** (PWA instalable con iconos PNG y maskable) y se sincroniza al volver la red.
-- **Suscripción por familia**: 2,50 €/mes o 25 €/año con 7 días de prueba (Stripe: tarjeta, Google Pay o Apple Pay), cambio de plan, cancelación y modo de solo lectura al terminar.
-- **Oferta de lanzamiento**: 1 año gratis para las 50 primeras familias con el código `LANZAMIENTO`, con las plazas que quedan en la página de inicio.
-- **Página de inicio** nueva con las funciones, los planes, la oferta y las preguntas frecuentes, y páginas de privacidad, términos y cómo borrar la cuenta.
-- **Cuentas**: alta, entrar, contraseña olvidada por correo, cambiar nombre, correo y contraseña, y borrar la cuenta o la familia entera.
-- **Administración** del servidor (`/admin`): familias y su acceso, dar acceso gratis, códigos de promoción, Stripe y copias de seguridad.
-- Aspecto: modo claro, oscuro o automático y 4 colores (rosa, lavanda, menta y coral). Logo nuevo.
-- Copia de seguridad: descargar e importar los datos de la familia, y copia automática del servidor cada noche (se guardan 30).
-- **Correo obligatorio y confirmado al darse de alta**: cada cuenta nueva confirma su dirección con un código de 6 cifras (vale 30 minutos, 5 intentos, se puede pedir otro). También al unirse a una familia con un enlace que no se envió a ese correo, y al cambiar el correo de la cuenta (con aviso a la dirección anterior).
-- **Google Play**, como en BodyLens: desde la app de Android la suscripción de la familia se paga con Google Play (después de confirmar el correo), se renueva, se recupera y se gestiona allí; el servidor comprueba cada compra con Google. Se configura en Administración → Google Play (paquete, producto, cuenta de servicio y enlace de la ficha). Guía en `docs/PLAY_STORE.md`.
-- **App de Android firmada siempre con la misma clave** (`tools/android-keystore.sh`), con el icono de la marca (corazón y chispa sobre el degradado), y cada compilación publica también el AAB para Google Play. La landing enseña el icono de la app y el botón de descarga solo cuando el servidor tiene el APK (`/api/android`; `tools/deploy-android.sh` lo copia al NAS), y el de Google Play cuando está publicada.
-- **Mam-IA en 10 idiomas**, los de BodyLens: español, inglés, catalán, francés, italiano, alemán, portugués, neerlandés, chino y japonés. La app, las páginas, los correos y los avisos salen en el idioma de cada persona (elegido en Ajustes o con el selector del pie; si no, el del navegador). Todo está en `lang/`, con el inglés como idioma base para que cualquiera pueda traducir (`lang/README.md`).
-- **Correos automáticos**, como en BodyLens: recordatorios de planes y tareas a quien le tocan (con «Marcar como hecha» en las tareas), resumen del día cada mañana (opcional), bienvenida, alguien se une a la familia, te quitan de ella o te la pasan, cambio de contraseña, cuenta o familia borrada, aviso a la administración de cada familia nueva, y avisos de la suscripción (el acceso gratis termina en 7 días y mañana, la familia pasa a solo lectura, ha fallado un cobro). Cada correo automático lleva un enlace para dejar de recibirlo, y en Ajustes → Avisos por correo se eligen.
+#### 🌟 New Features:
+- **New mobile-first interface**: bottom navigation, an always-at-hand «+» button and a side menu on desktop.
+- **Today**: what comes next with its countdown, the whole family's day, what must not be forgotten, tomorrow, dinner and the shopping.
+- **Family calendar** by day, week and month: one colour per person, filters, repeating plans, who drops off and who picks up, multi-day plans and a warning when two plans clash.
+- **Jot things down in 5 seconds**: type or dictate in plain language («Dentista Lucas el jueves a las 17:30, lo lleva Pablo» (Lucas's dentist on Thursday at 17:30, Pablo takes him), «comprar leche y pan» (buy milk and bread), «recuérdame pagar el comedor mañana a las 10» (remind me to pay for school lunches tomorrow at 10)) and it becomes a plan, task, reminder or shopping item, without AI.
+- **Tasks and routines**: date, time, person, reminder, importance, repetition and rotating turns; sections for pending, routines, done and **load sharing** with suggestions to balance it.
+- **Live shopping**: lists per store sorted by section, quantities, «the usual» in one tap and a notice of who is ticking items off right now.
+- **Weekly meals** with the school canteen and the family's allergies; missing ingredients go to the shopping list and the previous week can be repeated.
+- **Kids**: a profile for each child (school, timetables and after-school activities, allergies, health, paediatrician, sizes, contacts, birthdays) and their upcoming plans.
+- **Family**: up to 8 people; adults with their own account (invitation by email or a link for WhatsApp), kids as profiles, admin permissions and handing the family over to someone else.
+- **Notices**: push notifications in the browser (with a «Done» button on tasks) and exact alarms in the Android app.
+- **Android app** (`android/`): the web app full screen with exact alarms even when the phone is idle, notifications with «Done» and «Snooze 10 min», and «Share with Mam-IA» from other apps. The APK is built by GitHub Actions.
+- **Works offline** (installable PWA with PNG and maskable icons) and syncs when the network returns.
+- **Per-family subscription**: €2.50/month or €25/year with a 7-day trial (Stripe: card, Google Pay or Apple Pay), plan changes, cancellation and read-only mode when it ends.
+- **Launch offer**: 1 free year for the first 50 families with the code `LANZAMIENTO`, with the remaining spots shown on the home page.
+- **New home page** with the features, the plans, the offer and the FAQ, plus privacy and terms pages and how to delete your account.
+- **Accounts**: sign up, sign in, forgotten password by email, change name, email and password, and delete the account or the whole family.
+- **Administration** of the server (`/admin`): families and their access, granting free access, promo codes, Stripe and backups.
+- Look: light, dark or automatic mode and 4 colours (pink, lavender, mint and coral). New logo.
+- Backup: download and import the family's data, and an automatic server backup every night (30 are kept).
+- **Email required and confirmed at sign-up**: each new account confirms its address with a 6-digit code (valid for 30 minutes, 5 attempts, another can be requested). Also when joining a family with a link that was not sent to that email, and when changing the account email (with a notice to the previous address).
+- **Google Play**, as in BodyLens: from the Android app the family's subscription is paid through Google Play (after confirming the email), renewed, restored and managed there; the server verifies each purchase with Google. It is configured in Administration → Google Play (package, product, service account and store listing link). Guide in `docs/PLAY_STORE.md`.
+- **Android app always signed with the same key** (`tools/android-keystore.sh`), with the brand icon (heart and spark on the gradient), and each build also publishes the AAB for Google Play. The landing page shows the app icon and the download button only when the server has the APK (`/api/android`; `tools/deploy-android.sh` copies it to the NAS), and the Google Play button once it is published.
+- **Mam-IA in 10 languages**, the same as BodyLens: Spanish, English, Catalan, French, Italian, German, Portuguese, Dutch, Chinese and Japanese. The app, pages, emails and notices come out in each person's language (chosen in Settings or with the footer selector; otherwise, the browser's). Everything lives in `lang/`, with English as the base language so anyone can translate (`lang/README.md`).
+- **Automatic emails**, as in BodyLens: reminders of plans and tasks to whoever they concern (with «Mark as done» on tasks), a daily summary every morning (optional), welcome, someone joins the family, you are removed from it or it is handed over to you, password change, account or family deleted, a notice to the administration of each new family, and subscription notices (free access ends in 7 days and tomorrow, the family goes read-only, a payment failed). Every automatic email carries a link to stop receiving it, and in Settings → Email notices you choose them.
 
-#### 🚀 Mejoras:
-- `tools/CreateUpdateRelease.py` pone la versión también en `pyproject.toml` y en el `versionName` de Android, y la caché del service worker está ahora en `src/frontend/app/sw.js`.
-- GitHub Actions pasa los tests y publica la imagen `jaimetur/mam-ia` con cada push (`:main`, y `:X.Y.Z` + `:latest` en las ramas de versión).
-- Las fuentes y los iconos se sirven desde el propio servidor (sin Google Fonts ni CDN): más privacidad y funcionan sin conexión.
-- `runMamIA.py` levanta el servidor completo en local con datos de desarrollo; los correos se escriben en la consola (`SMTP_HOST=log`).
-- **Interfaz de escritorio rediseñada**: ocupa todo el ancho (antes se quedaba en una franja estrecha), letra y tarjetas más grandes, la semana de la Agenda como tablero de 7 columnas y el mes con los planes dentro, Tareas y Compras en columnas, el Menú como semana, menú lateral con colores, cabecera de Hoy con degradado y resumen del día, emojis en planes y tareas, y confeti al terminar una tarea.
-- El logo y los iconos de la marca están en `assets/branding/` (como en BodyLens) y se sirven en la raíz del sitio (`/logo.svg`, `/icon-192.png`…); `tools/make_icons.py` los genera ahí.
-- Administración → Correo: el servidor SMTP se configura desde la web (manda sobre el `.env`; la contraseña se guarda cifrada) y se comprueba con un correo de prueba.
-- La pantalla de entrar tiene un botón «Página de inicio» (en el móvil, «Web») para volver a la web, como en BodyLens; no aparece dentro de la app de Android, que no tiene landing.
+#### 🚀 Enhancements:
+- `tools/CreateUpdateRelease.py` also sets the version in `pyproject.toml` and in Android's `versionName`, and the service worker cache is now in `src/frontend/app/sw.js`.
+- GitHub Actions runs the tests and publishes the `jaimetur/mam-ia` image with every push (`:main`, and `:X.Y.Z` + `:latest` on version branches).
+- Fonts and icons are served from the server itself (no Google Fonts or CDN): more privacy and they work offline.
+- `runMamIA.py` starts the full server locally with development data; emails are written to the console (`SMTP_HOST=log`).
+- **Redesigned desktop interface**: it uses the full width (it used to sit in a narrow strip), larger text and cards, the Calendar week as a 7-column board and the month with the plans inside, Tasks and Shopping in columns, Meals as a week, a side menu with colours, a Today header with a gradient and a day summary, emojis on plans and tasks, and confetti when a task is finished.
+- The logo and brand icons are in `assets/branding/` (as in BodyLens) and served at the site root (`/logo.svg`, `/icon-192.png`…); `tools/make_icons.py` generates them there.
+- Administration → Email: the SMTP server is configured from the web (it takes precedence over `.env`; the password is stored encrypted) and checked with a test email.
+- The sign-in screen has a «Home page» button (on mobile, «Web») to go back to the website, as in BodyLens; it does not appear inside the Android app, which has no landing page.
 
-#### 🐛 Correcciones:
-- La semana de la agenda ponía cada evento un día más tarde en España, y «hoy» cambiaba a medianoche en hora UTC: ahora todas las fechas son locales.
-- Los recordatorios no avisaban en el móvil (solo con la pestaña abierta, y Android no permite `new Notification()`).
-- Quitar a una persona borraba todas sus tareas: ahora se quedan, a su nombre.
-- Los títulos y nombres podían inyectar HTML en la página: todo lo que escribe la familia se escapa y el servidor valida cada dato.
-- Las invitaciones se marcaban como «Enviado» sin enviar nada: ahora llega un correo o un enlace para compartir.
-- Los choques de la agenda solo se buscaban entre planes seguidos.
-- La PWA antigua guardaba la página para siempre: un service worker de retirada la limpia y carga la app nueva.
-- En el iPhone, al tocar un campo la página se ampliaba y se podía arrastrar más allá de los bordes de la pantalla: ya no hace zoom ni rebota.
+#### 🐛 Bug fixes:
+- The calendar week showed each event one day late in Spain, and «today» changed at midnight UTC: all dates are now local.
+- Reminders did not notify on mobile (only with the tab open, and Android does not allow `new Notification()`).
+- Removing a person deleted all their tasks: they now stay, under their name.
+- Titles and names could inject HTML into the page: everything the family types is escaped and the server validates every field.
+- Invitations were marked as «Sent» without sending anything: now an email or a link to share is produced.
+- Calendar clashes were only looked for between consecutive plans.
+- The old PWA cached the page forever: a retirement service worker cleans it up and loads the new app.
+- On iPhone, tapping a field zoomed the page and it could be dragged beyond the screen edges: it no longer zooms or bounces.
 
-#### 📚 Documentación:
-- README nuevo, guía de despliegue en el NAS (`docs/DEPLOYMENT.md`) y de la app de Android (`docs/ANDROID.md`).
+#### 📚 Documentation:
+- New README, deployment guide for the NAS (`docs/DEPLOYMENT.md`) and for the Android app (`docs/ANDROID.md`).
 
 #### 📱 Google Play (es-ES):
 Mam-IA se renueva por completo: ahora es una app con una cuenta para toda la familia.
@@ -173,64 +173,64 @@ Mam-IA 全面焕新：现在是全家共用一个账户的应用。
 
 ## Release: v0.1.0
 ### Release Date: 2026-03-26
-Primera version funcional de `Mam-IA` orientada a MVP de interfaz y despliegue.
+First working version of `Mam-IA`, aimed at an interface and deployment MVP.
 
-#### 🌟 Novedades:
-- Nueva aplicacion web/PWA `Mam-IA` en `src/`.
-- Interfaz moderna y responsive para desktop y movil.
-- Selector de temas de color (persistido en localStorage).
-- Modulos funcionales:
-  - comidas semanales
-  - compras
-  - tareas familiares compartidas
-  - trabajo
-  - limpieza
-  - viajes
-  - ocio
-  - agenda escolar
-  - citas medicas
-  - belleza
-  - planes en pareja
-  - presupuesto familiar
-  - configuracion familiar
-- Panel de invitaciones familiares con persistencia local.
-- Centro de administracion familiar (nombre de familia, admin, calendario compartido, notificaciones).
-- Logo SVG propio en `src/assets/mam-ia-logo.svg`.
-- Soporte PWA:
+#### 🌟 New Features:
+- New `Mam-IA` web/PWA application in `src/`.
+- Modern, responsive interface for desktop and mobile.
+- Colour theme selector (persisted in localStorage).
+- Functional modules:
+  - weekly meals
+  - shopping
+  - shared family tasks
+  - work
+  - cleaning
+  - trips
+  - leisure
+  - school calendar
+  - medical appointments
+  - beauty
+  - couple plans
+  - family budget
+  - family settings
+- Family invitations panel with local persistence.
+- Family administration centre (family name, admin, shared calendar, notifications).
+- Own SVG logo in `src/assets/mam-ia-logo.svg`.
+- PWA support:
   - `manifest.webmanifest`
   - `service-worker.js`
-- Lanzador `runMamIA.py` para iniciar la interfaz web desde PyCharm con el intérprete configurado en el proyecto y abrirla automáticamente en el navegador.
-- Herramienta `tools/CreateUpdateRelease.py` y su configuración de ejecución de PyCharm (**CreateUpdateRelease**) para actualizar la release actual o crear, confirmar y subir a `origin` una nueva rama de release.
+- `runMamIA.py` launcher to start the web interface from PyCharm with the interpreter configured in the project and open it automatically in the browser.
+- `tools/CreateUpdateRelease.py` tool and its PyCharm run configuration (**CreateUpdateRelease**) to update the current release or to create, commit and push a new release branch to `origin`.
 
 #### 🐳 Docker:
-- `docker/Dockerfile` para construir imagen de la app.
-- `docker/docker-compose.yml` para produccion (imagen publicada).
-- `docker/docker-compose.dev.yml` para desarrollo (build local).
-- `docker/.env` parametrizable:
-  - nombre de contenedor
-  - puertos prod/dev
-  - rutas de config y data
-  - red Docker dedicada (subred y gateway) para evitar solapes.
+- `docker/Dockerfile` to build the app image.
+- `docker/docker-compose.yml` for production (published image).
+- `docker/docker-compose.dev.yml` for development (local build).
+- Configurable `docker/.env`:
+  - container name
+  - prod/dev ports
+  - config and data paths
+  - dedicated Docker network (subnet and gateway) to avoid overlaps.
 
 #### ⚙️ CI/CD:
-- Workflow manual de GitHub Actions:
+- Manual GitHub Actions workflow:
   - `.github/workflows/build_docker.yml`
-  - construye y publica imagen en Docker Hub (`jaimetur/mam-ia`)
-  - ejecucion on-demand (`workflow_dispatch`).
+  - builds and publishes the image to Docker Hub (`jaimetur/mam-ia`)
+  - on-demand execution (`workflow_dispatch`).
 
-#### 🚀 Mejoras:
-- La configuración local de PyCharm (`.idea/`) queda excluida del control de versiones.
-- La caché del service worker lleva la versión de la release (`mam-ia-vX.Y.Z`): cada release nueva sustituye los archivos que guardan en caché los navegadores y la PWA instalada.
+#### 🚀 Enhancements:
+- The local PyCharm configuration (`.idea/`) is excluded from version control.
+- The service worker cache carries the release version (`mam-ia-vX.Y.Z`): each new release replaces the files that browsers and the installed PWA keep in cache.
 
-#### 📚 Documentación:
-- Documentacion principal migrada desde proyecto anterior a `Mam-IA`.
-- Documentación de ejecución local actualizada con el uso del lanzador de PyCharm y sus argumentos opcionales.
-- README: creación del entorno virtual local (`.venv`) y uso de la herramienta de releases.
-- CHANGELOG con la cabecera `## Release:` / `### Release Date:` que usa la herramienta de releases.
+#### 📚 Documentation:
+- Main documentation migrated from the previous project to `Mam-IA`.
+- Local run documentation updated with the use of the PyCharm launcher and its optional arguments.
+- README: creating the local virtual environment (`.venv`) and using the release tool.
+- CHANGELOG with the `## Release:` / `### Release Date:` header used by the release tool.
 
 ---
 
-## Notas de versionado
+## Versioning notes
 
-- El versionado actual parte desde `0.1.0` como MVP.
-- Se recomienda mantener esquema semantico (`MAJOR.MINOR.PATCH`) a partir de aqui.
+- The current versioning starts from `0.1.0` as an MVP.
+- Keeping a semantic scheme (`MAJOR.MINOR.PATCH`) from here on is recommended.

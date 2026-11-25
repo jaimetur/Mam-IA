@@ -198,6 +198,11 @@ def init_db() -> None:
         for table, column, ddl in MIGRATIONS:
             if column not in {r["name"] for r in con.execute(f"PRAGMA table_info({table})")}:
                 con.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
+        # English became the language of whoever's language is not known (0.2.0): the accounts made before, when
+        # Mam-IA was only in Spanish, keep Spanish (once)
+        if not con.execute("SELECT 1 FROM settings WHERE key='langs_backfilled'").fetchone():
+            con.execute("UPDATE users SET lang='es' WHERE lang IS NULL")
+            con.execute("INSERT INTO settings(key, value) VALUES('langs_backfilled', 'true')")
     finally:
         con.close()
 

@@ -1,7 +1,7 @@
 {
-  "name": "Mam-IA · la agenda de toda la familia",
+  "name": "Mam-IA · the whole family's calendar",
   "short_name": "Mam-IA",
-  "description": "Agenda, tareas, compra, menú y peques de toda la familia, en un solo sitio.",
+  "description": "Calendar, tasks, shopping, meals and kids of the whole family, in one place.",
   "id": "/app",
   "start_url": "/app",
   "scope": "/",
@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "background_color": "#F6F3F6",
   "theme_color": "#C93E66",
-  "lang": "es",
+  "lang": "en",
   "categories": [
     "lifestyle",
     "productivity"

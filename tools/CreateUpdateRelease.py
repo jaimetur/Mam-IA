@@ -36,13 +36,13 @@ ANDROID_GRADLE_PATH = ROOT / 'android' / 'app' / 'build.gradle.kts'
 VERSION_PATTERN = r'\d+\.\d+\.\d+'
 DATE_PATTERN = r'\d{4}-\d{2}-\d{2}'
 
-# the changelog of Mam-IA is written in Spanish
+# the changelog of Mam-IA is written in English, with the sections of BodyLens and MeetGo
 RELEASE_SECTIONS = (
-    '#### ⚠️ Cambios incompatibles:',
-    '#### 🌟 Novedades:',
-    '#### 🚀 Mejoras:',
-    '#### 🐛 Correcciones:',
-    '#### 📚 Documentación:',
+    '#### ⚠️ Breaking Changes:',
+    '#### 🌟 New Features:',
+    '#### 🚀 Enhancements:',
+    '#### 🐛 Bug fixes:',
+    '#### 📚 Documentation:',
 )
 
 
