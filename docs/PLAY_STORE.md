@@ -87,9 +87,9 @@ suscripción cubre a toda la familia.
 
 1. En Google Cloud, en el proyecto vinculado a la Play Console: **IAM → Cuentas de servicio → Crear**. Después,
    **Claves → Añadir clave → JSON** y descarga el fichero.
-2. En Play Console: **Gestionar cuenta → Usuarios y permisos → Invitar**, con el correo de la cuenta de servicio
-   (`…@….iam.gserviceaccount.com`). Dale, para la app Mam-IA, «Ver datos financieros» y «Gestionar pedidos y
-   suscripciones».
+2. En Play Console: **Gestionar cuenta → Usuarios y permisos → Invitar a nuevos usuarios**, con el correo de la
+   cuenta de servicio (`…@….iam.gserviceaccount.com`). Los permisos que necesita, también para la subida automática,
+   están en la sección 9.
 3. En Mam-IA, entra en **Administración → Google Play** y rellena:
    - Paquete: `app.mamia.android`.
    - Suscripción: `mamia`.
@@ -196,11 +196,13 @@ la versión llega a `main`, se publica sola: release de GitHub y, con acceso a p
 
 **Configuración (una vez):**
 
-1. **Play Console → Gestionar cuenta → Usuarios y permisos**: abre la cuenta de servicio de la sección 5. En
-   **Permisos de la app → Mam-IA**, añade «Publicar aplicaciones en canales de prueba» y «Gestionar la presencia en
-   Google Play Store», sin quitar los de pedidos y suscripciones. Para producción hará falta también «Publicar en
-   producción» (sección 10).
-   **Aplicar → Guardar cambios.**
+1. **Play Console → Gestionar cuenta → Usuarios y permisos → Invitar a nuevos usuarios**: el correo de la cuenta de
+   servicio de la sección 5, sin fecha de caducidad. En la pestaña **Permisos de la cuenta** (valen para todas las
+   apps), marca «Ver información de las aplicaciones y descargar informes en bloque (solo lectura)», «Ver datos
+   financieros, pedidos y respuestas a encuestas de cancelación», «Gestionar pedidos y suscripciones», «Lanzar
+   aplicaciones en canales de pruebas», «Lanzar a producción, excluir dispositivos y usar la firma de aplicaciones de
+   Play» y «Gestionar la presencia en Play Store». **Invitar usuario**. Si ya estaba invitada, ábrela con **Gestionar**
+   en su fila y marca lo que le falte.
 2. **Google Cloud** (el proyecto de esa cuenta): **APIs y servicios → Biblioteca**, busca «Google Play Android
    Developer API» y pulsa **Habilitar** (si ya lo está, no hay que hacer nada).
 3. **GitHub → jaimetur/Mam-IA → Settings → Secrets and variables → Actions**:
@@ -209,7 +211,7 @@ la versión llega a `main`, se publica sola: release de GitHub y, con acceso a p
      ruta/clave.json`);
    - pestaña **Variables → New repository variable** (opcional): `PLAY_TRACK`, el canal de las ramas `X.Y.Z`, por
      defecto `alpha`: el canal que Play crea para la prueba cerrada («Alpha» en **Probar y publicar → Pruebas →
-     Pruebas cerradas**). Si tu prueba cerrada es un canal que creaste tú, pon aquí su nombre. El canal estable
+     Prueba cerrada**). Si tu prueba cerrada es un canal que creaste tú, pon aquí su nombre. El canal estable
      (`PLAY_STABLE_TRACK`) es otro: sección 10.
 4. Prueba: **Actions → 🤖 Android app → Run workflow**, rama `0.2.0`. El registro debe terminar con
    «0.2.0 (N) uploaded to the alpha track», y en Play Console → Prueba cerrada aparece la versión nueva.
@@ -251,11 +253,11 @@ Para ver lo que recibiría Play: `python tools/play_publish.py --promote --versi
 menos 12 testers durante 14 días seguidos. Después, en Play Console → **Panel → Solicitar acceso a producción**. Cuando
 Google lo conceda:
 
-1. **Play Console → Gestionar cuenta → Usuarios y permisos**: abre la cuenta de servicio. En **Permisos de la app →
-   Mam-IA**, añade «Publicar en producción, excluir dispositivos y usar la firma de aplicaciones de Play».
-   **Aplicar → Guardar cambios.**
-2. **Play Console → Probar y publicar → Producción → pestaña Países/regiones**: añade los países donde se publica. Sin
-   países, la subida a producción falla.
+1. La cuenta de servicio necesita «Lanzar a producción, excluir dispositivos y usar la firma de aplicaciones de Play».
+   Si la invitaste como en la sección 9, ya lo tiene. Si no: **Gestionar cuenta → Usuarios y permisos →
+   Gestionar** en su fila, y márcalo.
+2. **Play Console → Probar y publicar → Producción → pestaña Países o territorios → Añadir países o territorios**:
+   añade los países donde se publica y guarda los cambios. Sin países, la subida a producción falla.
 3. Activa el canal estable (en el terminal, desde cualquier carpeta):
 
    ```bash
