@@ -36,8 +36,8 @@ class ReleaseToolTests(unittest.TestCase):
 
     def test_pyproject_and_android(self):
         self.assertIn('version = "0.3.0"', rt.replace_pyproject_version('[project]\nname = "x"\nversion = "0.2.0"\n', '0.3.0'))
-        g = 'versionName = "0.2." + (System.getenv("MAMIA_ANDROID_BUILD") ?: "0")'
-        self.assertTrue(rt.replace_android_version(g, '1.4.2').startswith('versionName = "1.4." +'))
+        g = 'versionCode = 1\n        versionName = "0.2.0"\n'
+        self.assertIn('versionName = "1.4.2"', rt.replace_android_version(g, '1.4.2'))
 
     def test_real_files_build_without_writing(self):
         before = {p: p.read_text(encoding='utf-8')

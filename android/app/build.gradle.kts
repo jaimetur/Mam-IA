@@ -13,7 +13,9 @@ android {
         minSdk = 28
         targetSdk = 36
         versionCode = (System.getenv("MAMIA_ANDROID_BUILD") ?: "1").toInt()
-        versionName = "0.2." + (System.getenv("MAMIA_ANDROID_BUILD") ?: "0")
+        // the version of the release (X.Y.Z, set by tools/CreateUpdateRelease.py), the same Google Play shows;
+        // versionCode is the CI build number, which Play needs to go up on every upload
+        versionName = "0.2.0"
     }
 
     // in CI, with the keystore in the secrets, the app is signed with it; otherwise with the debug key

@@ -5,10 +5,14 @@ name: 🤖 Android app
 #   the AAB for Google Play), from where tools/deploy-android.sh puts the APK on the server
 #   (<DATA_DIR>/android/mamia-android.apk, served at /android.apk; /api/android says whether it is there).
 # - Called by a release workflow with a release tag, it attaches the APK to that version's release instead.
+# - On a release branch (X.Y.Z), it also uploads the AAB to Google Play (tools/play_publish.py), to the track of the
+#   repository variable PLAY_TRACK (by default alpha, the closed test), when the secret PLAY_SERVICE_ACCOUNT_JSON is
+#   there. Play shows the release's version (versionName = X.Y.Z, set by tools/CreateUpdateRelease.py) and the build
+#   number (versionCode). A new release branch changes android/app/build.gradle.kts, so it always builds and uploads.
 on:
   push:
     branches: [main, "[0-9]+.[0-9]+.[0-9]+"]
-    paths: ["android/**", ".github/workflows/android.yml"]
+    paths: ["android/**", ".github/workflows/android.yml", "tools/play_publish.py"]
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -59,6 +63,20 @@ jobs:
           [ -n "$ANDROID_KEYSTORE_FILE" ] && KIND="release key" || KIND="DEBUG key (no keystore in the secrets)"
           echo "SIGNATURE=$KIND · SHA-256 $SHA" >> "$GITHUB_ENV"
           echo "::notice title=Android signature::$KIND · SHA-256 $SHA"
+      - name: Upload to Google Play (release branches)
+        if: ${{ !inputs.release_tag }}
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_TRACK: ${{ vars.PLAY_TRACK || 'alpha' }}
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "Not a release branch: not uploaded to Google Play."; exit 0; fi
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then echo "::warning title=Google Play::No PLAY_SERVICE_ACCOUNT_JSON secret: the AAB was not uploaded to Google Play."; exit 0; fi
+          VERSION=$(sed -n 's/^ *versionName *= *"\([^"]*\)".*/\1/p' android/app/build.gradle.kts)
+          if [ "$VERSION" != "$GITHUB_REF_NAME" ]; then echo "::error title=Google Play::versionName $VERSION is not the release $GITHUB_REF_NAME (run tools/CreateUpdateRelease.py --update)"; exit 1; fi
+          pip install -q requests==2.32.3 cryptography==44.0.0
+          python tools/play_publish.py --aab android/app/build/outputs/bundle/release/app-release.aab \
+            --track "$PLAY_TRACK" --release-name "$VERSION (${{ github.run_number }})"
+          echo "::notice title=Google Play::$VERSION (${{ github.run_number }}) uploaded to the $PLAY_TRACK track"
       - name: Publish to the rolling android-latest pre-release
         if: ${{ !inputs.release_tag }}
         env:

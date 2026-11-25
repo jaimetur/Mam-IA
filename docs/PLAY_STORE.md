@@ -61,8 +61,9 @@ APK modernos.)
   (`title.txt`, `short_description.txt`, `full_description.txt`). Google Play enseña a cada visitante la traducción de
   la ficha en su idioma, con sus capturas; si su idioma no tiene traducción, le enseña la predeterminada (en-US). Las hace
   `tools/play_screenshots.py` con la app real y la familia de ejemplo de `app.demo.play_review`, con la interfaz y los
-  textos de la familia en cada idioma. El workflow «📸 Google Play images» las vuelve a hacer y las sube al repositorio
-  cada vez que cambian la interfaz, las traducciones o la familia de ejemplo.
+  textos de la familia en cada idioma. El workflow «📸 Google Play images» las vuelve a hacer y las sube a la misma rama
+  (`main` o la de la release, `X.Y.Z`) cada vez que cambian la interfaz, las traducciones o la familia de ejemplo. En
+  una rama de release, además, las sube a Google Play (sección 9).
 - Firma de la app: **clave generada por Google** (Play App Signing), como en BodyLens. `mamia-upload.jks` es solo la
   clave de subida. Por eso la app de Play y el APK del servidor tienen firmas distintas: quien tenga instalada una
   tiene que desinstalarla para pasar a la otra.
@@ -172,3 +173,41 @@ The account belongs to a sample family with made-up data: agenda, tasks, shoppin
 - Crea la clave (paso 1) y espera a que GitHub compile con ella: el registro de Actions debe decir `release key`.
 - Sube `mamia-android.aab` (de la release `android-latest`) a una prueba interna, configura la suscripción y la
   cuenta de servicio, y prueba una compra con una cuenta de prueba de licencias (Configuración → Pruebas de licencia).
+
+## 9. Subida automática a Google Play
+
+En cada rama de release (`X.Y.Z`), GitHub sube solo a Google Play:
+
+- **La app**: cada compilación del AAB (`.github/workflows/android.yml`) va al canal de la variable `PLAY_TRACK`, por
+  defecto `alpha`, la prueba cerrada. Una release nueva siempre compila y sube, porque `tools/CreateUpdateRelease.py`
+  cambia la versión en `android/app/build.gradle.kts`. Los cambios solo de la web no necesitan versión nueva de la app:
+  la app carga la web del servidor.
+- **La ficha**: los textos y las imágenes de `assets/play-store/` en los 10 idiomas («📸 Google Play images»). Solo se
+  vuelven a subir las imágenes que han cambiado. Las capturas de Chromebook no están en la API: se suben a mano.
+
+**La versión es la misma en todas partes.** `versionName` es la versión de la release (`0.2.0`), la misma del
+repositorio, del CHANGELOG y del servidor. `versionCode` es el número de compilación de GitHub, que Play exige que suba
+en cada subida. En Play Console se ve como `0.2.0 (45)`. Si la versión de Gradle no coincide con la rama, la subida
+falla.
+
+Lo hace `tools/play_publish.py` con la API de Google Play. Google sigue revisando cada versión y cada cambio de la ficha,
+y pasar una versión a producción se hace a mano con «Promocionar versión».
+
+**Configuración (una vez):**
+
+1. **Play Console → Usuarios y permisos**: abre la cuenta de servicio de la sección 5. En **Permisos de la app →
+   Mam-IA**, añade «Publicar aplicaciones en canales de prueba» y «Gestionar la presencia en Google Play Store», sin
+   quitar los de pedidos y suscripciones. Si algún día quieres subir a producción directamente, también «Publicar en
+   producción». **Aplicar → Guardar cambios.**
+2. **Google Cloud** (el proyecto de esa cuenta): **APIs y servicios → Biblioteca**, busca «Google Play Android
+   Developer API» y pulsa **Habilitar** (si ya lo está, no hay que hacer nada).
+3. **GitHub → jaimetur/Mam-IA → Settings → Secrets and variables → Actions**:
+   - pestaña **Secrets → New repository secret**: nombre `PLAY_SERVICE_ACCOUNT_JSON`, valor: el contenido entero del
+     JSON de la cuenta de servicio (o, desde la carpeta del repositorio, `gh secret set PLAY_SERVICE_ACCOUNT_JSON <
+     ruta/clave.json`);
+   - pestaña **Variables → New repository variable** (opcional): `PLAY_TRACK`, con `internal` (prueba interna),
+     `alpha` (prueba cerrada, por defecto), `beta` (prueba abierta) o `production`.
+4. Prueba: **Actions → 🤖 Android app → Run workflow**, rama `0.2.0`. El registro debe terminar con
+   «0.2.0 (N) uploaded to the alpha track», y en Play Console → Prueba cerrada aparece la versión nueva.
+
+Sin el secreto, los workflows siguen funcionando y avisan de que no han subido nada a Google Play.

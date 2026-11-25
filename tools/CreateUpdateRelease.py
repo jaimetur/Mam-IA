@@ -6,7 +6,8 @@ Adapted from DriveTest Analyzer's, BodyLens' and MeetGo's tool of the same name.
   - a `## Release: vX.Y.Z` block on top of CHANGELOG.md, whose header gives the current version and release date;
   - the same version in pyproject.toml (the server) and in the service worker's cache name (src/frontend/app/sw.js), so
     every new release replaces the files that browsers and the installed PWA keep in their cache;
-  - the major.minor of the Android app's versionName (android/app/build.gradle.kts; the patch is the CI build number).
+  - the Android app's versionName (android/app/build.gradle.kts), so Google Play shows the same version; its
+    versionCode is the CI build number.
 Every push of the release branch builds the Docker image jaimetur/mam-ia:X.Y.Z and :latest (GitHub Actions).
 
 Usage:
@@ -99,9 +100,8 @@ def replace_pyproject_version(content: str, version: str) -> str:
 
 
 def replace_android_version(content: str, version: str) -> str:
-    """Return the Gradle script with the major.minor of versionName updated (the patch is the CI build number)."""
-    major, minor, _ = version.split('.')
-    content, count = re.subn(r'(versionName\s*=\s*")\d+\.\d+\.(")', rf'\g<1>{major}.{minor}.\g<2>', content, count=1)
+    """Return the Gradle script with versionName set to the release version (versionCode is the CI build number)."""
+    content, count = re.subn(r'(versionName\s*=\s*")[^"]*(")', rf'\g<1>{version}\g<2>', content, count=1)
     if count != 1:
         raise RuntimeError('Unable to update versionName in android/app/build.gradle.kts.')
     return content
