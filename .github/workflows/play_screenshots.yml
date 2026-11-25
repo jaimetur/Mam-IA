@@ -2,12 +2,13 @@ name: 📸 Google Play images
 
 # Regenerates the Google Play store images (screenshots for phone, tablet and Chromebook, and the feature graphic) in
 # every language of the app whenever the interface, its translations or the demo family change, and commits them to
-# assets/play-store/<Play language code>/ of the same branch (main or a release branch X.Y.Z; see
-# tools/play_screenshots.py). On a release branch it then uploads them, with the texts of the listing, to Google Play
+# assets/play-store/<Play language code>/ of the same release branch (X.Y.Z; see tools/play_screenshots.py). Not on
+# main: main only gets a finished release branch pushed onto it, and a commit of its own there would stop the next
+# push of the release branch to main (non-fast-forward). On a release branch it then uploads them, with the texts of the listing, to Google Play
 # (tools/play_publish.py) when the secret PLAY_SERVICE_ACCOUNT_JSON is there. Its own commits are [skip ci].
 on:
   push:
-    branches: [main, "[0-9]+.[0-9]+.[0-9]+"]
+    branches: ["[0-9]+.[0-9]+.[0-9]+"]
     paths:
       - "src/frontend/**"
       - "lang/**"
